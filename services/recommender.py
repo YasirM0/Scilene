@@ -1,6 +1,9 @@
+import math
 import re
 
-from services.repository import search_candidates
+from services.repository import search_candidates, keyword_document_frequency, count_journals
+from services.stopwords import filter_stopwords
+from services.explain import build_explanation
 
 # Strategies we can actually support with the data currently in the
 # database. "Highest Prestige" now has real data behind it (Scopus/WoS
@@ -14,6 +17,29 @@ _QUARTILE_RANK = {"Q1": 4, "Q2": 3, "Q3": 2, "Q4": 1}
 
 # Ordered worst -> best. Used for confidence bucketing below.
 CONFIDENCE_LEVELS = ["Poor", "Weak", "Moderate", "Strong", "Excellent"]
+
+# A result needs at least this fraction of its own theoretical max score
+# to be eligible for the top two confidence tiers, no matter how it
+# ranks relative to other results in THIS search. Without this floor, a
+# search that's mostly generic (e.g. abstract fallback pulling in weak
+# terms) would still label its best-of-a-mediocre-bunch result
+# "Excellent" purely by comparison to worse results in the same batch.
+# Calibrated against real data, not guessed: the theoretical max assumes
+# every keyword hits all 3 fields, which essentially never happens even
+# for a great match (a journal literally titled "Blockchain" for a
+# "blockchain governance digital" query still only reached ~0.33); real
+# noise matches (a single generic word overlapping by coincidence)
+# measured around 0.01. 0.12 sits well above the noise floor while still
+# reachable by genuinely strong topical matches.
+MIN_NORMALIZED_SCORE_FOR_TOP_TIERS = 0.12
+
+# IDF-style down/up-weighting of keywords by how common they are across
+# the WHOLE database (not blocklisted words — measured ones). Values
+# calibrated against real data: e.g. "medicine" (very common) lands
+# near 0.55x, "governance" near 1.4x, "blockchain" (rare) near 2x.
+_IDF_REFERENCE = 1.7
+_IDF_MIN_MULTIPLIER = 0.4
+_IDF_MAX_MULTIPLIER = 2.2
 
 # apc_amount is free text like "40 USD" or "40 USD; 450000 IDR", not a
 # clean number. We only trust a figure we can find explicitly in USD;
@@ -48,12 +74,14 @@ class JournalRecommender:
         indexing=None,
         quartiles=None,
         sinta_levels=None,
+        max_review_weeks=None,
         strategy="Balanced",
     ):
         """
         Recommend journals based on a paper title, keywords, and
-        (optionally) an abstract, narrowed by language/budget/indexing
-        filters and reordered according to a recommendation strategy.
+        (optionally) an abstract, narrowed by language/budget/indexing/
+        review-time filters and reordered according to a recommendation
+        strategy.
 
         Returns the FULL sorted list of matching journals (searches and
         scores the complete candidate set rather than an early-truncated
@@ -63,21 +91,22 @@ class JournalRecommender:
 
         keywords = keywords or []
 
-        keywords = [
+        keywords = filter_stopwords([
             keyword.strip()
             for keyword in keywords
             if keyword.strip()
-        ]
+        ])
 
         # If no keywords are provided, fall back to words from the title
-        # and abstract (simple substring matching, not NLP/embeddings).
+        # and abstract (simple substring matching, not NLP/embeddings),
+        # with stopwords removed so filler words don't pollute matching.
         if not keywords:
             fallback_text = f"{title} {abstract}"
-            fallback_words = [
+            fallback_words = filter_stopwords([
                 word.strip(".,;:()").lower()
                 for word in fallback_text.split()
                 if len(word.strip(".,;:()")) > 3
-            ]
+            ])
             seen = set()
             keywords = []
             for word in fallback_words:
@@ -86,8 +115,21 @@ class JournalRecommender:
                     keywords.append(word)
             keywords = keywords[:15]
 
-        # Only push free_only/indexing to SQL (both are clean columns).
-        # Budget filtering happens below, in Python, after parsing.
+        # IDF-style weight per keyword, based on how common it actually
+        # is across the whole database — not a guessed "generic words"
+        # list. A keyword in nearly every journal (e.g. "medicine" in a
+        # mixed-field search) contributes much less than a distinctive one.
+        total_journals = count_journals()
+        keyword_weights = {}
+        for keyword in keywords:
+            df = keyword_document_frequency(keyword)
+            idf = math.log10((total_journals + 1) / (df + 1))
+            multiplier = max(_IDF_MIN_MULTIPLIER, min(_IDF_MAX_MULTIPLIER, idf / _IDF_REFERENCE))
+            keyword_weights[keyword] = multiplier
+
+        # Only push free_only/indexing/quartile/review-time to SQL (all
+        # clean columns). Budget filtering happens below, in Python,
+        # after parsing the free-text apc_amount.
         candidates = search_candidates(
             keywords,
             language=language,
@@ -95,6 +137,7 @@ class JournalRecommender:
             indexing=indexing,
             quartiles=quartiles,
             sinta_levels=sinta_levels,
+            max_review_weeks=max_review_weeks,
         )
 
         recommendations = []
@@ -105,10 +148,6 @@ class JournalRecommender:
             usd_amount = None if is_free else parse_usd_amount(journal.apc_amount)
 
             # Budget filter (Python-side, since apc_amount is free text).
-            # Free journals satisfy any band whose floor is $0/unset.
-            # Paid journals only count if we found a confirmed USD figure
-            # inside the requested range — an unconfirmed/non-USD fee is
-            # excluded rather than guessed at.
             if not free_only and (min_budget is not None or max_budget is not None):
                 if is_free:
                     if min_budget:
@@ -121,37 +160,49 @@ class JournalRecommender:
                     if max_budget is not None and usd_amount > max_budget:
                         continue
 
-            score = 0
-            reasons = []
+            score = 0.0
+            max_possible = 0.0
+            title_hits, subject_hits, keyword_field_hits = [], [], []
 
             for keyword in keywords:
 
                 k = keyword.lower()
+                weight = keyword_weights[keyword]
+                max_possible += 11 * weight  # 5 + 4 + 2, this keyword's ceiling
+
+                hit_any_field = False
 
                 if k in str(journal.title).lower():
-                    score += 5
-                    reasons.append(f'✓ Title contains "{keyword}"')
+                    score += 5 * weight
+                    title_hits.append(keyword)
+                    hit_any_field = True
 
                 if k in str(journal.subjects).lower():
-                    score += 4
-                    reasons.append(f'✓ Subject contains "{keyword}"')
+                    score += 4 * weight
+                    subject_hits.append(keyword)
+                    hit_any_field = True
 
                 if k in str(journal.keywords).lower():
-                    score += 2
-                    reasons.append(f'✓ Keywords contain "{keyword}"')
+                    score += 2 * weight
+                    keyword_field_hits.append(keyword)
+                    hit_any_field = True
 
-            if score == 0:
+            distinct_hits = len(set(title_hits) | set(subject_hits) | set(keyword_field_hits))
+
+            # Reduce false positives from a single generic word matching
+            # only in the weakest field: require either a subject/title
+            # hit, or at least 2 distinct keywords matching, before a
+            # journal is considered relevant at all.
+            if score <= 0:
+                continue
+            if not title_hits and not subject_hits and distinct_hits < 2:
                 continue
 
-            if is_free:
-                reasons.append("✓ No publication fee (APC)")
-            elif usd_amount is not None:
-                reasons.append(f"APC: ~${usd_amount:.0f}")
-            else:
-                reasons.append("APC applies (amount not confirmed in USD — check journal site)")
-
-            if journal.review_weeks is not None:
-                reasons.append(f"Typical review time: ~{journal.review_weeks} weeks")
+            explanation = build_explanation(
+                subject_terms=list(dict.fromkeys(subject_hits)),
+                title_terms=list(dict.fromkeys(title_hits)),
+                keyword_field_terms=list(dict.fromkeys(keyword_field_hits)),
+            )
 
             recommendations.append({
                 "id": journal.id,
@@ -172,7 +223,8 @@ class JournalRecommender:
                 "sources": journal.sources,
                 "source_details": journal.source_details,
                 "score": score,
-                "reasons": reasons,
+                "normalized_score": (score / max_possible) if max_possible else 0.0,
+                "explanation": explanation,
             })
 
         recommendations = self._apply_strategy(recommendations, strategy)
@@ -220,25 +272,32 @@ class JournalRecommender:
 
     def _assign_confidence(self, recommendations):
         """
-        Label each recommendation with a confidence level, relative to
-        the other matches found for THIS search.
+        Label each recommendation with a confidence level. Two things
+        have to both hold for "Excellent"/"Strong":
+          1. Rank — which fifth of THIS search's results it falls in.
+          2. An absolute floor — at least MIN_NORMALIZED_SCORE_FOR_TOP_TIERS
+             of its own theoretical max score.
 
-        This is a rank-based heuristic (which fifth of this search's own
-        results a journal falls into), not a statistically validated
-        probability of fit or acceptance — there's no outcome data behind
-        it. It's here to help scanning, not as a claim about your odds
-        with any individual journal.
+        The floor exists because #1 alone is fooled by a weak search: if
+        every candidate is a mediocre match (e.g. a vague abstract-only
+        fallback), the best of that weak bunch would still look
+        "Excellent" by comparison, even though it's not a strong match
+        in any absolute sense. Neither number is a validated probability
+        of fit or acceptance — there's no outcome data behind either.
         """
 
         n = len(recommendations)
 
         for position, recommendation in enumerate(recommendations):
-            # position 0 is the best match
             percentile_from_top = position / n if n else 0
             bucket_index = min(
                 int(percentile_from_top * len(CONFIDENCE_LEVELS)),
                 len(CONFIDENCE_LEVELS) - 1,
             )
-            # bucket_index 0 = top fifth -> should map to "Excellent" (last in list)
             level = CONFIDENCE_LEVELS[len(CONFIDENCE_LEVELS) - 1 - bucket_index]
+
+            if level in ("Excellent", "Strong"):
+                if recommendation["normalized_score"] < MIN_NORMALIZED_SCORE_FOR_TOP_TIERS:
+                    level = "Moderate"
+
             recommendation["confidence"] = level

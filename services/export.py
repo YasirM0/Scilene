@@ -44,7 +44,7 @@ def recommendations_to_rows(
             {
                 "Journal Name": recommendation["title"],
                 "Confidence": recommendation.get("confidence", ""),
-                "Score": recommendation["score"],
+                "Score": round(recommendation["score"], 1),
                 "Sources": ", ".join(recommendation.get("sources", [])),
                 "Best Quartile": _best_quartile(recommendation.get("source_details", [])),
                 "SINTA Accreditation": _sinta_accreditation(recommendation.get("source_details", [])),
@@ -60,7 +60,7 @@ def recommendations_to_rows(
                 "Subjects": recommendation.get("subjects", ""),
                 "Website": recommendation["website"],
                 "DOAJ URL": recommendation["doaj_url"],
-                "Reasons": " | ".join(recommendation["reasons"]),
+                "Why This Journal": recommendation.get("explanation", ""),
             }
         )
 

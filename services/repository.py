@@ -204,13 +204,31 @@ def search_by_keywords(keywords):
     return result
 
 
+def keyword_document_frequency(keyword):
+    """
+    How many journals in the WHOLE database contain this keyword in
+    title/subjects/keywords, regardless of the current search's other
+    filters. Used by the recommender to down-weight ubiquitous words
+    (e.g. "policy" appearing in thousands of journals) relative to
+    distinctive ones, without needing a hardcoded list of "generic"
+    words — this measures actual corpus frequency instead of guessing.
+    """
+    conn = get_connection()
+    count = conn.execute(
+        "SELECT COUNT(*) FROM journals WHERE title LIKE ? OR subjects LIKE ? OR keywords LIKE ?",
+        [f"%{keyword}%"] * 3,
+    ).fetchone()[0]
+    conn.close()
+    return count
+
+
 def search_candidates(keywords, language=None, free_only=False, indexing=None,
-                       quartiles=None, sinta_levels=None):
+                       quartiles=None, sinta_levels=None, max_review_weeks=None):
     """
     Search journals matching any keyword in the title, subjects, or
     keywords fields, optionally narrowed by language, free-only,
-    confirmed indexing source(s), Scopus/WoS quartile(s), and/or SINTA
-    accreditation level(s).
+    confirmed indexing source(s), Scopus/WoS quartile(s), SINTA
+    accreditation level(s), and/or a maximum typical review time.
 
     quartiles:
         Optional list (e.g. ["Q1", "Q2"]). Matches a journal if ANY of
@@ -273,6 +291,10 @@ def search_candidates(keywords, language=None, free_only=False, indexing=None,
             f"id IN (SELECT journal_id FROM journal_sources WHERE accreditation IN ({placeholders}))"
         )
         params.extend(sinta_levels)
+
+    if max_review_weeks is not None:
+        conditions.append("review_weeks IS NOT NULL AND review_weeks <= ?")
+        params.append(max_review_weeks)
 
     query = "SELECT DISTINCT * FROM journals"
 

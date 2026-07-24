@@ -26,6 +26,7 @@ def search_journals(
     indexing=None,
     quartiles=None,
     sinta_levels=None,
+    max_review_weeks=None,
     strategy="Balanced",
 ):
     """
@@ -48,6 +49,7 @@ def search_journals(
         indexing=indexing,
         quartiles=quartiles,
         sinta_levels=sinta_levels,
+        max_review_weeks=max_review_weeks,
         strategy=strategy,
     )
 

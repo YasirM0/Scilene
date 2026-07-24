@@ -1,0 +1,28 @@
+[1mdiff --git a/services/search_service.py b/services/search_service.py[m
+[1mindex 4dfcc88..c875a67 100644[m
+[1m--- a/services/search_service.py[m
+[1m+++ b/services/search_service.py[m
+[36m@@ -24,6 +24,8 @@[m [mdef search_journals([m
+     min_budget=None,[m
+     max_budget=None,[m
+     indexing=None,[m
+[32m+[m[32m    quartiles=None,[m
+[32m+[m[32m    sinta_levels=None,[m
+     strategy="Balanced",[m
+ ):[m
+     """[m
+[36m@@ -44,10 +46,12 @@[m [mdef search_journals([m
+         min_budget=min_budget,[m
+         max_budget=max_budget,[m
+         indexing=indexing,[m
+[32m+[m[32m        quartiles=quartiles,[m
+[32m+[m[32m        sinta_levels=sinta_levels,[m
+         strategy=strategy,[m
+     )[m
+ [m
+ [m
+ def export_results_csv(results):[m
+     """Export a list of recommendation results as CSV bytes."""[m
+[31m-    return export_to_csv(results)[m
+[32m+[m[32m    return export_to_csv(results)[m
+\ No newline at end of file[m

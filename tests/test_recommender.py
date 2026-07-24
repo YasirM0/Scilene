@@ -15,19 +15,14 @@ def main():
 
     print(f"Found {len(recommendations)} recommendations\n")
 
-    for recommendation in recommendations:
+    for recommendation in recommendations[:3]:
 
         print("=" * 80)
         print(f"Journal : {recommendation['title']}")
         print(f"Publisher : {recommendation['publisher']}")
         print(f"Country : {recommendation['country']}")
-        print(f"Score : {recommendation['score']}")
-
-        print("Reasons:")
-
-        for reason in recommendation["reasons"]:
-            print(f"  - {reason}")
-
+        print(f"Score : {recommendation['score']:.1f}  (confidence: {recommendation['confidence']})")
+        print(f"Why: {recommendation['explanation']}")
         print()
 
 

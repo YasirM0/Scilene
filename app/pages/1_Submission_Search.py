@@ -7,6 +7,7 @@ from datetime import datetime
 from services import search_service
 from services.recommender import STRATEGIES
 from services.repository import DB_PATH
+from utils.subjects import format_subjects
 
 if "search" not in st.session_state:
     st.session_state.search = None
@@ -41,27 +42,49 @@ STRONG_TIERS = {"Excellent", "Strong"}
 QUARTILE_OPTIONS = ["Q1", "Q2", "Q3", "Q4"]
 SINTA_LEVEL_OPTIONS = [f"SINTA {n}" for n in range(1, 7)]
 
+REVIEW_TIME_BANDS = {
+    "Any": None,
+    "Up to 8 weeks": 8,
+    "Up to 12 weeks": 12,
+    "Up to 20 weeks": 20,
+    "Up to 30 weeks": 30,
+}
 
-def format_source_label(detail):
-    """e.g. 'Scopus (Q1)', 'SINTA 2', or plain 'DOAJ'."""
-    source = detail["source"]
-    if source == "SINTA" and detail.get("accreditation"):
-        return detail["accreditation"]
-    if detail.get("quartile"):
-        return f"{source} ({detail['quartile']})"
-    return source
+# Chips get extra spacing (real spaces collapse in HTML) so a row of
+# indexing tags is easy to scan rather than run together.
+CHIP_GAP = "\u2003\u2003"
+
+
+def format_index_chips(source_details):
+    """
+    e.g. '✓ DOAJ    ✓ Scopus (Q1)    ✓ WoS    ✓ SINTA 2'
+
+    Quartile is only shown once, on Scopus — Scopus and Web of Science
+    quartiles come from the same underlying SCImago row in this
+    database, so repeating it on the WoS chip would just be the same
+    number twice, not new information.
+    """
+    chips = []
+    for detail in source_details:
+        source = detail["source"]
+        if source == "SINTA" and detail.get("accreditation"):
+            chips.append(detail["accreditation"])
+        elif source == "Scopus" and detail.get("quartile"):
+            chips.append(f"Scopus ({detail['quartile']})")
+        else:
+            chips.append(source)
+    return CHIP_GAP.join(f"✓ {chip}" for chip in chips)
 
 
 @st.cache_data(show_spinner=False)
 def cached_search(title, keywords_tuple, abstract, language, free_only,
                    min_budget, max_budget, indexing_tuple, quartiles_tuple,
-                   sinta_levels_tuple, strategy, _db_mtime):
+                   sinta_levels_tuple, max_review_weeks, strategy, _db_mtime):
     """
     Cached wrapper around the (Streamlit-free) search service. `_db_mtime`
     is included purely so the cache key changes automatically whenever
-    data/journal_intelligence.db is rebuilt (e.g. after re-running
-    scripts/build_database.py) — Streamlit's cache otherwise has no way
-    to know the underlying data changed.
+    data/journal_intelligence.db is rebuilt — Streamlit's cache otherwise
+    has no way to know the underlying data changed.
     """
     return search_service.search_journals(
         title=title,
@@ -74,6 +97,7 @@ def cached_search(title, keywords_tuple, abstract, language, free_only,
         indexing=list(indexing_tuple) if indexing_tuple else None,
         quartiles=list(quartiles_tuple) if quartiles_tuple else None,
         sinta_levels=list(sinta_levels_tuple) if sinta_levels_tuple else None,
+        max_review_weeks=max_review_weeks,
         strategy=strategy,
     )
 
@@ -197,17 +221,27 @@ with st.expander("⚙️ Publication Preferences", expanded=False):
             ["Any", "English", "Indonesian"],
         )
 
-    budget_choice = st.selectbox(
-        "Publication Budget",
-        [
-            "Any",
-            "Free (No APC)",
-            "Low APC (< $100)",
-            "Medium APC ($100–300)",
-            "High APC (> $300)",
-        ],
-        help="Maximum publication fee you are willing to pay.",
-    )
+    budget_col, review_col = st.columns(2)
+
+    with budget_col:
+        budget_choice = st.selectbox(
+            "Publication Budget",
+            [
+                "Any",
+                "Free (No APC)",
+                "Low APC (< $100)",
+                "Medium APC ($100–300)",
+                "High APC (> $300)",
+            ],
+            help="Maximum publication fee you are willing to pay.",
+        )
+
+    with review_col:
+        review_time_choice = st.selectbox(
+            "Maximum Review Time",
+            list(REVIEW_TIME_BANDS.keys()),
+            help="Filters by the journal's own typical review time — independent of prestige or cost.",
+        )
 
     level_col1, level_col2 = st.columns(2)
 
@@ -263,6 +297,8 @@ if st.button(
     elif budget_choice == "High APC (> $300)":
         min_budget = 300
 
+    max_review_weeks = REVIEW_TIME_BANDS[review_time_choice]
+
     resolved_strategy = STRATEGY_LABELS[strategy_label]
 
     db_mtime = DB_PATH.stat().st_mtime if DB_PATH.exists() else 0
@@ -278,6 +314,7 @@ if st.button(
         tuple(preferred_indexing) if preferred_indexing else None,
         tuple(preferred_quartiles) if preferred_quartiles else None,
         tuple(preferred_sinta_levels) if preferred_sinta_levels else None,
+        max_review_weeks,
         resolved_strategy,
         db_mtime,
     )
@@ -297,7 +334,7 @@ if st.button(
 Try one or more of the following:
 
 - Choose **Any** as the preferred language.
-- Choose **Any** as the publication budget.
+- Choose **Any** as the publication budget or review time.
 - Clear the Quartile / SINTA Level filters.
 - Select **DOAJ** (or clear indexing filters) — it has the broadest coverage.
 - Broaden your manuscript title, abstract, or keywords.
@@ -320,9 +357,9 @@ if search:
         "Show weaker matches too (Moderate / Weak / Poor)",
         value=st.session_state.show_weaker,
         help=(
-            "Confidence is relative to this search's own results, not a "
-            "validated prediction — it just ranks matches into fifths so "
-            "the strongest ones are easy to spot."
+            "Confidence is relative to this search's own results and requires "
+            "a minimum absolute match strength — it isn't a validated prediction, "
+            "just a way to surface the strongest matches first."
         ),
     )
 
@@ -386,49 +423,47 @@ if search:
     # ------------------------------------------------------
     # Compact recommendation cards
     #
-    # Each card's widgets (expander, etc.) are keyed by the journal's
-    # database id, NOT by its position in the list. Without this, if
-    # journal A is expanded on page 1 and journal B happens to land in
-    # that same on-page position after paginating, Streamlit reuses A's
-    # widget state for B — B shows up already expanded. Keying by a
-    # stable per-journal id (not list position) fixes that.
+    # Compact card answers "should I open this?" — title, confidence,
+    # indexing, country, APC, language, and a one-line reason. Publisher,
+    # full subjects, ISSN, and license move to "Show more", which answers
+    # "should I submit here?". Every card widget is keyed by the
+    # journal's database id (not list position) so pagination can't mix
+    # up expanded/collapsed state between different journals landing in
+    # the same on-page slot.
     # ------------------------------------------------------
 
     for journal in page_results:
 
         with st.container(border=True, key=f"card_{journal['id']}"):
 
-            card_col1, card_col2 = st.columns([3, 1])
+            title_col, badge_col = st.columns([4, 1])
 
-            with card_col1:
+            with title_col:
                 st.markdown(f"**{journal['title']}**")
-                st.caption(
-                    f"{CONFIDENCE_STARS.get(journal['confidence'], '')} "
-                    f"{journal['confidence']} Match"
-                )
 
-            with card_col2:
+            with badge_col:
                 st.badge(
                     journal["confidence"],
                     color=CONFIDENCE_COLORS.get(journal["confidence"], "gray"),
                 )
+                st.caption(CONFIDENCE_STARS.get(journal["confidence"], ""))
 
-            st.write("**Indexed in:**")
-            if journal["source_details"]:
-                index_line = "  ".join(
-                    f"✓ {format_source_label(d)}" for d in journal["source_details"]
-                )
-                st.write(index_line)
-            else:
-                st.write("—")
+            st.write(format_index_chips(journal["source_details"]) or "—")
 
-            summary_col1, summary_col2, summary_col3 = st.columns(3)
+            if journal.get("explanation"):
+                st.caption(journal["explanation"])
 
-            with summary_col1:
-                st.caption("Match Score")
-                st.write(journal["score"])
+            meta_col1, meta_col2, meta_col3 = st.columns(3)
 
-            with summary_col2:
+            with meta_col1:
+                st.caption("Country")
+                st.write(journal["country"] or "—")
+
+            with meta_col2:
+                st.caption("Language")
+                st.write(journal["languages"] or "—")
+
+            with meta_col3:
                 apc_label = "Free" if journal["is_free"] else (
                     f"~${journal['apc_amount']:.0f}"
                     if journal["apc_amount"] is not None
@@ -437,32 +472,27 @@ if search:
                 st.caption("APC")
                 st.write(apc_label)
 
-            with summary_col3:
-                st.caption("Language")
-                st.write(journal["languages"] or "—")
-
             with st.expander("Show more", key=f"expander_{journal['id']}"):
 
                 st.write(f"**Publisher:** {journal['publisher'] or 'Not listed'}")
-                st.write(f"**Country:** {journal['country'] or 'Not listed'}")
-                st.write(f"**License:** {journal['license'] or 'Not listed'}")
+
+                subject_tags = format_subjects(journal["subjects"])
+                if subject_tags:
+                    st.write(f"**Subjects:** {subject_tags}")
 
                 if journal["review_weeks"] is not None:
                     st.write(f"**Typical review time:** ~{journal['review_weeks']} weeks")
 
-                if journal["subjects"]:
-                    st.write(f"**Subjects:** {journal['subjects']}")
-
+                secondary_bits = []
                 if journal["issn_print"] or journal["issn_online"]:
-                    st.write(
-                        f"**ISSN:** {journal['issn_print'] or '—'} (print) / "
+                    secondary_bits.append(
+                        f"ISSN: {journal['issn_print'] or '—'} (print) / "
                         f"{journal['issn_online'] or '—'} (online)"
                     )
-
-                if journal["reasons"]:
-                    st.write("**Why this journal?**")
-                    for reason in journal["reasons"]:
-                        st.write(f"- {reason}")
+                if journal["license"]:
+                    secondary_bits.append(f"License: {journal['license']}")
+                if secondary_bits:
+                    st.caption("  ·  ".join(secondary_bits))
 
                 link_col1, link_col2 = st.columns(2)
                 with link_col1:
@@ -481,7 +511,7 @@ if search:
                         )
 
     # ------------------------------------------------------
-    # Pagination (below the results, per feedback)
+    # Pagination (below the results)
     # ------------------------------------------------------
 
     st.divider()
