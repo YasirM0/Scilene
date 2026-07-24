@@ -1,11 +1,3 @@
-from pathlib import Path
-import sys
-
-ROOT = Path(__file__).resolve().parents[2]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-
 import math
 
 import streamlit as st
@@ -46,6 +38,9 @@ CONFIDENCE_STARS = {
 # By default only the top two confidence tiers are shown.
 STRONG_TIERS = {"Excellent", "Strong"}
 
+QUARTILE_OPTIONS = ["Q1", "Q2", "Q3", "Q4"]
+SINTA_LEVEL_OPTIONS = [f"SINTA {n}" for n in range(1, 7)]
+
 
 def format_source_label(detail):
     """e.g. 'Scopus (Q1)', 'SINTA 2', or plain 'DOAJ'."""
@@ -59,7 +54,8 @@ def format_source_label(detail):
 
 @st.cache_data(show_spinner=False)
 def cached_search(title, keywords_tuple, abstract, language, free_only,
-                   min_budget, max_budget, indexing_tuple, strategy, _db_mtime):
+                   min_budget, max_budget, indexing_tuple, quartiles_tuple,
+                   sinta_levels_tuple, strategy, _db_mtime):
     """
     Cached wrapper around the (Streamlit-free) search service. `_db_mtime`
     is included purely so the cache key changes automatically whenever
@@ -76,6 +72,8 @@ def cached_search(title, keywords_tuple, abstract, language, free_only,
         min_budget=min_budget,
         max_budget=max_budget,
         indexing=list(indexing_tuple) if indexing_tuple else None,
+        quartiles=list(quartiles_tuple) if quartiles_tuple else None,
+        sinta_levels=list(sinta_levels_tuple) if sinta_levels_tuple else None,
         strategy=strategy,
     )
 
@@ -211,6 +209,27 @@ with st.expander("⚙️ Publication Preferences", expanded=False):
         help="Maximum publication fee you are willing to pay.",
     )
 
+    level_col1, level_col2 = st.columns(2)
+
+    with level_col1:
+        preferred_quartiles = st.multiselect(
+            "Scopus / WoS Quartile",
+            QUARTILE_OPTIONS,
+            default=[],
+            help=(
+                "Matches if the journal has this quartile in EITHER Scopus "
+                "or Web of Science. Leave empty for any quartile (or none)."
+            ),
+        )
+
+    with level_col2:
+        preferred_sinta_levels = st.multiselect(
+            "SINTA Level",
+            SINTA_LEVEL_OPTIONS,
+            default=[],
+            help="Leave empty for any SINTA level (or none).",
+        )
+
 st.divider()
 
 # ==========================================================
@@ -257,6 +276,8 @@ if st.button(
         min_budget,
         max_budget,
         tuple(preferred_indexing) if preferred_indexing else None,
+        tuple(preferred_quartiles) if preferred_quartiles else None,
+        tuple(preferred_sinta_levels) if preferred_sinta_levels else None,
         resolved_strategy,
         db_mtime,
     )
@@ -277,6 +298,7 @@ Try one or more of the following:
 
 - Choose **Any** as the preferred language.
 - Choose **Any** as the publication budget.
+- Clear the Quartile / SINTA Level filters.
 - Select **DOAJ** (or clear indexing filters) — it has the broadest coverage.
 - Broaden your manuscript title, abstract, or keywords.
 """
@@ -355,41 +377,26 @@ if search:
         "SINTA (sinta.kemdikbud.go.id)"
     )
 
-    # ------------------------------------------------------
-    # Pagination
-    # ------------------------------------------------------
-
     total_pages = max(1, math.ceil(len(visible_results) / PAGE_SIZE))
     st.session_state.page = min(st.session_state.page, total_pages)
-
-    page_col1, page_col2, page_col3 = st.columns([1, 2, 1])
-
-    with page_col1:
-        if st.button("⬅️ Previous", disabled=st.session_state.page <= 1):
-            st.session_state.page -= 1
-            st.rerun()
-
-    with page_col2:
-        st.markdown(
-            f"<div style='text-align:center;'>Page {st.session_state.page} of {total_pages}</div>",
-            unsafe_allow_html=True,
-        )
-
-    with page_col3:
-        if st.button("Next ➡️", disabled=st.session_state.page >= total_pages):
-            st.session_state.page += 1
-            st.rerun()
 
     start = (st.session_state.page - 1) * PAGE_SIZE
     page_results = visible_results[start:start + PAGE_SIZE]
 
     # ------------------------------------------------------
     # Compact recommendation cards
+    #
+    # Each card's widgets (expander, etc.) are keyed by the journal's
+    # database id, NOT by its position in the list. Without this, if
+    # journal A is expanded on page 1 and journal B happens to land in
+    # that same on-page position after paginating, Streamlit reuses A's
+    # widget state for B — B shows up already expanded. Keying by a
+    # stable per-journal id (not list position) fixes that.
     # ------------------------------------------------------
 
     for journal in page_results:
 
-        with st.container(border=True):
+        with st.container(border=True, key=f"card_{journal['id']}"):
 
             card_col1, card_col2 = st.columns([3, 1])
 
@@ -434,7 +441,7 @@ if search:
                 st.caption("Language")
                 st.write(journal["languages"] or "—")
 
-            with st.expander("Show more"):
+            with st.expander("Show more", key=f"expander_{journal['id']}"):
 
                 st.write(f"**Publisher:** {journal['publisher'] or 'Not listed'}")
                 st.write(f"**Country:** {journal['country'] or 'Not listed'}")
@@ -460,7 +467,39 @@ if search:
                 link_col1, link_col2 = st.columns(2)
                 with link_col1:
                     if journal["website"]:
-                        st.link_button("Visit Journal", journal["website"])
+                        st.link_button(
+                            "Visit Journal",
+                            journal["website"],
+                            key=f"visit_{journal['id']}",
+                        )
                 with link_col2:
                     if journal["doaj_url"]:
-                        st.link_button("View on DOAJ", journal["doaj_url"])
+                        st.link_button(
+                            "View on DOAJ",
+                            journal["doaj_url"],
+                            key=f"doaj_{journal['id']}",
+                        )
+
+    # ------------------------------------------------------
+    # Pagination (below the results, per feedback)
+    # ------------------------------------------------------
+
+    st.divider()
+
+    page_col1, page_col2, page_col3 = st.columns([1, 2, 1])
+
+    with page_col1:
+        if st.button("⬅️ Previous", disabled=st.session_state.page <= 1, key="prev_page"):
+            st.session_state.page -= 1
+            st.rerun()
+
+    with page_col2:
+        st.markdown(
+            f"<div style='text-align:center;'>Page {st.session_state.page} of {total_pages}</div>",
+            unsafe_allow_html=True,
+        )
+
+    with page_col3:
+        if st.button("Next ➡️", disabled=st.session_state.page >= total_pages, key="next_page"):
+            st.session_state.page += 1
+            st.rerun()

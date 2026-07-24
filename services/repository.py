@@ -204,30 +204,26 @@ def search_by_keywords(keywords):
     return result
 
 
-def search_candidates(keywords, language=None, free_only=False, indexing=None):
+def search_candidates(keywords, language=None, free_only=False, indexing=None,
+                       quartiles=None, sinta_levels=None):
     """
     Search journals matching any keyword in the title, subjects, or
-    keywords fields, optionally narrowed by language, free-only, and/or
-    confirmed indexing source(s).
+    keywords fields, optionally narrowed by language, free-only,
+    confirmed indexing source(s), Scopus/WoS quartile(s), and/or SINTA
+    accreditation level(s).
 
-    language:
-        Substring match against the `languages` column
-        (e.g. "English", "Indonesian").
+    quartiles:
+        Optional list (e.g. ["Q1", "Q2"]). Matches a journal if ANY of
+        its confirmed sources (Scopus and/or WoS) carries one of these
+        quartiles.
 
-    free_only:
-        If True, only return journals with no publication fee (apc = "No").
+    sinta_levels:
+        Optional list (e.g. ["SINTA 1", "SINTA 2"]). Matches a journal
+        if its SINTA accreditation is one of these.
 
-    indexing:
-        Optional list of source names (e.g. ["DOAJ", "Scopus"]). If given,
-        only journals confirmed in at least one of these sources (via
-        journal_sources) are returned. Sources with no imported data
-        simply won't match anything yet — this does not fabricate matches.
+    (language/free_only/indexing documented above.)
 
-    Note: budget (max APC) filtering is NOT done here. The `apc_amount`
-    column is free text (e.g. "40 USD", "40 USD; 450000 IDR") rather than
-    a clean number, so it can't be reliably compared in SQL. Budget
-    filtering happens in Python, in the recommender, after parsing each
-    value.
+    Note: budget (max APC) filtering is NOT done here — see recommender.
     """
 
     keywords = [
@@ -263,6 +259,20 @@ def search_candidates(keywords, language=None, free_only=False, indexing=None):
             f"id IN (SELECT journal_id FROM journal_sources WHERE source IN ({placeholders}))"
         )
         params.extend(indexing)
+
+    if quartiles:
+        placeholders = ",".join("?" for _ in quartiles)
+        conditions.append(
+            f"id IN (SELECT journal_id FROM journal_sources WHERE quartile IN ({placeholders}))"
+        )
+        params.extend(quartiles)
+
+    if sinta_levels:
+        placeholders = ",".join("?" for _ in sinta_levels)
+        conditions.append(
+            f"id IN (SELECT journal_id FROM journal_sources WHERE accreditation IN ({placeholders}))"
+        )
+        params.extend(sinta_levels)
 
     query = "SELECT DISTINCT * FROM journals"
 

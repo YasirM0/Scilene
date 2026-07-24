@@ -52,11 +52,12 @@ def import_sinta(csv_path, source_label="SINTA", index=None, conn=None):
             if issn
         ]
         title = _clean(row.get("name"))
+        country = "Indonesia"  # SINTA only covers Indonesian journals
 
         if not issns:
             missing_issn += 1
 
-        journal_id, match_type = index.find(issns, title)
+        journal_id, match_type = index.find(issns, title, country=country)
 
         # e.g. "S2Accredited" -> "SINTA 2"
         raw_accreditation = _clean(row.get("accreditation"))
@@ -73,13 +74,13 @@ def import_sinta(csv_path, source_label="SINTA", index=None, conn=None):
                 conn,
                 title=title,
                 publisher=_clean(row.get("publisher")),
-                country="Indonesia",
+                country=country,
                 website=_clean(row.get("website")),
                 issn_print=issns[0] if issns else None,
                 issn_online=issns[1] if len(issns) > 1 else None,
                 source=source_label,
             )
-            index.add(journal_id, issns, title)
+            index.add(journal_id, issns, title, country=country)
             created += 1
         elif match_type == "issn":
             matched_by_issn += 1

@@ -24,6 +24,8 @@ def search_journals(
     min_budget=None,
     max_budget=None,
     indexing=None,
+    quartiles=None,
+    sinta_levels=None,
     strategy="Balanced",
 ):
     """
@@ -44,6 +46,8 @@ def search_journals(
         min_budget=min_budget,
         max_budget=max_budget,
         indexing=indexing,
+        quartiles=quartiles,
+        sinta_levels=sinta_levels,
         strategy=strategy,
     )
 

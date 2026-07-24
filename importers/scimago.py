@@ -62,11 +62,12 @@ def import_scimago(csv_path, source_label, index=None, conn=None):
 
         issns = extract_issns(row.get("Issn"))
         title = _clean(row.get("Title"))
+        country = _clean(row.get("Country"))
 
         if not issns:
             missing_issn += 1
 
-        journal_id, match_type = index.find(issns, title)
+        journal_id, match_type = index.find(issns, title, country=country)
 
         metadata = {
             "quartile": _clean(row.get("SJR Best Quartile")),
@@ -79,12 +80,12 @@ def import_scimago(csv_path, source_label, index=None, conn=None):
                 conn,
                 title=title,
                 publisher=_clean(row.get("Publisher")),
-                country=_clean(row.get("Country")),
+                country=country,
                 issn_print=issns[0] if issns else None,
                 issn_online=issns[1] if len(issns) > 1 else None,
                 source=source_label,
             )
-            index.add(journal_id, issns, title)
+            index.add(journal_id, issns, title, country=country)
             created += 1
         elif match_type == "issn":
             matched_by_issn += 1

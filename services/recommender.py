@@ -46,6 +46,8 @@ class JournalRecommender:
         min_budget=None,
         max_budget=None,
         indexing=None,
+        quartiles=None,
+        sinta_levels=None,
         strategy="Balanced",
     ):
         """
@@ -91,6 +93,8 @@ class JournalRecommender:
             language=language,
             free_only=free_only,
             indexing=indexing,
+            quartiles=quartiles,
+            sinta_levels=sinta_levels,
         )
 
         recommendations = []
@@ -150,6 +154,7 @@ class JournalRecommender:
                 reasons.append(f"Typical review time: ~{journal.review_weeks} weeks")
 
             recommendations.append({
+                "id": journal.id,
                 "title": journal.title,
                 "publisher": journal.publisher or "",
                 "country": journal.country or "",

@@ -44,20 +44,49 @@ no code changes needed for a routine data update.
 
 ## Deduplication / merge strategy
 
+The database intentionally uses a **conservative merge strategy**. False
+duplicates are considered more harmful than leaving two records
+unmerged, because an incorrect merge can attach the wrong indexing,
+quartile, or accreditation information to a journal.
+
 For each incoming row (Scopus, WoS, SINTA):
 
-1. Try to match an existing journal by ISSN (print or online).
-2. If no ISSN match, try an **exact** normalized-title match (lowercased,
-   punctuation stripped, whitespace collapsed).
-3. If neither matches, a new `journals` row is created from that
-   source's own metadata, tagged only with that source.
+1. Try to match an existing journal by ISSN (print or online). This is
+   the authoritative matching method.
+2. If no ISSN match exists, try an **exact normalized-title match**
+   **only if**:
+   - the title is sufficiently distinctive (generic one- or two-word
+     titles such as *Vision*, *Forum*, or *Logos* are intentionally
+     excluded), and
+   - the existing journal and incoming record do not have conflicting
+     country metadata.
+3. If neither rule matches, create a new row in `journals` and attach
+   the source normally.
 
-This is not fuzzy matching. Two records for the same journal with a
-meaningfully different title (e.g. one includes a subtitle the other
-doesn't, or a transliteration differs) will NOT be merged and will end
-up as two separate rows. `scripts/build_database.py` prints how many
-matches were made by ISSN vs. by title as a rough signal — a high
-title-only match count is worth spot-checking by hand.
+This is intentionally **not fuzzy matching**. Two records referring to
+the same journal but using different titles (for example subtitles,
+alternative transliterations, abbreviations, or translations) will
+remain separate until a reliable identifier such as an ISSN can confirm
+they are the same journal.
+
+`scripts/build_database.py` reports how many journals matched by ISSN
+and how many required the title fallback. A high number of title-based
+matches should always be reviewed manually because they carry a higher
+risk of false positives than ISSN matches.
+
+### Lessons learned
+
+Early versions allowed any exact normalized title to trigger a merge.
+Testing revealed several false positives involving journals with generic
+titles (for example *Vision*, *Forum*, and *Logos*), causing unrelated
+journals from different countries to inherit incorrect indexing
+information.
+
+The current strategy restricts title-based merges to distinctive titles
+and rejects matches with conflicting country metadata. After rebuilding
+the database, all previously identified false title merges were
+eliminated. The remaining title-independent merges are backed by shared
+ISSNs and are therefore considered legitimate.
 
 ### What actually happened on the last real build
 

@@ -1,3 +1,18 @@
+import sys
+from pathlib import Path
+
+# Allow "services", "models", etc. to be imported from the project root.
+# Needed on Streamlit Community Cloud: Streamlit puts the directory
+# containing the entry script (app/) on sys.path, not the project root,
+# so anything outside app/ (services/, models/, importers/, utils/)
+# isn't importable without this. This only needs to run ONCE, here, in
+# the entry point — sys.path is shared by the whole process, so every
+# page (app/pages/*.py) inherits it too. It does NOT belong in each
+# page file individually.
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 import streamlit as st
 
 st.set_page_config(
