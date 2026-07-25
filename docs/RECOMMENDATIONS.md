@@ -82,23 +82,58 @@ Each result gets a label — Excellent / Strong / Moderate / Weak / Poor
 — from TWO things that must both hold for the top two tiers:
 
 1. **Rank** — which fifth of this search's own results it falls in.
-2. **An absolute floor** — its `normalized_score` (score ÷ its own
-   theoretical max, assuming every keyword hit all 3 fields) must be
-   at least 0.12.
+2. **A floor** — its `normalized_score` must be at least the larger of
+   a small absolute floor (0.05) and 45% of this search's own TOP
+   result's normalized_score.
 
-The floor exists because rank alone is fooled by a weak search: if
-every candidate is a mediocre match, the best of that bunch would still
-look "Excellent" purely by comparison. The 0.12 threshold is calibrated
-against real measurements, not guessed — even a near-perfect match (a
-journal literally titled "Blockchain" for a "blockchain governance
-digital" query) only reached ~0.33 normalized score, since it's rare
-for every keyword to hit all 3 fields; genuine noise matches (a single
-coincidental word overlap) measured around 0.01. 0.12 sits well above
-the noise floor while staying reachable by real topical matches.
+The floor is deliberately RELATIVE to this search's own best result,
+not one fixed number for every search (that was v0.1.8's first attempt,
+and it was miscalibrated — see "Recalibration" below). A search with
+many fallback keywords has a structurally lower achievable ceiling than
+a precise 2-keyword search, so comparing every search against the same
+fixed number punished the former unfairly.
 
-This is still NOT a calibrated probability of fit or acceptance —
-there's no outcome data behind it, and the search page's help text
-says so explicitly.
+This is still NOT a calibrated probability of fit or acceptance — no
+outcome data backs it — and the search page's help text says so.
+
+### Recalibration (post-launch fix)
+
+The first version of this used a single fixed floor (0.12) and a
+looser inclusion rule (any title/subject hit, or 2+ keyword-field hits,
+was enough to include a journal at all). Two real problems came out of
+testing at scale:
+
+1. **Too conservative for typical manuscripts.** A diffuse manuscript
+   (title+abstract fallback, up to 15 keywords) produces a huge OR-based
+   candidate pool — thousands of journals matching on just one fairly
+   common word. That diluted the percentile ranking so badly that the
+   "top 40% by rank" often sat at a normalized_score around 0.02 — far
+   below the fixed 0.12 floor — so almost everything got capped at
+   Moderate and hidden by default (one real test: 17 of 1,274 results
+   visible).
+2. **Fixed thresholds don't transfer across searches with very
+   different keyword counts** — the root cause of #1.
+
+Fix, in two parts:
+- **Inclusion now scales with keyword count**: `min_required_hits = 1`
+  when there are ≤3 keywords (an explicit, precise search), otherwise
+  `max(2, ceil(0.2 × keyword_count))`. This shrinks the noisy long tail
+  at the source instead of just hiding more of the output afterward —
+  one real test went from 8,066 diluted candidates to 735 meaningful
+  ones for the same manuscript.
+- **The floor became relative** (45% of this search's own top score,
+  floored at 0.05) instead of one fixed number. Verified against a
+  deliberately adversarial case — "Coral Reef Bleaching" — where
+  several textile-industry journals matched only via the ambiguous word
+  "bleaching" (a real textile process term) and, under the old fixed
+  floor, got mislabeled Excellent/Strong alongside the genuinely correct
+  match ("Coral Reefs"). The relative floor correctly separates them:
+  "Coral Reefs" scored 0.308 normalized, the textile false-positives
+  all tied at 0.117 — well below 45% of 0.308 (0.139) — so only the
+  genuine match now shows as Excellent.
+- Net effect on the earlier diffuse-manuscript case: 58 Excellent
+  results shown by default (was 17), with zero medical/engineering
+  journals in the top 30 (checked directly, not assumed).
 
 ## "Why this journal?" explanations
 

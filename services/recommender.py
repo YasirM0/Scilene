@@ -18,20 +18,17 @@ _QUARTILE_RANK = {"Q1": 4, "Q2": 3, "Q3": 2, "Q4": 1}
 # Ordered worst -> best. Used for confidence bucketing below.
 CONFIDENCE_LEVELS = ["Poor", "Weak", "Moderate", "Strong", "Excellent"]
 
-# A result needs at least this fraction of its own theoretical max score
-# to be eligible for the top two confidence tiers, no matter how it
-# ranks relative to other results in THIS search. Without this floor, a
-# search that's mostly generic (e.g. abstract fallback pulling in weak
-# terms) would still label its best-of-a-mediocre-bunch result
-# "Excellent" purely by comparison to worse results in the same batch.
-# Calibrated against real data, not guessed: the theoretical max assumes
-# every keyword hits all 3 fields, which essentially never happens even
-# for a great match (a journal literally titled "Blockchain" for a
-# "blockchain governance digital" query still only reached ~0.33); real
-# noise matches (a single generic word overlapping by coincidence)
-# measured around 0.01. 0.12 sits well above the noise floor while still
-# reachable by genuinely strong topical matches.
-MIN_NORMALIZED_SCORE_FOR_TOP_TIERS = 0.12
+# Confidence-tier floor: RELATIVE to this search's own top result, not a
+# single fixed number for every search. A 15-keyword fallback query and
+# a 2-keyword precise query have structurally different achievable
+# ceilings (more keywords make it statistically harder for one journal
+# to hit every field for every keyword), so one fixed absolute number
+# punished multi-keyword searches unfairly. The absolute floor still
+# exists underneath it so that if EVERY candidate in a search is weak
+# (a truly poor match overall), the best-of-a-bad-bunch still doesn't
+# get called "Excellent."
+CONFIDENCE_RELATIVE_FLOOR_RATIO = 0.45
+CONFIDENCE_ABSOLUTE_FLOOR = 0.05
 
 # IDF-style down/up-weighting of keywords by how common they are across
 # the WHOLE database (not blocklisted words — measured ones). Values
@@ -189,13 +186,20 @@ class JournalRecommender:
 
             distinct_hits = len(set(title_hits) | set(subject_hits) | set(keyword_field_hits))
 
-            # Reduce false positives from a single generic word matching
-            # only in the weakest field: require either a subject/title
-            # hit, or at least 2 distinct keywords matching, before a
-            # journal is considered relevant at all.
-            if score <= 0:
-                continue
-            if not title_hits and not subject_hits and distinct_hits < 2:
+            # Minimum evidence required to include a journal at all. This
+            # scales with how many keywords are in play, on purpose: a
+            # single strong hit is real evidence when the person typed 2-3
+            # precise keywords, but when there are many keywords (typically
+            # the title+abstract fallback, up to 15), requiring only ONE
+            # match let thousands of journals in on a single fairly common
+            # word — diluting the candidate pool so badly that percentile-
+            # based confidence became meaningless (the "top 40%" of an
+            # 8,000-candidate pool was mostly noise, not genuine matches).
+            # Scaling the bar with keyword count fixes that at the source
+            # instead of just hiding more of the output after the fact.
+            min_required_hits = 1 if len(keywords) <= 3 else max(2, math.ceil(len(keywords) * 0.2))
+
+            if score <= 0 or distinct_hits < min_required_hits:
                 continue
 
             explanation = build_explanation(
@@ -275,18 +279,28 @@ class JournalRecommender:
         Label each recommendation with a confidence level. Two things
         have to both hold for "Excellent"/"Strong":
           1. Rank — which fifth of THIS search's results it falls in.
-          2. An absolute floor — at least MIN_NORMALIZED_SCORE_FOR_TOP_TIERS
-             of its own theoretical max score.
+          2. A floor — its normalized_score must be at least the larger
+             of CONFIDENCE_ABSOLUTE_FLOOR and (this search's own top
+             normalized_score × CONFIDENCE_RELATIVE_FLOOR_RATIO).
 
         The floor exists because #1 alone is fooled by a weak search: if
-        every candidate is a mediocre match (e.g. a vague abstract-only
-        fallback), the best of that weak bunch would still look
-        "Excellent" by comparison, even though it's not a strong match
-        in any absolute sense. Neither number is a validated probability
-        of fit or acceptance — there's no outcome data behind either.
+        every candidate is a mediocre match, the best of that weak bunch
+        would still look "Excellent" by comparison, even though it's not
+        a strong match in any absolute sense. It's RELATIVE to this
+        search's own best result (not one fixed number for every search)
+        so a search with many fallback keywords isn't punished for having
+        a structurally lower achievable ceiling than a precise 2-keyword
+        search. Neither number is a validated probability of fit or
+        acceptance — there's no outcome data behind either.
         """
 
         n = len(recommendations)
+
+        if n == 0:
+            return
+
+        top_score = recommendations[0]["normalized_score"]
+        floor = max(CONFIDENCE_ABSOLUTE_FLOOR, top_score * CONFIDENCE_RELATIVE_FLOOR_RATIO)
 
         for position, recommendation in enumerate(recommendations):
             percentile_from_top = position / n if n else 0
@@ -296,8 +310,7 @@ class JournalRecommender:
             )
             level = CONFIDENCE_LEVELS[len(CONFIDENCE_LEVELS) - 1 - bucket_index]
 
-            if level in ("Excellent", "Strong"):
-                if recommendation["normalized_score"] < MIN_NORMALIZED_SCORE_FOR_TOP_TIERS:
-                    level = "Moderate"
+            if level in ("Excellent", "Strong") and recommendation["normalized_score"] < floor:
+                level = "Moderate"
 
             recommendation["confidence"] = level

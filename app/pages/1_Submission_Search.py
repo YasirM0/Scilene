@@ -18,6 +18,11 @@ if "page" not in st.session_state:
 if "show_weaker" not in st.session_state:
     st.session_state.show_weaker = False
 
+if "search_history" not in st.session_state:
+    st.session_state.search_history = []
+
+MAX_HISTORY_ENTRIES = 10
+
 PAGE_SIZE = 10
 
 CONFIDENCE_COLORS = {
@@ -326,6 +331,25 @@ if st.button(
     st.session_state.page = 1
     st.session_state.show_weaker = False
 
+    st.session_state.search_history.insert(0, {
+        "title": title,
+        "keywords": keyword_list,
+        "abstract": abstract,
+        "language": language,
+        "free_only": free_only,
+        "min_budget": min_budget,
+        "max_budget": max_budget,
+        "indexing": tuple(preferred_indexing) if preferred_indexing else None,
+        "quartiles": tuple(preferred_quartiles) if preferred_quartiles else None,
+        "sinta_levels": tuple(preferred_sinta_levels) if preferred_sinta_levels else None,
+        "max_review_weeks": max_review_weeks,
+        "strategy": resolved_strategy,
+        "strategy_label": strategy_label,
+        "result_count": len(results),
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    })
+    st.session_state.search_history = st.session_state.search_history[:MAX_HISTORY_ENTRIES]
+
     if not results:
         st.info(
             """
@@ -341,6 +365,59 @@ Try one or more of the following:
 """
         )
         st.stop()
+
+# ==========================================================
+# Search History (session-only — cleared on page reload/new
+# browser session, never written to the database). Placed here,
+# after the search button, rather than at the top of the page:
+# people search first and only revisit past searches afterward,
+# so this is closer to where they'll actually look for it.
+# ==========================================================
+
+if st.session_state.search_history:
+
+    with st.expander(f"🕘 Search History ({len(st.session_state.search_history)})"):
+
+        st.caption("Kept only for this browser session — not saved anywhere.")
+
+        for i, entry in enumerate(st.session_state.search_history):
+
+            hist_col1, hist_col2 = st.columns([4, 1])
+
+            with hist_col1:
+                st.write(f"**{entry['title']}**")
+                st.caption(
+                    f"{entry['timestamp']} · {entry['strategy_label']} · "
+                    f"{entry['result_count']} results"
+                )
+
+            with hist_col2:
+                if st.button("Rerun", key=f"history_rerun_{i}", width="stretch"):
+                    db_mtime = DB_PATH.stat().st_mtime if DB_PATH.exists() else 0
+                    results = cached_search(
+                        entry["title"],
+                        entry["keywords"],
+                        entry["abstract"],
+                        entry["language"],
+                        entry["free_only"],
+                        entry["min_budget"],
+                        entry["max_budget"],
+                        entry["indexing"],
+                        entry["quartiles"],
+                        entry["sinta_levels"],
+                        entry["max_review_weeks"],
+                        entry["strategy"],
+                        db_mtime,
+                    )
+                    st.session_state.search = {
+                        "results": results,
+                        "strategy_label": entry["strategy_label"],
+                    }
+                    st.session_state.page = 1
+                    st.session_state.show_weaker = False
+                    st.rerun()
+
+    st.divider()
 
 # ==========================================================
 # Recommendation Results
