@@ -21,6 +21,7 @@ class Settings(BaseSettings):
 
     app_name: str = "Journal Intelligence"
     app_version: str = "0.2.0"
+    github_url: str = "https://github.com/YasirM0/journal-intelligence"
 
     debug: bool = False
 

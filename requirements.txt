@@ -17,7 +17,13 @@ fpdf2==2.8.2
 # Coexists with Streamlit above during the migration — nothing here
 # replaces the streamlit/pandas lines, both apps run from this same
 # requirements.txt until the Streamlit app is retired.
-fastapi==0.115.6
+# fastapi==0.115.6 was the first version tried here, but its starlette
+# ceiling (<0.42.0) is older than what streamlit==1.59.2 above actually
+# needs at import time -- installing both together broke Streamlit
+# outright (ImportError on starlette.middleware.gzip). Verified 0.128.0
+# resolves to a starlette both frameworks are happy with; re-verify this
+# pin if either framework is upgraded.
+fastapi==0.128.0
 uvicorn[standard]==0.34.0
 jinja2==3.1.6
 python-multipart==0.0.20

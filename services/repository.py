@@ -333,6 +333,30 @@ def count_journals():
     return count
 
 
+def count_by_source():
+    """
+    Return {source: count} for every confirmed indexing source, e.g.
+    {"DOAJ": 23077, "Scopus": 32191, "Web of Science": 17815, "SINTA": 11768}.
+
+    A small, read-only aggregate for display purposes (e.g. homepage
+    statistics) — not a general query-builder.
+    """
+
+    conn = get_connection()
+
+    rows = conn.execute(
+        """
+        SELECT source, COUNT(DISTINCT journal_id)
+        FROM journal_sources
+        GROUP BY source
+        """
+    ).fetchall()
+
+    conn.close()
+
+    return dict(rows)
+
+
 def insert_minimal_journal(conn, title, publisher=None, country=None, website=None,
                             issn_print=None, issn_online=None, source=None):
     """

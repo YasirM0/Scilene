@@ -21,3 +21,13 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 # explicitly — e.g. base.html's <title> and footer use settings.app_name
 # and settings.app_version directly.
 templates.env.globals["settings"] = get_settings()
+
+# Defined once, here, so every page's nav bar (via partials/nav.html)
+# stays in sync automatically — a new page just needs an entry added
+# to this list, not an edit to every template that renders navigation.
+templates.env.globals["nav_links"] = [
+    {"label": "Home", "href": "/"},
+    {"label": "Submission Search", "href": "/search"},
+    {"label": "Academy", "href": "/academy"},
+    {"label": "Documentation", "href": "/documentation"},
+]

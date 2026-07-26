@@ -1,18 +1,19 @@
 """
 Application-level search service.
 
-This is the seam between the UI (Streamlit) and the core recommendation
-engine. Streamlit pages should call into this module rather than
-constructing a JournalRecommender or touching the repository directly —
-that keeps the recommendation engine and database access fully
-independent of Streamlit, so they can be reused by another frontend
-(a script, a different UI, a desktop wrapper) without changes.
+This is the seam between any UI (the Streamlit app, the FastAPI web
+app, or anything else in the future) and the core recommendation
+engine. UI code should call into this module rather than constructing
+a JournalRecommender or touching the repository directly — that keeps
+the recommendation engine and database access fully independent of any
+one frontend.
 
-Nothing in this module imports streamlit.
+Nothing in this module imports streamlit or fastapi.
 """
 
 from services.recommender import JournalRecommender, STRATEGIES, CONFIDENCE_LEVELS
 from services.export import export_to_csv
+from services.repository import count_journals, count_by_source
 
 
 def search_journals(
@@ -57,3 +58,16 @@ def search_journals(
 def export_results_csv(results, context=None):
     """Export a list of recommendation results as CSV bytes."""
     return export_to_csv(results, context=context)
+
+
+def get_database_stats():
+    """
+    Aggregate stats for display (e.g. the homepage's statistics
+    section). Kept as one function so a UI never needs to know which
+    individual repository calls or SQL produce these numbers — just
+    "give me the stats to show."
+    """
+    return {
+        "total_journals": count_journals(),
+        "by_source": count_by_source(),
+    }

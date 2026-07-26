@@ -1,17 +1,18 @@
 """
-Placeholder homepage route (Phase 1 of the v0.2.0 migration).
+Homepage route.
 
-Deliberately calls into services.repository — a real backend call, not
-just static HTML — so this page actually proves the FastAPI app can use
-the same core the Streamlit app uses, not just that Jinja2 can render a
-template. No search/recommendation logic here yet; that's a later phase.
+Goes through services.search_service (not services.repository
+directly) for its statistics — "UI -> service layer -> repository ->
+database" is the preferred flow so the UI never needs to know it's
+SQLite underneath, and any future change to how stats are computed or
+cached happens in one place.
 """
 
 import logging
 
 from fastapi import APIRouter, Request
 
-from services.repository import count_journals
+from services.search_service import get_database_stats
 from web.templating import templates
 
 logger = logging.getLogger(__name__)
@@ -23,13 +24,13 @@ router = APIRouter()
 def home(request: Request):
 
     try:
-        journal_count = count_journals()
+        stats = get_database_stats()
     except Exception:
-        logger.exception("Could not reach the database for the journal count")
-        journal_count = None
+        logger.exception("Could not reach the database for homepage stats")
+        stats = None
 
     return templates.TemplateResponse(
         request=request,
         name="pages/home.html",
-        context={"journal_count": journal_count},
+        context={"stats": stats},
     )
