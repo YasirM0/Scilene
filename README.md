@@ -92,6 +92,40 @@ v0.1.0-alpha
 
 ---
 
+## Running the app
+
+### Streamlit (current, complete)
+
+```
+streamlit run app/main.py
+```
+
+### Web app (v0.2.0, in progress — Phase 1 only)
+
+FastAPI + Jinja2 + HTMX + Tailwind is being migrated to alongside the
+Streamlit app, not replacing it yet. Phase 1 only proves the
+architecture — a placeholder homepage that calls the real backend
+(`services.repository.count_journals()`) and renders it. No search
+functionality has moved here yet.
+
+```
+pip install -r requirements.txt
+uvicorn web.main:app --reload
+```
+
+Then open http://127.0.0.1:8000/.
+
+To rebuild the Tailwind CSS after changing a template's classes:
+
+```
+npm install
+npm run build:css
+```
+
+See docs/WEB_MIGRATION.md for the full architecture rationale.
+
+---
+
 ## Documentation
 
 See docs/INDEX.md for the complete documentation.

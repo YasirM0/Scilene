@@ -1,0 +1,16 @@
+{
+  "name": "journal-intelligence-web",
+  "private": true,
+  "version": "0.2.0",
+  "description": "Frontend build tooling (Tailwind CSS) for the Journal Intelligence FastAPI web app. Not a Node.js runtime dependency of the app itself -- only used to build web/static/css/output.css and to vendor htmx into web/static/js/.",
+  "scripts": {
+    "build:css": "tailwindcss -i ./web/static/src/input.css -o ./web/static/css/output.css --minify",
+    "watch:css": "tailwindcss -i ./web/static/src/input.css -o ./web/static/css/output.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  },
+  "dependencies": {
+    "htmx.org": "^2.0.4"
+  }
+}
