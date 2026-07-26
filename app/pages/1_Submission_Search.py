@@ -7,7 +7,10 @@ from datetime import datetime
 from services import search_service
 from services.recommender import STRATEGIES
 from services.repository import DB_PATH
+from services.report_context import ReportContext, build_filters_summary
+from services.reports import generate_pdf, generate_docx, generate_xlsx, generate_markdown
 from utils.subjects import format_subjects
+from utils.indexing import format_source_chip
 
 if "search" not in st.session_state:
     st.session_state.search = None
@@ -64,21 +67,11 @@ def format_index_chips(source_details):
     """
     e.g. '✓ DOAJ    ✓ Scopus (Q1)    ✓ WoS    ✓ SINTA 2'
 
-    Quartile is only shown once, on Scopus — Scopus and Web of Science
-    quartiles come from the same underlying SCImago row in this
-    database, so repeating it on the WoS chip would just be the same
-    number twice, not new information.
+    Per-source label logic lives in utils.indexing (shared with the
+    export reports); this just adds the on-screen checkmarks and the
+    wider chip spacing.
     """
-    chips = []
-    for detail in source_details:
-        source = detail["source"]
-        if source == "SINTA" and detail.get("accreditation"):
-            chips.append(detail["accreditation"])
-        elif source == "Scopus" and detail.get("quartile"):
-            chips.append(f"Scopus ({detail['quartile']})")
-        else:
-            chips.append(source)
-    return CHIP_GAP.join(f"✓ {chip}" for chip in chips)
+    return CHIP_GAP.join(f"✓ {format_source_chip(d)}" for d in source_details)
 
 
 @st.cache_data(show_spinner=False)
@@ -105,6 +98,38 @@ def cached_search(title, keywords_tuple, abstract, language, free_only,
         max_review_weeks=max_review_weeks,
         strategy=strategy,
     )
+
+
+_EXPORT_GENERATORS = {
+    "pdf": generate_pdf,
+    "docx": generate_docx,
+    "xlsx": generate_xlsx,
+    "md": generate_markdown,
+}
+
+
+@st.cache_data(show_spinner=False)
+def cached_export(fmt, title, abstract, keywords_tuple, strategy_label,
+                   filters_tuple, result_ids_tuple, _results):
+    """
+    Cached report generation, keyed by everything that would actually
+    change the exported content (format, search info, filters, and
+    which specific journals are in the result set) — NOT by `_results`
+    itself. The leading underscore tells st.cache_data to skip hashing
+    that argument, since hashing a few hundred result dicts on every
+    pagination click or checkbox toggle would defeat the point of
+    caching. `result_ids_tuple` (the journals' own database ids) stands
+    in for it as the actual cache key.
+    """
+    context = ReportContext(
+        title=title,
+        abstract=abstract,
+        keywords=list(keywords_tuple),
+        strategy_label=strategy_label,
+        filters_summary=list(filters_tuple),
+        results=_results,
+    )
+    return _EXPORT_GENERATORS[fmt](context)
 
 
 # ==========================================================
@@ -324,9 +349,24 @@ if st.button(
         db_mtime,
     )
 
+    filters_summary = build_filters_summary(
+        language=language,
+        free_only=free_only,
+        min_budget=min_budget,
+        max_budget=max_budget,
+        indexing=preferred_indexing,
+        quartiles=preferred_quartiles,
+        sinta_levels=preferred_sinta_levels,
+        max_review_weeks=max_review_weeks,
+    )
+
     st.session_state.search = {
         "results": results,
         "strategy_label": strategy_label,
+        "title": title,
+        "abstract": abstract,
+        "keywords": list(keyword_list),
+        "filters_summary": filters_summary,
     }
     st.session_state.page = 1
     st.session_state.show_weaker = False
@@ -412,6 +452,19 @@ if st.session_state.search_history:
                     st.session_state.search = {
                         "results": results,
                         "strategy_label": entry["strategy_label"],
+                        "title": entry["title"],
+                        "abstract": entry["abstract"],
+                        "keywords": list(entry["keywords"]),
+                        "filters_summary": build_filters_summary(
+                            language=entry["language"],
+                            free_only=entry["free_only"],
+                            min_budget=entry["min_budget"],
+                            max_budget=entry["max_budget"],
+                            indexing=entry["indexing"],
+                            quartiles=entry["quartiles"],
+                            sinta_levels=entry["sinta_levels"],
+                            max_review_weeks=entry["max_review_weeks"],
+                        ),
                     }
                     st.session_state.page = 1
                     st.session_state.show_weaker = False
@@ -461,6 +514,13 @@ if search:
 
     if visible_results:
 
+        st.divider()
+        st.subheader("📤 Export Results")
+        st.caption(
+            "Markdown is the best choice for pasting into an AI assistant "
+            "like ChatGPT or Claude for further discussion."
+        )
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
 
         strategy_slug = (
@@ -471,15 +531,74 @@ if search:
             .lower()
         )
 
-        filename = f"ji_{strategy_slug}_{timestamp}.csv"
+        base_filename = f"ji_{strategy_slug}_{timestamp}"
 
-        csv_data = search_service.export_results_csv(visible_results)
-        st.download_button(
-            label="📥 Download Recommendations (CSV)",
-            data=csv_data,
-            file_name=filename,
-            mime="text/csv",
-        )
+        export_keywords_tuple = tuple(search.get("keywords", []))
+        export_filters_tuple = tuple(search.get("filters_summary", []))
+        result_ids_tuple = tuple(r["id"] for r in visible_results)
+
+        export_col1, export_col2, export_col3, export_col4, export_col5 = st.columns(5)
+
+        with export_col1:
+            pdf_bytes = cached_export(
+                "pdf", search.get("title", ""), search.get("abstract", ""),
+                export_keywords_tuple, strategy_label, export_filters_tuple,
+                result_ids_tuple, visible_results,
+            )
+            st.download_button(
+                "📄 PDF", data=pdf_bytes, file_name=f"{base_filename}.pdf",
+                mime="application/pdf", width="stretch",
+            )
+
+        with export_col2:
+            docx_bytes = cached_export(
+                "docx", search.get("title", ""), search.get("abstract", ""),
+                export_keywords_tuple, strategy_label, export_filters_tuple,
+                result_ids_tuple, visible_results,
+            )
+            st.download_button(
+                "📝 DOCX", data=docx_bytes, file_name=f"{base_filename}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                width="stretch",
+            )
+
+        with export_col3:
+            xlsx_bytes = cached_export(
+                "xlsx", search.get("title", ""), search.get("abstract", ""),
+                export_keywords_tuple, strategy_label, export_filters_tuple,
+                result_ids_tuple, visible_results,
+            )
+            st.download_button(
+                "📊 XLSX", data=xlsx_bytes, file_name=f"{base_filename}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                width="stretch",
+            )
+
+        with export_col4:
+            md_bytes = cached_export(
+                "md", search.get("title", ""), search.get("abstract", ""),
+                export_keywords_tuple, strategy_label, export_filters_tuple,
+                result_ids_tuple, visible_results,
+            )
+            st.download_button(
+                "📋 Markdown", data=md_bytes, file_name=f"{base_filename}.md",
+                mime="text/markdown", width="stretch",
+            )
+
+        with export_col5:
+            csv_context = ReportContext(
+                title=search.get("title", ""),
+                abstract=search.get("abstract", ""),
+                keywords=list(export_keywords_tuple),
+                strategy_label=strategy_label,
+                filters_summary=list(export_filters_tuple),
+                results=visible_results,
+            )
+            csv_bytes = search_service.export_results_csv(visible_results, context=csv_context)
+            st.download_button(
+                "📥 CSV", data=csv_bytes, file_name=f"{base_filename}.csv",
+                mime="text/csv", width="stretch",
+            )
 
     st.caption(
         "🔒 Search results are stored only for this browser session "

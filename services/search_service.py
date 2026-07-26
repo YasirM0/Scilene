@@ -54,6 +54,6 @@ def search_journals(
     )
 
 
-def export_results_csv(results):
+def export_results_csv(results, context=None):
     """Export a list of recommendation results as CSV bytes."""
-    return export_to_csv(results)
+    return export_to_csv(results, context=context)

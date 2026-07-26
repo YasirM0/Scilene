@@ -1,7 +1,14 @@
 # Direct runtime dependencies only. pip resolves the full transitive
 # tree (altair, pyarrow, protobuf, etc. are streamlit's own
 # dependencies) automatically — pinning them here too would just be
-# duplicate bookkeeping that goes stale. Both versions below are the
-# ones this milestone was actually built and tested against.
+# duplicate bookkeeping that goes stale. Versions below are the ones
+# this milestone was actually built and tested against.
 streamlit==1.59.2
 pandas==3.0.3
+
+# Recommendation Export (#57) — PDF/DOCX/XLSX generation. All three are
+# pure Python, no system packages (no LibreOffice/pandoc/wkhtmltopdf),
+# so they work as-is on Streamlit Community Cloud.
+python-docx==1.1.2
+openpyxl==3.1.5
+fpdf2==2.8.2

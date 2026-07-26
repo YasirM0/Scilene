@@ -201,11 +201,14 @@ Accessibility improvements will continue in future versions.
 Version 0.1 does not include:
 
 - User accounts
-- Saved searches
-- Submission history
+- Saved searches (persisted across sessions/devices)
 - Cloud synchronization
 - AI chat assistant
 - Collaboration features
+
+Session-only search history (cleared when the browser session ends,
+never written to the database) was added in v0.1.8 — see
+docs/RECOMMENDATIONS.md.
 
 ---
 
@@ -218,7 +221,9 @@ Version 0.1 provides a lightweight interface that enables researchers to:
 - Receive transparent journal recommendations
 - Understand why journals are recommended
 - Review journal information
-- Export results
+- Revisit recent searches from the same browser session
+- Export results as PDF, DOCX, XLSX, Markdown, or CSV — see
+  docs/EXPORT.md
 
 The interface prioritizes clarity, transparency, and usability over feature richness.
 

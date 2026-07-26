@@ -37,7 +37,7 @@ def build_explanation(subject_terms, title_terms, keyword_field_terms):
 
     if title_terms:
         parts.append(
-            f"its own title reflects {_join_terms(title_terms)}"
+            f"has a title that reflects {_join_terms(title_terms)}"
         )
 
     if not parts and keyword_field_terms:

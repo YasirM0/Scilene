@@ -223,7 +223,7 @@ class JournalRecommender:
                 "apc": journal.apc or "",
                 "apc_amount": usd_amount,
                 "is_free": is_free,
-                "review_weeks": journal.review_weeks,
+                "review_weeks": int(journal.review_weeks) if journal.review_weeks is not None else None,
                 "sources": journal.sources,
                 "source_details": journal.source_details,
                 "score": score,

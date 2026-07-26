@@ -69,13 +69,33 @@ def recommendations_to_rows(
 
 def export_to_csv(
     recommendations: Iterable[dict],
+    context=None,
 ) -> bytes:
     """
     Export recommendations as CSV data.
+
+    If `context` (a services.report_context.ReportContext) is given,
+    the same small metadata block used by the other export formats is
+    prepended as '#'-commented lines, so a person opening this in a
+    plain viewer still sees it, and tools that skip '#' lines (e.g.
+    pandas' read_csv(comment='#')) can still parse the data cleanly.
     """
 
     rows = recommendations_to_rows(recommendations)
 
     dataframe = pd.DataFrame(rows)
 
-    return dataframe.to_csv(index=False).encode("utf-8")
+    csv_text = dataframe.to_csv(index=False)
+
+    if context is not None:
+        header_lines = [
+            f"# Journal Intelligence v{context.app_version}",
+            f"# Generated: {context.generated_at} UTC",
+            f"# Search Strategy: {context.strategy_label}",
+            f"# Database Sources: {context.database_sources}",
+            f"# Total Recommendations: {len(context.results)}",
+            "",
+        ]
+        csv_text = "\n".join(header_lines) + csv_text
+
+    return csv_text.encode("utf-8")
