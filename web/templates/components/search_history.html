@@ -1,0 +1,31 @@
+{% macro search_history(history) %}
+{% if history %}
+<details class="bg-white rounded-lg border border-gray-200 group">
+    <summary class="cursor-pointer list-none px-4 py-3 flex items-center justify-between">
+        <span class="text-sm font-semibold text-gray-700">🕘 Search History ({{ history|length }})</span>
+        <span class="text-gray-400 transition-transform group-open:rotate-90">▶</span>
+    </summary>
+    <div class="px-4 pb-4 space-y-2">
+        <p class="text-xs text-gray-400">Kept only for this browser session — not saved anywhere.</p>
+        {% for entry in history %}
+        <div class="flex items-center justify-between gap-3 py-2 border-t border-gray-100">
+            <div>
+                <p class="text-sm font-medium text-gray-800">{{ entry.search_meta.title }}</p>
+                <p class="text-xs text-gray-400">
+                    {{ entry.timestamp }} UTC &middot; {{ entry.search_meta.strategy_label }} &middot; {{ entry.result_count }} results
+                </p>
+            </div>
+            <button
+                hx-post="/search/history/{{ loop.index0 }}/rerun"
+                hx-target="#results-panel"
+                hx-swap="innerHTML"
+                class="shrink-0 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50"
+            >
+                Rerun
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</details>
+{% endif %}
+{% endmacro %}

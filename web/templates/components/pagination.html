@@ -1,0 +1,26 @@
+{% macro pagination(page, total_pages, show_weaker) %}
+{% set weaker_param = "&show_weaker=on" if show_weaker else "" %}
+<div class="flex items-center justify-between mt-4">
+    <button
+        {% if page <= 1 %}disabled{% endif %}
+        hx-get="/search/results?page={{ page - 1 }}{{ weaker_param }}"
+        hx-target="#results-panel"
+        hx-swap="innerHTML"
+        class="px-3 py-1.5 text-sm rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+    >
+        ⬅️ Previous
+    </button>
+
+    <span class="text-sm text-gray-500">Page {{ page }} of {{ total_pages }}</span>
+
+    <button
+        {% if page >= total_pages %}disabled{% endif %}
+        hx-get="/search/results?page={{ page + 1 }}{{ weaker_param }}"
+        hx-target="#results-panel"
+        hx-swap="innerHTML"
+        class="px-3 py-1.5 text-sm rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+    >
+        Next ➡️
+    </button>
+</div>
+{% endmacro %}

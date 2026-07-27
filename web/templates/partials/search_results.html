@@ -1,0 +1,66 @@
+{% from "components/pagination.html" import pagination %}
+{% from "components/export_panel.html" import export_panel %}
+{% from "components/search_history.html" import search_history %}
+{% from "components/journal_card.html" import journal_card %}
+
+{% if warning %}
+<div class="px-4 py-3 rounded-md bg-yellow-50 text-yellow-800 text-sm border border-yellow-200 mb-4">
+    {{ warning }}
+</div>
+{% endif %}
+
+{{ search_history(history) }}
+
+{% if has_search %}
+
+<div class="flex items-center justify-between mt-4 mb-2">
+    <div>
+        <p class="text-sm font-medium text-green-700">
+            Showing {{ visible_count }} of {{ total_count }} recommended journals.
+        </p>
+        {% if hidden_count and not show_weaker %}
+        <p class="text-xs text-gray-400">{{ hidden_count }} weaker matches hidden — tick the box below to see them.</p>
+        {% endif %}
+    </div>
+    <button
+        hx-post="/search/clear"
+        hx-target="#results-panel"
+        hx-swap="innerHTML"
+        class="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
+    >
+        🗑️ Clear Search
+    </button>
+</div>
+
+<label class="flex items-center gap-2 text-sm text-gray-600 mb-4">
+    <input
+        type="checkbox" name="show_weaker" {% if show_weaker %}checked{% endif %}
+        hx-get="/search/results?page=1"
+        hx-target="#results-panel"
+        hx-swap="innerHTML"
+        hx-trigger="change"
+        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+    >
+    Show weaker matches too (Moderate / Weak / Poor)
+</label>
+
+{% if visible_count %}
+<div class="mb-4">
+    {{ export_panel() }}
+</div>
+{% endif %}
+
+<p class="text-xs text-gray-400 mb-4">
+    🔒 Search results are stored only for this browser session and are never saved permanently.
+    &middot; Data: DOAJ &middot; SCImago Journal &amp; Country Rank &middot; SINTA
+</p>
+
+<div class="space-y-3">
+    {% for journal in page_results %}
+        {{ journal_card(journal) }}
+    {% endfor %}
+</div>
+
+{{ pagination(page, total_pages, show_weaker) }}
+
+{% endif %}
