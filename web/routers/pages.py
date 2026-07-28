@@ -1,8 +1,10 @@
 """
-Placeholder routes for pages not yet built out (Academy and
-Documentation have no target milestone yet). Submission Search moved
-to web/routers/search.py as of Phase 3 — it's real now, not a
-placeholder, so it no longer lives here.
+Academy has real content (ported from Streamlit's own Publication
+Academy page — it was never actually a bare placeholder there either,
+just self-labeled "under development" while already containing four
+sections of real reference content). Documentation has no Streamlit
+equivalent to port — see docs/WEB_MIGRATION.md for why it stays a
+placeholder rather than getting invented content.
 """
 
 from fastapi import APIRouter, Request
@@ -13,18 +15,8 @@ router = APIRouter()
 
 
 @router.get("/academy")
-def academy_placeholder(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="pages/coming_soon.html",
-        context={
-            "page_title": "Publication Academy",
-            "page_description": (
-                "Educational content on academic publishing is planned for a "
-                "future milestone."
-            ),
-        },
-    )
+def academy(request: Request):
+    return templates.TemplateResponse(request=request, name="pages/academy.html", context={})
 
 
 @router.get("/documentation")

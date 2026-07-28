@@ -1,5 +1,15 @@
 # v0.2.0: Migrating from Streamlit to FastAPI + Jinja2 + HTMX + Tailwind
 
+**Status as of Phase 4:** the FastAPI app (`web/`) is now the primary
+frontend — homepage, Submission Search (full feature parity: form,
+filters, pagination, cards, history, all 5 export formats), and
+Publication Academy are all real here, not placeholders. Documentation
+remains a deliberate placeholder (Streamlit never had a documentation
+page to migrate content from). The Streamlit app (`app/`) is kept
+running as a regression reference and has not been deleted, but nothing
+in it is exclusive anymore — every user-facing feature it has also
+exists in `web/`.
+
 ## Why
 
 Streamlit is a fast way to build an internal tool, but it isn't a

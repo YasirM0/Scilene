@@ -1,0 +1,10 @@
+{% macro info_section(icon, title, items) %}
+<div>
+    <h2 class="text-lg font-semibold text-gray-800 mb-2">{{ icon }} {{ title }}</h2>
+    <ul class="list-disc list-inside text-gray-600 space-y-1">
+        {% for item in items %}
+        <li>{{ item }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endmacro %}

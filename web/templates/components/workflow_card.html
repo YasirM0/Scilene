@@ -1,0 +1,47 @@
+{% macro planning_workflow_card() %}
+<div class="p-5 bg-white rounded-lg border border-gray-200">
+    <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold text-gray-800">🌱 Planning</h3>
+        <span class="text-xs text-gray-400">🚧 Coming Soon</span>
+    </div>
+    <p class="text-gray-500 text-sm mb-4">
+        Still planning or writing your manuscript? Discover suitable journals before you
+        begin writing so you can align your manuscript with the right audience, scope, and
+        author guidelines from the start.
+    </p>
+    <details class="group">
+        <summary class="cursor-pointer list-none inline-block px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors text-sm">
+            🌱 Start Planning
+        </summary>
+        <div class="mt-4 pt-4 border-t border-gray-100">
+            <div class="px-4 py-3 rounded-md bg-blue-50 text-blue-800 text-sm border border-blue-200 mb-3">
+                The Planning workflow is currently under development.
+            </div>
+            <h4 class="text-sm font-semibold text-gray-700 mb-2">Planned Features</h4>
+            <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+                <li>Discover suitable journals before writing</li>
+                <li>Download journal templates</li>
+                <li>Browse author guidelines</li>
+                <li>Explore journal aims and scope</li>
+                <li>Receive journal-specific writing recommendations</li>
+            </ul>
+        </div>
+    </details>
+</div>
+{% endmacro %}
+
+{% macro submission_workflow_card() %}
+<div class="p-5 bg-white rounded-lg border border-gray-200">
+    <h3 class="text-lg font-semibold text-gray-800 mb-2">🚀 Submission</h3>
+    <p class="text-gray-500 text-sm mb-4">
+        Already have a completed manuscript? Analyze your title, abstract, and keywords to
+        discover journals that best match your research.
+    </p>
+    <a
+        href="/search"
+        class="inline-block w-full text-center px-4 py-2.5 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors text-sm"
+    >
+        🚀 Start Submission Search
+    </a>
+</div>
+{% endmacro %}

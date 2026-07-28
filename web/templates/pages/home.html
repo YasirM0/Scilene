@@ -2,6 +2,7 @@
 {% from "components/stat_card.html" import stat_card %}
 {% from "components/feature_card.html" import feature_card %}
 {% from "components/index_badge.html" import index_badge %}
+{% from "components/workflow_card.html" import submission_workflow_card, planning_workflow_card %}
 
 {% block title %}{{ settings.app_name }} — Find the right journal for your research{% endblock %}
 
@@ -34,6 +35,35 @@
     >
         Start Searching
     </a>
+</section>
+
+<section class="py-10 border-t border-gray-200">
+    <h2 class="text-xl font-semibold text-gray-800 mb-1">Choose your workflow</h2>
+    <p class="text-sm text-gray-500 mb-6">
+        Select the workflow that best matches your current stage of research.
+    </p>
+    <div class="space-y-4">
+        {{ planning_workflow_card() }}
+        {{ submission_workflow_card() }}
+    </div>
+</section>
+
+<section class="py-10 border-t border-gray-200">
+    <h2 class="text-xl font-semibold text-gray-800 mb-2">🎓 Need a quick refresher?</h2>
+    <p class="text-gray-500 mb-4">
+        Whether you're publishing your first paper or exploring a new indexing system,
+        Publication Academy explains important publishing concepts in clear, practical language.
+    </p>
+    <a
+        href="/academy"
+        class="inline-block px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors mb-4"
+    >
+        🎓 Explore Publication Academy
+    </a>
+    <div class="px-4 py-3 rounded-md bg-blue-50 text-blue-800 text-sm border border-blue-200">
+        💡 Publishing terms such as APC, Scopus, SINTA, Quartiles, Open Access, and Peer Review
+        will be explained throughout the application.
+    </div>
 </section>
 
 <section class="py-10 border-t border-gray-200">
@@ -79,5 +109,11 @@
         {{ feature_card("⚡", "Fast, Local Search", "Every search runs against a local, indexed database — no external API calls or rate limits.") }}
     </div>
 </section>
+
+<div class="text-center py-6 border-t border-gray-200">
+    <p class="text-xs text-gray-400">
+        🔒 Privacy-first &middot; No account required &middot; Built for researchers
+    </p>
+</div>
 
 {% endblock %}
