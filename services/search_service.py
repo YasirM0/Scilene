@@ -8,7 +8,9 @@ a JournalRecommender or touching the repository directly — that keeps
 the recommendation engine and database access fully independent of any
 one frontend.
 
-Nothing in this module imports streamlit or fastapi.
+This module is framework-agnostic and contains no FastAPI-specific logic.
+It can be reused by the web application, future desktop application, or other
+interfaces.
 """
 
 from services.recommender import JournalRecommender, STRATEGIES, CONFIDENCE_LEVELS

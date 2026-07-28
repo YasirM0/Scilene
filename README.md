@@ -1,134 +1,119 @@
-# Journal Intelligence
+# Scilene
 
-> Researchers deserve recommendations they can understand and trust.
+> Find the right journal. Understand why.
 
-**Most journal finders tell you which journals match your paper. Journal Intelligence tells you *why* they match.**
+**Scilene** is an open-source journal discovery platform that helps researchers find suitable academic journals through transparent, explainable recommendations powered by authoritative scholarly metadata.
 
-Journal Intelligence is an open-source journal recommendation platform that combines semantic search, transparent ranking, and practical publishing information to help researchers make informed submission decisions.
-
-## Overview
-
-Choosing an appropriate journal is one of the most difficult parts of academic publishing. Existing journal recommendation tools often rely on opaque algorithms, require paid services, or prioritize prestige over researchers' actual goals.
-
-Journal Intelligence aims to provide an open, transparent, and community-driven alternative.
-
-Rather than asking "Which journal is the best?", Journal Intelligence helps answer:
-
-> "Which journal is the best choice for **my research and my publishing goals**?"
+Unlike many journal finders that provide only a ranked list, Scilene explains **why** each journal matches your manuscript.
 
 ---
 
-## Version 0.1 Goals
+## Overview
 
-Version 0.1 focuses on doing one thing exceptionally well:
+Choosing an appropriate journal is one of the most challenging parts of academic publishing. Existing recommendation tools often rely on opaque algorithms, paid services, or prestige-based rankings without explaining their decisions.
 
-- Recommend suitable journals based on a paper's title and abstract.
-- Explain why each journal is recommended.
-- Allow practical filtering such as:
-  - Scopus / SINTA
-  - APC
-  - Quartile
-  - Language
-- Keep the recommendation process transparent and reproducible.
+Scilene provides a transparent, privacy-first alternative built around authoritative datasets and reproducible recommendations.
+
+Rather than asking:
+
+> *"Which journal is the best?"*
+
+Scilene helps answer:
+
+> *"Which journal is the best choice for my research and publishing goals?"*
 
 ---
 
 ## Core Principles
 
 - 🔍 Transparent recommendations
+- 📖 Explainable ranking
+- 🔒 Privacy by default
 - 🌍 Open source
 - 🧩 Modular architecture
-- 🔒 Privacy by default
-- 📖 Evidence over assumptions
-- 🚀 Simplicity before complexity
+- 🚀 Offline-first design
+- 📚 Authoritative scholarly metadata
 
 ---
 
-## Planned Features
+## Current Features
 
-### Version 0.1
-
-- Semantic journal search
-- Transparent ranking
-- Journal filters
-- Simple and Advanced search modes
-- Export results
-
-### Future Versions
-
-- Full manuscript analysis
-- AI-assisted writing suggestions
-- Submission planning
-- Community statistics
-- Optional LLM integration
+- Journal recommendation based on manuscript title and abstract
+- Plain-language explanations for every recommendation
+- Filtering by:
+  - Scopus
+  - Web of Science
+  - DOAJ
+  - SINTA
+  - APC
+  - Quartile
+  - Language
+- PDF, DOCX, XLSX, Markdown, CSV, and AI-ready exports
+- Fast local search using a SQLite database
 
 ---
 
 ## Technology
 
-The initial implementation is planned using:
+Scilene is built with:
 
 - Python
-- Streamlit
+- FastAPI
+- Jinja2
+- HTMX
+- Tailwind CSS
 - SQLite
-- FAISS
-- Sentence Transformers
 
-The architecture remains modular so components can be replaced without redesigning the project.
+The application is designed with a modular architecture so that future interfaces (desktop, API, or mobile companion) can reuse the same core recommendation engine.
 
 ---
 
 ## Project Status
 
-Journal Intelligence is currently in active development.
+Scilene is under active development.
 
-Current milestone:
+Current version:
 
-Sprint 1 — Application Skeleton
-
-Version:
-
-v0.1.0-alpha
+**v0.2.x**
 
 ---
 
-## Running the app
+## Running the application
 
-### Streamlit (current, complete)
+Install the dependencies:
 
-```
-streamlit run app/main.py
-```
-
-### Web app (v0.2.0, in progress — Phase 1 only)
-
-FastAPI + Jinja2 + HTMX + Tailwind is being migrated to alongside the
-Streamlit app, not replacing it yet. Phase 1 only proves the
-architecture — a placeholder homepage that calls the real backend
-(`services.repository.count_journals()`) and renders it. No search
-functionality has moved here yet.
-
-```
+```bash
 pip install -r requirements.txt
+```
+
+Start the development server:
+
+```bash
 uvicorn web.main:app --reload
 ```
 
-Then open http://127.0.0.1:8000/.
-
-To rebuild the Tailwind CSS after changing a template's classes:
+Then open:
 
 ```
+http://127.0.0.1:8000
+```
+
+To rebuild the Tailwind CSS after modifying templates:
+
+```bash
 npm install
 npm run build:css
 ```
-
-See docs/WEB_MIGRATION.md for the full architecture rationale.
 
 ---
 
 ## Documentation
 
-See docs/INDEX.md for the complete documentation.
+Project documentation is available in:
+
+```
+docs/INDEX.md
+```
 
 ---
 
@@ -136,7 +121,7 @@ See docs/INDEX.md for the complete documentation.
 
 Contributions are welcome.
 
-Before submitting code, please read:
+Before contributing, please read:
 
 - CONTRIBUTING.md
 - ROADMAP.md

@@ -1,28 +1,15 @@
-# Direct runtime dependencies only. pip resolves the full transitive
-# tree (altair, pyarrow, protobuf, etc. are streamlit's own
-# dependencies) automatically — pinning them here too would just be
-# duplicate bookkeeping that goes stale. Versions below are the ones
-# this milestone was actually built and tested against.
-streamlit==1.59.2
+# Direct runtime dependencies only. Transitive dependencies are resolved
+# automatically by pip and are intentionally not pinned here.
+
 pandas==3.0.3
 
-# Recommendation Export (#57) — PDF/DOCX/XLSX generation. All three are
-# pure Python, no system packages (no LibreOffice/pandoc/wkhtmltopdf),
-# so they work as-is on Streamlit Community Cloud.
+# Recommendation Export (#57)
+# Pure Python libraries for PDF, DOCX, and XLSX export.
 python-docx==1.1.2
 openpyxl==3.1.5
 fpdf2==2.8.2
 
-# v0.2.0 web app (FastAPI + Jinja2 + HTMX + Tailwind), Phase 1.
-# Coexists with Streamlit above during the migration — nothing here
-# replaces the streamlit/pandas lines, both apps run from this same
-# requirements.txt until the Streamlit app is retired.
-# fastapi==0.115.6 was the first version tried here, but its starlette
-# ceiling (<0.42.0) is older than what streamlit==1.59.2 above actually
-# needs at import time -- installing both together broke Streamlit
-# outright (ImportError on starlette.middleware.gzip). Verified 0.128.0
-# resolves to a starlette both frameworks are happy with; re-verify this
-# pin if either framework is upgraded.
+# Web application
 fastapi==0.128.0
 uvicorn[standard]==0.34.0
 jinja2==3.1.6
