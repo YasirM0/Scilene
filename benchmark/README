@@ -1,0 +1,37 @@
+# Scilene Benchmark
+
+This directory contains the benchmarking framework used to evaluate Scilene's recommendation engine and AI components.
+
+The goal is to ensure every significant change is validated using reproducible experiments rather than intuition.
+
+## Planned Structure
+
+```
+benchmark/
+├── datasets/      # Benchmark datasets
+├── scripts/       # Evaluation scripts
+├── results/       # Benchmark results
+├── baselines/     # Baseline implementations (e.g., TF-IDF)
+└── README.md
+```
+
+## Purpose
+
+The benchmark will be used to evaluate:
+
+- Embedding models
+- Recommendation algorithms
+- Ranking strategies
+- AI-assisted enrichment pipelines
+
+using a common evaluation protocol.
+
+## Benchmark Principles
+
+- Use real published research.
+- Compare against strong baselines.
+- Measure improvements objectively.
+- Keep experiments reproducible.
+- Track benchmark history over time.
+
+See `docs/BENCHMARK.md` for the benchmark specification.
