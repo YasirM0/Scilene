@@ -85,7 +85,6 @@ contain business logic — they only render data already computed by
 | `index_badge.html` | Small badge for an indexing source (Scopus, SINTA, etc). |
 | `stat_card.html` | Centered value + label tile (homepage stats). |
 | `feature_card.html` | Icon + title + description tile (homepage feature grid). |
-| `workflow_card.html` | Numbered step card with a call-to-action link (homepage "how it works"). |
 | `filter_panel.html` | The Advanced Mode filter form fields (indexing, quartile, SINTA level, language, budget). |
 | `search_form.html` | Title/abstract/keywords input fields shared by the search page. |
 | `search_history.html` | List of past searches from the session, each rerunnable. |
@@ -96,8 +95,8 @@ contain business logic — they only render data already computed by
 
 ## Shared card pattern
 
-Several components (`journal_card`, `stat_card`, `feature_card`,
-`workflow_card`) independently use the same base card styling:
+Several components (`journal_card`, `stat_card`, `feature_card`)
+independently use the same base card styling:
 
 ```
 bg-white rounded-lg border border-gray-200
