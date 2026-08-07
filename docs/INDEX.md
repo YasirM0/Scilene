@@ -79,6 +79,14 @@ Lists the public sources used to collect journal metadata and explains their int
 
 ---
 
+## ENRICHMENT.md
+
+Design for the metadata enrichment pipeline (ROAD, ERIH PLUS, SciELO,
+AJOL, Crossref, OpenAlex, Sherpa Romeo) — how it stays structurally
+separate from anything that affects search, filtering, or ranking.
+
+---
+
 # Development
 
 ## ROADMAP.md
@@ -112,6 +120,7 @@ Explains the CI pipeline and how to deploy the app (Docker or Heroku).
 | UI | ✅ Approved |
 | DESIGN_SYSTEM | ✅ Approved |
 | DATA_SOURCES | ✅ Approved |
+| ENRICHMENT | 🟡 Proposed |
 | ROADMAP | ✅ Approved |
 | CONTRIBUTING | ✅ Approved |
 | DEPLOYMENT | ✅ Approved |
