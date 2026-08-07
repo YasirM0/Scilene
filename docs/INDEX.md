@@ -93,6 +93,12 @@ Explains how developers can contribute to the project.
 
 ---
 
+## DEPLOYMENT.md
+
+Explains the CI pipeline and how to deploy the app (Docker or Heroku).
+
+---
+
 # Documentation Status
 
 | Document | Status |
@@ -108,6 +114,7 @@ Explains how developers can contribute to the project.
 | DATA_SOURCES | ✅ Approved |
 | ROADMAP | ✅ Approved |
 | CONTRIBUTING | ✅ Approved |
+| DEPLOYMENT | ✅ Approved |
 
 ---
 

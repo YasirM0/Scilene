@@ -1,0 +1,36 @@
+name: CI
+
+# Verifies the app is in a deployable state on every push/PR to main.
+# There is no automated test suite yet (see tests/README.md) and no
+# hosting platform has been chosen (see Dockerfile) — so this checks
+# what actually exists: the app imports cleanly, the recommender still
+# runs against the real database, and the Docker image still builds.
+# See docs/DEPLOYMENT.md.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Import-check the FastAPI app
+        run: python -c "from web.main import app"
+
+      - name: Run recommender smoke test
+        run: python -m tests.test_recommender
+
+      - name: Build Docker image
+        run: docker build -t scilene:ci .
