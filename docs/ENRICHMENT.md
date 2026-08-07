@@ -1,7 +1,7 @@
 # Metadata Enrichment Pipeline
 
-**Status:** The architecture below is implemented for the two
-offline, fully-specified providers (ROAD, ERIH PLUS) — see "Current
+**Status:** Implemented for all four offline providers (ROAD, ERIH
+PLUS, SciELO, AJOL) plus surfacing enrichment in the UI — see "Current
 implementation state" at the end for exactly what that does and
 doesn't cover. It's the foundation `importers/enrichment/` providers
 and their storage follow (tracked in #108 and the dataset-specific
@@ -50,7 +50,7 @@ Local files already collected for this, in `data/enrichment/`:
 | ERIH PLUS | `erihplus.csv` | ERIH PLUS indexing flag, English title, publisher, URL, DOAJ/Sherpa Romeo flags |
 | SciELO | `scielo_journals.csv` | Regional (Latin America) coverage, subject areas, mission statement |
 | AJOL | `ajol.csv` | African journal coverage, Diamond OA flag |
-| Elsevier Source List | `Elsevier.csv` | Authoritative Scopus indexing + ASJC taxonomy + title history — this one is scoped to #98 (redefining how Scopus indexing itself is determined), not pure enrichment; noted here because the file lives in the same folder |
+| Elsevier Source List | `Elsevier.csv` | **Not enrichment** — scoped to #98 (redefining how Scopus indexing itself is determined). Implemented narrowly: `importers/elsevier.py` fills Scopus-indexing gaps SCImago's periodic snapshot hasn't caught up to yet, without touching quartile/SJR/H-index. The rest of #98 (title history, ASJC taxonomy, article language, coverage display, Source Record ID, import-order restructuring) is NOT implemented — see "Current implementation state". |
 
 Not yet available locally (per the original issue, these must never
 require a live call from the *offline* app — see "Online vs. offline"
@@ -194,39 +194,60 @@ Done:
 
 - `journal_enrichment` table exists in `data/schema.sql` and is
   populated by `scripts/build_database.py` after the core import.
-- `services/repository.tag_enrichment()` (upsert, mirrors `tag_source`).
+- `services/repository.tag_enrichment()` (upsert, mirrors `tag_source`),
+  plus `count_by_enrichment_provider()` for display stats.
 - `EnrichmentProvider` / `OfflineEnrichmentProvider` /
   `OnlineEnrichmentProvider` base classes (`importers/enrichment/base.py`).
-- Two working offline providers: `importers/enrichment/road.py`
-  (`ROADProvider`) and `importers/enrichment/erihplus.py`
-  (`ERIHPlusProvider`), both ISSN-matched only, both skip unmatched
-  rows rather than creating journals.
+- Four working offline providers: ROAD, ERIH PLUS, SciELO
+  (`importers/enrichment/scielo.py`, parses the mission-statement dict
+  literal via `ast.literal_eval`), and AJOL
+  (`importers/enrichment/ajol.py`, not in the original issue text —
+  the data file was collected afterward). All ISSN-matched only, all
+  skip unmatched rows rather than creating journals.
 - `importers/enrichment/runner.py` (`run_offline_provider`) drives an
   offline provider over every journal already in the database.
+- `importers/elsevier.py` (`import_elsevier`) — the narrow slice of
+  #98 described above. Verified against a real rebuild: 142 journals
+  newly tagged Scopus-indexed with no SCImago rank yet, 30,689 already
+  Scopus-tagged journals left untouched (quartile/SJR/H-index
+  preserved, spot-checked).
+- Enrichment now reaches the UI: `models/journal.py`'s `Journal.enrichment`
+  field, batch-fetched by `services/repository._fetch_enrichment()`
+  (same pattern as `_fetch_sources`), passed through
+  `services/recommender.py` display-only (not read by any scoring
+  code), and rendered as "Also listed in: ..." badges on
+  `journal_card.html` — visually distinct from the indexing-source
+  checkmark row on purpose. The homepage's "Supported Indexes &
+  Coverage" section is now a right-to-left auto-scrolling strip of
+  all 8 sources (`.marquee-track`, pure CSS, pauses on hover, respects
+  `prefers-reduced-motion`).
+- Fixed a latent pre-existing bug surfaced while testing this: an
+  unfiltered search (~55k journals) blew past SQLite's per-statement
+  variable limit in `_fetch_sources`'s `IN (...)` query. Both
+  `_fetch_sources` and the new `_fetch_enrichment` now batch in
+  chunks of 500.
 - Verified against a real full rebuild: DOAJ/Scopus/WoS/SINTA row
-  counts are byte-identical to the pre-enrichment baseline in
-  `docs/DATABASE.md`, and the recommender smoke test
-  (`python -m tests.test_recommender`) returns the same top matches
-  with the same scores before and after — confirming enrichment
-  cannot influence recommendation results, per the design's core rule.
+  counts are unchanged from the pre-enrichment baseline, and the
+  recommender smoke test (`python -m tests.test_recommender`) returns
+  the same top matches with the same scores before and after —
+  confirming enrichment cannot influence recommendation results, per
+  the design's core rule.
 
 Not done (still real implementation work, not this pass):
 
-- SciELO and AJOL providers — same `OfflineEnrichmentProvider`
-  pattern as ROAD/ERIH PLUS, just not written yet.
 - Crossref and OpenAlex (`OnlineEnrichmentProvider`) — need actual
   HTTP calls, caching, retries, and timeout handling.
 - The desktop consent flow and "Settings page integration" from
   #108's checklist — blocked on the desktop app existing at all
   (see `docs/ARCHITECTURE_DECISIONS.md`).
-- Displaying enrichment data anywhere in the UI — it's in the
-  database now but `services/search_service.py` and
-  `web/templates/components/journal_card.html` don't surface it yet.
 - The `tools/generate_scielo.py` / `generate_sherpa.py` annual
   regeneration scripts.
-- Elsevier Source List as the authoritative Scopus source (#98) —
-  that's a change to the *indexing* pipeline, not enrichment; the
-  file lives in `data/enrichment/` but is out of scope here.
+- The rest of #98: title history, ASJC taxonomy, article language,
+  coverage display for inactive journals, Source Record ID as the
+  canonical identifier, and reordering the import pipeline to put
+  Elsevier first. What's implemented only fills the specific gap
+  (Scopus-indexed-but-not-yet-ranked) the Elsevier file was collected
+  for.
 
 ---
 

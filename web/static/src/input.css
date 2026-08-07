@@ -17,4 +17,25 @@
     .accordion-body > div {
         overflow: hidden;
     }
+
+    /* Right-to-left continuous scroll for the homepage index/coverage
+       strip. The track's content is rendered twice (see home.html) so
+       translating exactly -50% loops seamlessly with no visible jump. */
+    .marquee-track {
+        width: max-content;
+        animation: marquee-scroll 40s linear infinite;
+    }
+    .marquee-track:hover {
+        animation-play-state: paused;
+    }
+    @keyframes marquee-scroll {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+        animation: none;
+    }
 }

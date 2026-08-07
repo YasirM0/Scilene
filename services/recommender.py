@@ -226,6 +226,8 @@ class JournalRecommender:
                 "review_weeks": int(journal.review_weeks) if journal.review_weeks is not None else None,
                 "sources": journal.sources,
                 "source_details": journal.source_details,
+                # Display-only (docs/ENRICHMENT.md) -- passed through
+                "enrichment": journal.enrichment,
                 "score": score,
                 "normalized_score": (score / max_possible) if max_possible else 0.0,
                 "explanation": explanation,

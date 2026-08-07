@@ -13,6 +13,19 @@
         {% endfor %}
     </p>
 
+    {% set enrichment_badges = format_enrichment_badges(journal.enrichment) %}
+    {% if enrichment_badges %}
+    {#
+        Deliberately styled as plain gray text, not the ✓ green-ish
+        checkmark row above -- these are display-only coverage badges
+        (docs/ENRICHMENT.md), not confirmed indexing sources, and
+        should never look like they carry the same weight.
+    #}
+    <p class="text-xs text-gray-400 mt-1">
+        Also listed in: {{ enrichment_badges | join(", ") }}
+    </p>
+    {% endif %}
+
     {% if journal.explanation %}
     <p class="text-sm text-gray-500 mt-2 italic">{{ journal.explanation }}</p>
     {% endif %}

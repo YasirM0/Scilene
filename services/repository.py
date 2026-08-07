@@ -18,6 +18,19 @@ def get_connection():
     return sqlite3.connect(DB_PATH)
 
 
+# SQLite caps how many "?" placeholders a single statement can have
+# (SQLITE_MAX_VARIABLE_NUMBER -- 999 on many builds). An unfiltered
+# search matches every journal (~55k), so a single IN (...) over all
+# of them raises "too many SQL variables" -- chunking keeps every
+# batch well under any build's limit.
+_SQL_IN_CHUNK_SIZE = 500
+
+
+def _chunked(items, size):
+    for start in range(0, len(items), size):
+        yield items[start:start + size]
+
+
 def _fetch_sources(conn, journal_ids):
     """
     Batch-fetch confirmed indexing sources for a set of journal ids,
@@ -30,31 +43,62 @@ def _fetch_sources(conn, journal_ids):
     if not journal_ids:
         return {}
 
-    placeholders = ",".join("?" for _ in journal_ids)
-
-    rows = conn.execute(
-        f"SELECT journal_id, source, quartile, sjr, h_index, accreditation "
-        f"FROM journal_sources WHERE journal_id IN ({placeholders})",
-        journal_ids,
-    ).fetchall()
-
     details_by_id = {}
-    for journal_id, source, quartile, sjr, h_index, accreditation in rows:
-        details_by_id.setdefault(journal_id, []).append({
-            "source": source,
-            "quartile": quartile,
-            "sjr": sjr,
-            "h_index": h_index,
-            "accreditation": accreditation,
-        })
+
+    for chunk in _chunked(journal_ids, _SQL_IN_CHUNK_SIZE):
+        placeholders = ",".join("?" for _ in chunk)
+
+        rows = conn.execute(
+            f"SELECT journal_id, source, quartile, sjr, h_index, accreditation "
+            f"FROM journal_sources WHERE journal_id IN ({placeholders})",
+            chunk,
+        ).fetchall()
+
+        for journal_id, source, quartile, sjr, h_index, accreditation in rows:
+            details_by_id.setdefault(journal_id, []).append({
+                "source": source,
+                "quartile": quartile,
+                "sjr": sjr,
+                "h_index": h_index,
+                "accreditation": accreditation,
+            })
 
     return details_by_id
+
+
+def _fetch_enrichment(conn, journal_ids):
+    """
+    Batch-fetch metadata enrichment (docs/ENRICHMENT.md) for a set of
+    journal ids. Returns {journal_id: {provider: data, ...}, ...} --
+    display-only, never read by services/recommender.py.
+    """
+
+    journal_ids = list(journal_ids)
+
+    if not journal_ids:
+        return {}
+
+    enrichment_by_id = {}
+
+    for chunk in _chunked(journal_ids, _SQL_IN_CHUNK_SIZE):
+        placeholders = ",".join("?" for _ in chunk)
+
+        rows = conn.execute(
+            f"SELECT journal_id, provider, data FROM journal_enrichment WHERE journal_id IN ({placeholders})",
+            chunk,
+        ).fetchall()
+
+        for journal_id, provider, data in rows:
+            enrichment_by_id.setdefault(journal_id, {})[provider] = json.loads(data)
+
+    return enrichment_by_id
 
 
 def _rows_to_journals(dataframe, conn=None):
     """
     Convert a pandas DataFrame into Journal objects, attaching each
-    journal's confirmed indexing sources from journal_sources.
+    journal's confirmed indexing sources from journal_sources and its
+    metadata enrichment from journal_enrichment.
     """
 
     if dataframe.empty:
@@ -64,10 +108,16 @@ def _rows_to_journals(dataframe, conn=None):
     if owns_connection:
         conn = get_connection()
 
-    sources_by_id = _fetch_sources(conn, dataframe["id"].tolist())
+    journal_ids = dataframe["id"].tolist()
+    sources_by_id = _fetch_sources(conn, journal_ids)
+    enrichment_by_id = _fetch_enrichment(conn, journal_ids)
 
     journals = [
-        Journal.from_row(row, source_details=sources_by_id.get(row["id"], []))
+        Journal.from_row(
+            row,
+            source_details=sources_by_id.get(row["id"], []),
+            enrichment=enrichment_by_id.get(row["id"], {}),
+        )
         for _, row in dataframe.iterrows()
     ]
 
@@ -358,6 +408,30 @@ def count_by_source():
     return dict(rows)
 
 
+def count_by_enrichment_provider():
+    """
+    Return {provider: count} for every metadata enrichment provider,
+    e.g. {"road": 27500, "erihplus": 8963}. Same shape/purpose as
+    count_by_source(), kept as a separate function/query since this
+    reads journal_enrichment, not journal_sources -- see
+    docs/ENRICHMENT.md.
+    """
+
+    conn = get_connection()
+
+    rows = conn.execute(
+        """
+        SELECT provider, COUNT(DISTINCT journal_id)
+        FROM journal_enrichment
+        GROUP BY provider
+        """
+    ).fetchall()
+
+    conn.close()
+
+    return dict(rows)
+
+
 def insert_minimal_journal(conn, title, publisher=None, country=None, website=None,
                             issn_print=None, issn_online=None, source=None):
     """
@@ -448,7 +522,7 @@ def insert_journals(journals):
     journal_columns = [
         column.name
         for column in Journal.__dataclass_fields__.values()
-        if column.name not in ("id", "source_details")
+        if column.name not in ("id", "source_details", "enrichment")
     ]
 
     placeholders = ", ".join("?" for _ in journal_columns)

@@ -34,9 +34,14 @@ the same pattern as `importers/scimago.py` or `importers/sinta.py`, not
 changing the schema.
 
 A fourth table, `journal_enrichment`, holds display-only metadata
-(ROAD, ERIH PLUS so far) that can never affect search, filtering, or
-ranking — deliberately kept separate from the two tables above. See
-`docs/ENRICHMENT.md`.
+(ROAD, ERIH PLUS, SciELO, AJOL) that can never affect search,
+filtering, or ranking — deliberately kept separate from the two tables
+above. See `docs/ENRICHMENT.md`.
+
+Separately, `importers/elsevier.py` uses the Elsevier Scopus Source
+List to fill Scopus-indexing gaps SCImago's snapshot hasn't caught up
+to yet (writes to `journal_sources`, same as SCImago — this one DOES
+affect the Scopus filter). See `docs/ENRICHMENT.md`'s Elsevier note.
 
 ## Import pipeline
 

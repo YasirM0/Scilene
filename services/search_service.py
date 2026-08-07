@@ -15,7 +15,7 @@ interfaces.
 
 from services.recommender import JournalRecommender, STRATEGIES, CONFIDENCE_LEVELS
 from services.export import export_to_csv
-from services.repository import count_journals, count_by_source
+from services.repository import count_journals, count_by_source, count_by_enrichment_provider
 
 
 def search_journals(
@@ -72,4 +72,5 @@ def get_database_stats():
     return {
         "total_journals": count_journals(),
         "by_source": count_by_source(),
+        "by_enrichment": count_by_enrichment_provider(),
     }

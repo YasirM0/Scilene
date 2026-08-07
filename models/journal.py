@@ -52,6 +52,14 @@ class Journal:
     # [{"source": "Scopus", "quartile": "Q1", "sjr": 1.2, "h_index": 40, "accreditation": None}, ...]
     source_details: list[dict] = field(default_factory=list)
 
+    # Display-only metadata enrichment (docs/ENRICHMENT.md), keyed by
+    # provider name, e.g. {"road": {...}, "erihplus": {...}}. Like
+    # source_details, this is populated separately by the repository
+    # layer (journal_enrichment, not a `journals` column) and must be
+    # excluded anywhere Journal fields are mapped 1:1 onto `journals`
+    # columns -- see insert_journals().
+    enrichment: dict = field(default_factory=dict)
+
     @property
     def sources(self):
         """Plain list of confirmed source names, e.g. ["DOAJ", "Scopus"]."""
@@ -71,7 +79,7 @@ class Journal:
         return value
 
     @classmethod
-    def from_row(cls, row, source_details=None):
+    def from_row(cls, row, source_details=None, enrichment=None):
         """
         Create a Journal from a database row.
 
@@ -79,6 +87,10 @@ class Journal:
         sources (with metadata) for this journal, looked up separately
         from journal_sources. Falls back to a single-entry list built
         from row["source"] if not provided.
+
+        `enrichment` (optional) is the {provider: data} dict looked up
+        separately from journal_enrichment. Defaults to {} (no
+        enrichment data), never fabricated from anything on the row.
         """
 
         clean = cls._clean
@@ -111,4 +123,5 @@ class Journal:
             article_count=clean(row["article_count"]),
             source=clean(row["source"]),
             source_details=source_details,
+            enrichment=enrichment or {},
         )

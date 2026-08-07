@@ -14,11 +14,21 @@ data/raw/:
                        (+ accreditation); creates new rows for SINTA-only
                        journals not already present
 
-Then tags journals with metadata enrichment (docs/ENRICHMENT.md) from
-data/enrichment/ -- display-only data (ROAD, ERIH PLUS) that can never
-affect which journals are found or how they're ranked, unlike the
-sources above. A journal enrichment providers can't match by ISSN is
-simply skipped, never turned into a new journal row.
+Then, from data/enrichment/:
+  - Elsevier.csv   -> fills Scopus-indexing gaps SCImago's periodic
+                       snapshot hasn't caught up to yet (#98) -- tags a
+                       matched, Active journal as Scopus-indexed if it
+                       isn't already, WITHOUT touching a quartile/sjr/
+                       h_index SCImago already set. This one DOES
+                       affect the Scopus filter, unlike the enrichment
+                       providers below -- see importers/elsevier.py.
+  - road.tsv, erihplus.csv, scielo_journals.csv, ajol.csv -> tag
+                       journals with display-only metadata
+                       (docs/ENRICHMENT.md) that can never affect which
+                       journals are found or how they're ranked. A
+                       journal an enrichment provider can't match by
+                       ISSN is simply skipped, never turned into a new
+                       journal row.
 
 To update any dataset: replace the matching file in data/raw/ with a
 newer export (same filename) and re-run this script. No code changes
@@ -29,9 +39,12 @@ Attribution (kept here and wherever this data is displayed in the app):
   - Scopus/WoS:  SCImago Journal & Country Rank (https://www.scimagojr.com)
   - SINTA:       Indonesia's Science and Technology Index
                  (https://sinta.kemdikbud.go.id)
+  - Elsevier:    Elsevier Scopus Source List
   - ROAD:        Directory of Open Access Scholarly Resources (https://road.issn.org)
   - ERIH PLUS:   European Reference Index for the Humanities and Social
                  Sciences (https://erihplus.nsd.no)
+  - SciELO:      Scientific Electronic Library Online (https://scielo.org)
+  - AJOL:        African Journals Online (https://www.ajol.info)
 """
 
 from pathlib import Path
@@ -39,8 +52,11 @@ from pathlib import Path
 from importers.doaj import DOAJImporter
 from importers.scimago import import_scimago
 from importers.sinta import import_sinta
+from importers.elsevier import import_elsevier
 from importers.enrichment.road import ROADProvider
 from importers.enrichment.erihplus import ERIHPlusProvider
+from importers.enrichment.scielo import SciELOProvider
+from importers.enrichment.ajol import AJOLProvider
 from importers.enrichment.runner import run_offline_provider
 from services.dedup import JournalIndex
 from services.repository import get_connection, count_journals, DB_PATH
@@ -85,6 +101,11 @@ def main():
     conn.commit()
     print()
 
+    print("--- Elsevier Scopus Source List (fills SCImago gaps) ---")
+    index, elsevier_summary = import_elsevier(DATA_ENRICHMENT / "Elsevier.csv", "Scopus", index=index, conn=conn)
+    conn.commit()
+    print()
+
     print("--- SINTA ---")
     index, sinta_summary = import_sinta(DATA_RAW / "sinta.csv", "SINTA", index=index, conn=conn)
     conn.commit()
@@ -100,6 +121,16 @@ def main():
     conn.commit()
     print()
 
+    print("--- Enrichment: SciELO ---")
+    run_offline_provider(SciELOProvider(DATA_ENRICHMENT / "scielo_journals.csv"), conn)
+    conn.commit()
+    print()
+
+    print("--- Enrichment: AJOL ---")
+    run_offline_provider(AJOLProvider(DATA_ENRICHMENT / "ajol.csv"), conn)
+    conn.commit()
+    print()
+
     conn.close()
 
     total_journals = count_journals()
@@ -112,6 +143,11 @@ def main():
         matched = summary["matched_by_issn"] + summary["matched_by_title"]
         print(f"{label:20} {summary['rows']} rows -> {matched} matched to existing journals, "
               f"{summary['created']} new journals created")
+    print(
+        f"{'Elsevier':20} {elsevier_summary['rows']} rows -> "
+        f"{elsevier_summary['newly_tagged']} newly tagged Scopus (no SCImago rank yet), "
+        f"{elsevier_summary['already_tagged']} already Scopus via SCImago"
+    )
     print()
     print(f"Total unique journals in database: {total_journals}")
     print()

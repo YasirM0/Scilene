@@ -26,3 +26,27 @@ def format_index_summary(source_details, separator=", "):
     if not source_details:
         return "Not listed"
     return separator.join(format_source_chip(d) for d in source_details)
+
+
+# Metadata enrichment (docs/ENRICHMENT.md) is deliberately NOT
+# rendered through format_source_chip / format_index_summary above --
+# it's display-only coverage information, not a confirmed indexing
+# source, and mixing the two would blur a distinction the rest of the
+# system (services/recommender.py, journal_sources vs
+# journal_enrichment) is built to keep separate.
+ENRICHMENT_LABELS = {
+    "road": "ROAD",
+    "erihplus": "ERIH PLUS",
+    "scielo": "SciELO",
+    "ajol": "AJOL",
+}
+
+
+def format_enrichment_badges(enrichment):
+    """
+    e.g. {"road": {...}, "scielo": {...}} -> ["ROAD", "SciELO"], in a
+    fixed, stable order rather than dict insertion order.
+    """
+    if not enrichment:
+        return []
+    return [label for key, label in ENRICHMENT_LABELS.items() if key in enrichment]

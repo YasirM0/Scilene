@@ -13,7 +13,7 @@ from fastapi.templating import Jinja2Templates
 
 from web.config import get_settings
 from web.search_presentation import CONFIDENCE_COLORS, CONFIDENCE_STARS
-from utils.indexing import format_source_chip, format_index_summary
+from utils.indexing import format_source_chip, format_index_summary, format_enrichment_badges
 from utils.subjects import format_subjects
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
@@ -31,6 +31,7 @@ templates.env.globals["settings"] = get_settings()
 # app's while both exist side by side.
 templates.env.globals["format_source_chip"] = format_source_chip
 templates.env.globals["format_index_summary"] = format_index_summary
+templates.env.globals["format_enrichment_badges"] = format_enrichment_badges
 templates.env.globals["format_subjects"] = format_subjects
 templates.env.globals["confidence_colors"] = CONFIDENCE_COLORS
 templates.env.globals["confidence_stars"] = CONFIDENCE_STARS

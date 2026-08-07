@@ -85,13 +85,36 @@
 {% if stats %}
 <section class="py-10 border-t border-gray-200">
     <h2 class="text-center text-sm font-medium text-gray-400 uppercase tracking-wide mb-6">
-        Supported Indexes
+        Supported Indexes &amp; Coverage
     </h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {{ index_badge("DOAJ", stats.by_source.get("DOAJ", 0)) }}
-        {{ index_badge("Scopus", stats.by_source.get("Scopus", 0)) }}
-        {{ index_badge("Web of Science", stats.by_source.get("Web of Science", 0)) }}
-        {{ index_badge("SINTA", stats.by_source.get("SINTA", 0)) }}
+    {#
+        DOAJ/Scopus/WoS/SINTA are confirmed indexing sources (filterable
+        in Advanced Mode); ROAD/ERIH PLUS/SciELO/AJOL are display-only
+        coverage enrichment (docs/ENRICHMENT.md) -- not filterable, but
+        still real information about a journal shown on its card. Both
+        belong in an "at a glance" strip like this even though only the
+        first four are indexing sources in the stricter sense.
+    #}
+    {% set index_items = [
+        ("DOAJ", stats.by_source.get("DOAJ", 0)),
+        ("Scopus", stats.by_source.get("Scopus", 0)),
+        ("Web of Science", stats.by_source.get("Web of Science", 0)),
+        ("SINTA", stats.by_source.get("SINTA", 0)),
+        ("ROAD", stats.by_enrichment.get("road", 0)),
+        ("ERIH PLUS", stats.by_enrichment.get("erihplus", 0)),
+        ("SciELO", stats.by_enrichment.get("scielo", 0)),
+        ("AJOL", stats.by_enrichment.get("ajol", 0)),
+    ] %}
+    <div class="marquee-viewport overflow-hidden">
+        <div class="marquee-track flex gap-4">
+            {% for _ in range(2) %}
+                {% for name, count in index_items %}
+                    <div class="shrink-0">
+                        {{ index_badge(name, count) }}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
     </div>
 </section>
 {% endif %}
