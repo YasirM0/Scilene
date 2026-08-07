@@ -66,6 +66,13 @@ Defines the user experience, including Simple Mode and Advanced Mode.
 
 ---
 
+## DESIGN_SYSTEM.md
+
+Defines the visual tokens (brand colors) and the shared Jinja2
+components the web frontend is built from.
+
+---
+
 ## DATA_SOURCES.md
 
 Lists the public sources used to collect journal metadata and explains their intended use.
@@ -97,6 +104,7 @@ Explains how developers can contribute to the project.
 | DATABASE | ✅ Approved |
 | RANKING | ✅ Approved |
 | UI | ✅ Approved |
+| DESIGN_SYSTEM | ✅ Approved |
 | DATA_SOURCES | ✅ Approved |
 | ROADMAP | ✅ Approved |
 | CONTRIBUTING | ✅ Approved |
