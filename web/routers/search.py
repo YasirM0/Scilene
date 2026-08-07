@@ -134,6 +134,23 @@ def run_search(
         }
         return _render(request, "partials/search_results.html", context, session)
 
+    if not indexing:
+        # Clear any previous results rather than reusing
+        # _results_context(session) as-is -- otherwise a prior search's
+        # results stay on screen looking like they matched this
+        # (invalid) submission. No history entry either: this never
+        # ran a real search.
+        session["current_results"] = None
+        session["visible_results"] = None
+        session["search_meta"] = None
+
+        context = {
+            **_filter_context(),
+            **_results_context(session),
+            "warning": "Please select at least one journal index before searching.",
+        }
+        return _render(request, "partials/search_results.html", context, session)
+
     keyword_list = [k.strip() for k in keywords.replace(";", ",").split(",") if k.strip()]
 
     resolved_language = None if language == "Any" else language
