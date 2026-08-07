@@ -1,8 +1,10 @@
 # Scilene
 
-> Find the right journal. Understand why.
+> Navigate Scholarly Publishing with Confidence
 
 **Scilene** is an open-source journal discovery platform that helps researchers find suitable academic journals through transparent, explainable recommendations powered by authoritative scholarly metadata.
+
+The name combines *Sci* (science) with *Selene*, the Greek personification of the moon — chosen because the moon has long served as a natural guide for navigation and exploration, the same role Scilene aims to play for researchers navigating scholarly publishing. See the in-app About page, or [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md), for the full story behind the name and logo.
 
 Unlike many journal finders that provide only a ranked list, Scilene explains **why** each journal matches your manuscript.
 

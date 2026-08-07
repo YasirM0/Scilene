@@ -1,0 +1,21 @@
+{% macro accordion_card(title, group) %}
+{#
+    Native <details name="..."> makes cards in the same group mutually
+    exclusive (only one open at a time) with no JS. The chevron-rotate
+    pattern is the same one journal_card.html already uses; the smooth
+    expand/collapse itself comes from the .accordion-body rule in
+    input.css (a CSS-grid 0fr->1fr transition -- animating height:auto
+    isn't possible with plain CSS, this is the standard workaround).
+#}
+<details name="{{ group }}" class="group bg-white rounded-lg border border-gray-200">
+    <summary class="cursor-pointer list-none flex items-center justify-between gap-4 px-4 sm:px-6 py-4 font-semibold text-gray-900">
+        <span>{{ title }}</span>
+        <span class="shrink-0 text-horizon-600 transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
+    </summary>
+    <div class="accordion-body">
+        <div class="px-4 sm:px-6 pb-4 text-sm text-gray-600 leading-relaxed space-y-3">
+            {{ caller() }}
+        </div>
+    </div>
+</details>
+{% endmacro %}

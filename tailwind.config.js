@@ -27,7 +27,7 @@ module.exports = {
         gold: {
           DEFAULT: "#C9A227",
           600: "#C9A227",
-          700: "#A9871F",
+          700: "#A1821F",
         },
       },
     },

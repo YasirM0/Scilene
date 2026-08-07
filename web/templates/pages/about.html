@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% from "components/accordion_card.html" import accordion_card %}
+
+{% block title %}About — {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+
+<section class="px-4 sm:px-6 py-14 sm:py-20 bg-navy-600 rounded-lg text-center">
+    <img
+        src="{{ url_for('static', path='img/scilene-logo.png') }}"
+        alt="Scilene logo"
+        class="block mx-auto w-24 h-24 mb-6"
+    >
+    <p class="text-sm font-medium text-gold-600 mb-3">About Scilene</p>
+    <h1 class="text-3xl sm:text-5xl font-bold text-white tracking-tight mb-5 leading-tight">
+        Navigate Scholarly Publishing<br class="hidden sm:block"> with Confidence
+    </h1>
+    <p class="text-horizon-50 max-w-xl mx-auto">
+        Scilene helps researchers find the right academic journals through
+        transparent, explainable recommendations — and understand the
+        thinking behind every one of them.
+    </p>
+</section>
+
+<section class="py-10 space-y-4">
+
+    {% call accordion_card("What is Scilene?", "about") %}
+    <p>
+        Scilene is an open-source platform that helps researchers discover
+        the right academic journals for their work — and understand why
+        each one is recommended. Every match is backed by a transparent,
+        plain-language explanation rather than an opaque score.
+    </p>
+    <p>
+        Long term, Scilene is growing beyond journal discovery into a
+        broader research intelligence platform: a tool that helps
+        researchers understand, interpret, and navigate the scholarly
+        landscape, not just search it.
+    </p>
+    {% endcall %}
+
+    {% call accordion_card("Why was Scilene created?", "about") %}
+    <p>
+        Many existing journal finders return a ranked list without
+        explaining their reasoning — relying on paid services or
+        prestige-based scoring instead. Scilene was created as a
+        transparent alternative: recommendations grounded in verifiable,
+        publicly available scholarly metadata, with every match paired
+        with a plain-language explanation of why it's there.
+    </p>
+    {% endcall %}
+
+    {% call accordion_card('Why the name "Scilene"?', "about") %}
+    <p>
+        Scilene combines <strong>Sci</strong>, for science, with
+        <strong>Selene</strong>, the Greek personification of the moon.
+    </p>
+    <p>
+        The moon has long served as a natural guide for navigation and
+        exploration. In the same way, Scilene aims to guide researchers
+        through an increasingly complex scholarly landscape toward the
+        right journals, literature, and decisions — guidance through
+        science, rather than just a search over it.
+    </p>
+    {% endcall %}
+
+    {% call accordion_card("What does the logo represent?", "about") %}
+    <p>
+        The mark is the letter "S," traced by a subtle, abstract crescent
+        meant to suggest an orbit or research journey rather than a literal
+        moon. Above it, a small gold star stands in for a guiding star —
+        discovery, direction, and confidence.
+    </p>
+    <p>
+        The deep navy represents the night sky, trust, and academia; gold
+        represents discovery, insight, and progress. Together they trace
+        back to the same idea behind the name: a steady guide through the
+        scholarly landscape.
+    </p>
+    {% endcall %}
+
+    {% call accordion_card("Why offline-first?", "about") %}
+    <p>
+        Scilene's core recommendation engine is designed to work without
+        depending on external APIs or an internet connection. Optional
+        AI-assisted features may be added later, but they will never
+        become mandatory for getting a recommendation.
+    </p>
+    <p>
+        That keeps the tool fast, predictable, and independent of any
+        single service staying online — a search you can rely on the same
+        way today and a year from now.
+    </p>
+    {% endcall %}
+
+    {% call accordion_card("Why is AI optional?", "about") %}
+    <p>
+        Scilene's recommendations come from a deterministic, explainable
+        ranking engine, not a black box. Where AI is introduced, it's
+        meant to enrich and assist that process, never to replace it.
+    </p>
+    <p>
+        Recommendations should stay understandable by the researcher
+        reading them — not only interpretable by an algorithm.
+    </p>
+    {% endcall %}
+
+    {% call accordion_card("Why open source?", "about") %}
+    <p>
+        Scilene is developed in the open so that anyone can inspect how
+        recommendations are produced, suggest improvements, or contribute
+        new features.
+    </p>
+    <p>
+        Transparency in code is the same principle as transparency in
+        recommendations — nothing about how Scilene works should be
+        hidden from the researchers who rely on it.
+    </p>
+    {% endcall %}
+
+    {% call accordion_card("Our vision", "about") %}
+    <p>
+        Scilene aims to become a trusted, open-source reference tool for
+        journal selection — and, over time, a broader research
+        intelligence platform that helps researchers navigate scholarly
+        publishing with confidence.
+    </p>
+    <p>
+        Every new feature is measured against the same question:
+        does this make Scilene more transparent, more understandable, or
+        more useful to a researcher deciding where to submit their work?
+    </p>
+    {% endcall %}
+
+</section>
+
+{% endblock %}

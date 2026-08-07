@@ -14,6 +14,11 @@ from web.templating import templates
 router = APIRouter()
 
 
+@router.get("/about")
+def about(request: Request):
+    return templates.TemplateResponse(request=request, name="pages/about.html", context={})
+
+
 @router.get("/academy")
 def academy(request: Request):
     return templates.TemplateResponse(request=request, name="pages/academy.html", context={})

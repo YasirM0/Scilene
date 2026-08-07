@@ -14,6 +14,28 @@ ARCHITECTURE_DECISIONS.md.
 
 ---
 
+# Name & Logo
+
+"Scilene" combines **Sci** (science) with **Selene**, the Greek
+personification of the moon. The moon has long served as a natural
+guide for navigation and exploration — Scilene aims to guide
+researchers through an increasingly complex scholarly landscape the
+same way, toward the right journals, literature, and decisions.
+
+The logo (`web/static/img/scilene-logo.png`) traces the letter "S"
+through a subtle, abstract crescent — meant to suggest an orbit or
+research journey rather than a literal moon — with a small gold star
+standing in for a guiding star (discovery, direction, confidence).
+This is also where the brand colors below come from directly: navy
+for the night sky, trust, and academia; gold for discovery, insight,
+and progress.
+
+This is the project's actual design rationale, not marketing framing
+— see the About page (`web/templates/pages/about.html`) for the
+user-facing version of the same explanation.
+
+---
+
 # Brand Colors
 
 Defined in `tailwind.config.js` under `theme.extend.colors`, used as
@@ -21,9 +43,9 @@ Tailwind utility classes (`bg-navy-600`, `text-horizon-600`, etc.).
 
 | Token | Base hex | Role |
 |-------|----------|------|
-| `navy` | `#1E3A5F` (Navigation Navy) | Reserved for future primary chrome (headers, nav backgrounds) — not yet applied site-wide. |
+| `navy` | `#1E3A5F` (Navigation Navy) | Night sky, trust, academia. Used for the About page hero; reserved for future primary chrome (headers, nav backgrounds) elsewhere — not yet applied site-wide. |
 | `horizon` | `#2F5E88` (Horizon Blue) | Primary interactive accent — links, primary buttons, focus rings, active nav state. Replaces the placeholder `indigo-*` Tailwind default that was used before this document existed. |
-| `gold` | `#C9A227` (Guiding Gold) | Reserved for highlight/emphasis accents (e.g. featured content). Not yet applied — available for upcoming pages such as the About page. |
+| `gold` | `#C9A227` (Guiding Gold) | Discovery, insight, progress — the guiding-star accent. Used for small emphasis text (e.g. the About page eyebrow label); not applied broadly. |
 
 Each color needs more than its base hex because Tailwind utilities
 reference specific shades (`horizon-50`, `horizon-500`, `horizon-600`,
@@ -70,6 +92,7 @@ contain business logic — they only render data already computed by
 | `pagination.html` | Page-number controls for the results list. |
 | `export_panel.html` | The row of export-format buttons (PDF/DOCX/XLSX/MD/CSV). |
 | `info_section.html` | Generic titled text block (used on the Academy page). |
+| `accordion_card.html` | One expandable card for a `<details name="...">` group — same `name` on every card in a group makes them mutually exclusive natively, no JS. Used by the About page. |
 
 ## Shared card pattern
 

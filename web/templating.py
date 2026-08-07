@@ -42,5 +42,6 @@ templates.env.globals["nav_links"] = [
     {"label": "Home", "href": "/"},
     {"label": "Submission Search", "href": "/search"},
     {"label": "Academy", "href": "/academy"},
+    {"label": "About", "href": "/about"},
     {"label": "Documentation", "href": "/documentation"},
 ]

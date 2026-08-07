@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    /* Animates <details> open/close smoothly. Plain CSS can't transition
+       height:auto, so this transitions grid-template-rows 0fr -> 1fr
+       instead -- the standard workaround (see docs/DESIGN_SYSTEM.md). */
+    .accordion-body {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 300ms ease;
+    }
+    details[open] > .accordion-body {
+        grid-template-rows: 1fr;
+    }
+    .accordion-body > div {
+        overflow: hidden;
+    }
+}
