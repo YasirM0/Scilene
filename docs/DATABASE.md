@@ -33,6 +33,11 @@ Sherpa Romeo. Adding a new source means writing one importer following
 the same pattern as `importers/scimago.py` or `importers/sinta.py`, not
 changing the schema.
 
+A fourth table, `journal_enrichment`, holds display-only metadata
+(ROAD, ERIH PLUS so far) that can never affect search, filtering, or
+ranking — deliberately kept separate from the two tables above. See
+`docs/ENRICHMENT.md`.
+
 ## Import pipeline
 
 Run `python3 scripts/build_database.py` from the project root. This is

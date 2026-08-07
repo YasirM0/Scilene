@@ -14,6 +14,12 @@ data/raw/:
                        (+ accreditation); creates new rows for SINTA-only
                        journals not already present
 
+Then tags journals with metadata enrichment (docs/ENRICHMENT.md) from
+data/enrichment/ -- display-only data (ROAD, ERIH PLUS) that can never
+affect which journals are found or how they're ranked, unlike the
+sources above. A journal enrichment providers can't match by ISSN is
+simply skipped, never turned into a new journal row.
+
 To update any dataset: replace the matching file in data/raw/ with a
 newer export (same filename) and re-run this script. No code changes
 needed for a routine data refresh.
@@ -23,6 +29,9 @@ Attribution (kept here and wherever this data is displayed in the app):
   - Scopus/WoS:  SCImago Journal & Country Rank (https://www.scimagojr.com)
   - SINTA:       Indonesia's Science and Technology Index
                  (https://sinta.kemdikbud.go.id)
+  - ROAD:        Directory of Open Access Scholarly Resources (https://road.issn.org)
+  - ERIH PLUS:   European Reference Index for the Humanities and Social
+                 Sciences (https://erihplus.nsd.no)
 """
 
 from pathlib import Path
@@ -30,11 +39,15 @@ from pathlib import Path
 from importers.doaj import DOAJImporter
 from importers.scimago import import_scimago
 from importers.sinta import import_sinta
+from importers.enrichment.road import ROADProvider
+from importers.enrichment.erihplus import ERIHPlusProvider
+from importers.enrichment.runner import run_offline_provider
 from services.dedup import JournalIndex
 from services.repository import get_connection, count_journals, DB_PATH
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_RAW = ROOT / "data" / "raw"
+DATA_ENRICHMENT = ROOT / "data" / "enrichment"
 SCHEMA_PATH = ROOT / "data" / "schema.sql"
 
 
@@ -74,6 +87,16 @@ def main():
 
     print("--- SINTA ---")
     index, sinta_summary = import_sinta(DATA_RAW / "sinta.csv", "SINTA", index=index, conn=conn)
+    conn.commit()
+    print()
+
+    print("--- Enrichment: ROAD ---")
+    run_offline_provider(ROADProvider(DATA_ENRICHMENT / "road.tsv"), conn)
+    conn.commit()
+    print()
+
+    print("--- Enrichment: ERIH PLUS ---")
+    run_offline_provider(ERIHPlusProvider(DATA_ENRICHMENT / "erihplus.csv"), conn)
     conn.commit()
     print()
 

@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS journal_enrichment;
 DROP TABLE IF EXISTS journal_sources;
 DROP TABLE IF EXISTS journals;
 
@@ -64,3 +65,21 @@ CREATE INDEX idx_journals_title ON journals(title);
 CREATE INDEX idx_journals_country ON journals(country);
 CREATE INDEX idx_journal_sources_journal_id ON journal_sources(journal_id);
 CREATE INDEX idx_journal_sources_source ON journal_sources(source);
+
+-- Metadata enrichment (docs/ENRICHMENT.md) -- structurally separate
+-- from journal_sources on purpose: nothing in services/recommender.py
+-- reads this table, so a bug here cannot affect search, filtering, or
+-- ranking. `data` is a JSON blob (display-only, provider-specific
+-- shape) rather than fixed columns, since providers' fields genuinely
+-- differ and none of it needs to be queried or filtered on.
+CREATE TABLE journal_enrichment (
+    journal_id INTEGER NOT NULL,
+    provider TEXT NOT NULL,
+    fetched_at TEXT,
+    data TEXT NOT NULL,
+
+    PRIMARY KEY (journal_id, provider),
+    FOREIGN KEY (journal_id) REFERENCES journals(id)
+);
+
+CREATE INDEX idx_journal_enrichment_journal_id ON journal_enrichment(journal_id);

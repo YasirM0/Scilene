@@ -1,3 +1,4 @@
+import json
 import sqlite3
 from pathlib import Path
 from dataclasses import asdict
@@ -408,6 +409,30 @@ def tag_source(conn, journal_id, source, metadata=None):
             metadata.get("h_index"),
             metadata.get("accreditation"),
         ),
+    )
+
+
+def tag_enrichment(conn, journal_id, provider, data, fetched_at=None):
+    """
+    Attach a metadata enrichment provider's data to a journal that
+    already exists. Upserts, same as tag_source. `data` is stored as a
+    JSON blob -- see docs/ENRICHMENT.md for why (provider-specific,
+    display-only shape, never queried or filtered on).
+
+    Never creates a journal row -- callers (importers/enrichment/)
+    only call this for a journal_id already resolved by matching
+    against `journals`, exactly like tag_source.
+    """
+
+    conn.execute(
+        """
+        INSERT INTO journal_enrichment (journal_id, provider, fetched_at, data)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(journal_id, provider) DO UPDATE SET
+            fetched_at = excluded.fetched_at,
+            data = excluded.data
+        """,
+        (journal_id, provider, fetched_at, json.dumps(data)),
     )
 
 

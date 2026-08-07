@@ -120,7 +120,7 @@ Explains the CI pipeline and how to deploy the app (Docker or Heroku).
 | UI | ✅ Approved |
 | DESIGN_SYSTEM | ✅ Approved |
 | DATA_SOURCES | ✅ Approved |
-| ENRICHMENT | 🟡 Proposed |
+| ENRICHMENT | ✅ Approved |
 | ROADMAP | ✅ Approved |
 | CONTRIBUTING | ✅ Approved |
 | DEPLOYMENT | ✅ Approved |

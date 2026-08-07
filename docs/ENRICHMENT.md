@@ -1,10 +1,11 @@
-# Metadata Enrichment Pipeline (Design)
+# Metadata Enrichment Pipeline
 
-**Status:** Design only — nothing in this document is wired into the
-running app yet. It defines the architecture that `importers/`
-providers and their storage will follow once implemented (tracked in
-#108 and the dataset-specific issues below). See "What this issue
-does *not* do" at the end.
+**Status:** The architecture below is implemented for the two
+offline, fully-specified providers (ROAD, ERIH PLUS) — see "Current
+implementation state" at the end for exactly what that does and
+doesn't cover. It's the foundation `importers/enrichment/` providers
+and their storage follow (tracked in #108 and the dataset-specific
+issues below).
 
 ---
 
@@ -68,7 +69,7 @@ not here.
 
 ---
 
-## Proposed storage
+## Storage
 
 A single wide table, one row per `(journal_id, provider)` pair —
 deliberately separate from `journal_sources` so a bug in enrichment
@@ -187,37 +188,50 @@ always, desktop only after explicit consent).
 
 ---
 
-## Acceptance criteria for this design
+## Current implementation state
 
-- [x] Indexing sources vs. enrichment sources are explicitly
-      distinguished, with the rule for which is which.
-- [x] Each dataset's responsibility is scoped to one kind of
-      information.
-- [x] Storage is structurally separate from `journal_sources`, so
-      enrichment cannot reach scoring code by accident.
-- [x] The provider abstraction is defined (interface only).
-- [x] Online vs. offline behavior, including the desktop consent
-      flow, is specified.
-- [x] The annual regeneration process for API-sourced offline data
-      (SciELO, Sherpa Romeo) is specified.
+Done:
 
-## What this issue does *not* do
+- `journal_enrichment` table exists in `data/schema.sql` and is
+  populated by `scripts/build_database.py` after the core import.
+- `services/repository.tag_enrichment()` (upsert, mirrors `tag_source`).
+- `EnrichmentProvider` / `OfflineEnrichmentProvider` /
+  `OnlineEnrichmentProvider` base classes (`importers/enrichment/base.py`).
+- Two working offline providers: `importers/enrichment/road.py`
+  (`ROADProvider`) and `importers/enrichment/erihplus.py`
+  (`ERIHPlusProvider`), both ISSN-matched only, both skip unmatched
+  rows rather than creating journals.
+- `importers/enrichment/runner.py` (`run_offline_provider`) drives an
+  offline provider over every journal already in the database.
+- Verified against a real full rebuild: DOAJ/Scopus/WoS/SINTA row
+  counts are byte-identical to the pre-enrichment baseline in
+  `docs/DATABASE.md`, and the recommender smoke test
+  (`python -m tests.test_recommender`) returns the same top matches
+  with the same scores before and after — confirming enrichment
+  cannot influence recommendation results, per the design's core rule.
 
-- Does not modify `data/schema.sql`, `models/journal.py`, or
-  `services/repository.py` — applying the `journal_enrichment` table
-  and wiring it in is real implementation work, scoped to #108 and
-  the dataset-specific issues (#97 Garuda, #98 Scopus/Elsevier, #100
-  aliases), not this design pass.
-- Does not implement any provider (no ROAD parser, no ERIH PLUS
-  parser, no Crossref/OpenAlex client). Only the abstract
-  `EnrichmentProvider` base class exists so far
-  (`importers/enrichment/base.py`).
-- Does not touch `services/recommender.py` in any way.
+Not done (still real implementation work, not this pass):
+
+- SciELO and AJOL providers — same `OfflineEnrichmentProvider`
+  pattern as ROAD/ERIH PLUS, just not written yet.
+- Crossref and OpenAlex (`OnlineEnrichmentProvider`) — need actual
+  HTTP calls, caching, retries, and timeout handling.
+- The desktop consent flow and "Settings page integration" from
+  #108's checklist — blocked on the desktop app existing at all
+  (see `docs/ARCHITECTURE_DECISIONS.md`).
+- Displaying enrichment data anywhere in the UI — it's in the
+  database now but `services/search_service.py` and
+  `web/templates/components/journal_card.html` don't surface it yet.
+- The `tools/generate_scielo.py` / `generate_sherpa.py` annual
+  regeneration scripts.
+- Elsevier Source List as the authoritative Scopus source (#98) —
+  that's a change to the *indexing* pipeline, not enrichment; the
+  file lives in `data/enrichment/` but is out of scope here.
 
 ---
 
-**Document Version:** 0.1
+**Document Version:** 0.2
 
 **Last Updated:** August 2026
 
-**Status:** Proposed
+**Status:** Approved (ROAD, ERIH PLUS) — remaining providers pending
