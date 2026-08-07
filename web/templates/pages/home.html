@@ -4,7 +4,7 @@
 {% from "components/index_badge.html" import index_badge %}
 {% from "components/workflow_card.html" import submission_workflow_card, planning_workflow_card %}
 
-{% block title %}{{ settings.app_name }} — Find the right journal for your research{% endblock %}
+{% block title %}{{ app.name }} — Find the right journal for your research{% endblock %}
 
 {% block content %}
 
@@ -17,14 +17,14 @@
     </h1>
     {% if stats %}
     <p class="text-gray-500 max-w-xl mx-auto mb-8">
-        Journal Intelligence matches your manuscript's title, abstract, and keywords
+        {{ app.name }} matches your manuscript's title, abstract, and keywords
         against {{ "{:,}".format(stats.total_journals) }} journals across DOAJ, Scopus,
         Web of Science, and SINTA &mdash; with a plain-language explanation for every
         recommendation.
     </p>
     {% else %}
     <p class="text-gray-500 max-w-xl mx-auto mb-8">
-        Journal Intelligence matches your manuscript against journals from DOAJ, Scopus,
+        {{ app.name }} matches your manuscript against journals from DOAJ, Scopus,
         Web of Science, and SINTA &mdash; with a plain-language explanation for every
         recommendation.
     </p>

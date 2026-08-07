@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{{ settings.app_name }}{% endblock %}</title>
+    <title>{% block title %}{{ app.name }}{% endblock %}</title>
 
     <link rel="stylesheet" href="{{ url_for('static', path='css/output.css') }}">
     <script src="{{ url_for('static', path='js/htmx.min.js') }}" defer></script>

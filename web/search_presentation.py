@@ -12,6 +12,7 @@ conditionals.
 
 import math
 
+from services.app_info import export_prefix
 from services.recommender import STRATEGIES
 
 PAGE_SIZE = 10
@@ -109,4 +110,4 @@ def build_export_basename(strategy_label):
         .replace(" ", "_")
         .lower()
     )
-    return f"ji_{slug}_{timestamp}"
+    return f"{export_prefix()}_{slug}_{timestamp}"

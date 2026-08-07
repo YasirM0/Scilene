@@ -9,7 +9,7 @@ frontend would also use.
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
-from services.app_info import APP_VERSION, DATABASE_SOURCES
+from services.app_info import APP_NAME, APP_VERSION, DATABASE_SOURCES
 
 
 @dataclass
@@ -21,6 +21,7 @@ class ReportContext:
     filters_summary: list
     results: list
     generated_at: str = ""
+    app_name: str = APP_NAME
     app_version: str = APP_VERSION
     database_sources: str = DATABASE_SOURCES
 

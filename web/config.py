@@ -8,6 +8,11 @@ for convenience in development), so the same code deploys to different
 environments without edits — a real requirement once this moves beyond
 a single developer's machine.
 
+Application identity (name, version, author, GitHub URL, license)
+lives in services/app_info.py instead, not here — those aren't
+runtime/environment concerns, and used to be duplicated between this
+file and app_info.py (out of sync: 0.2.0 here, 0.1.9 there).
+
 The JI_ prefix avoids collisions with generic env vars (DEBUG, PORT,
 etc.) that a host platform or another process might already set.
 """
@@ -18,10 +23,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-
-    app_name: str = "Journal Intelligence"
-    app_version: str = "0.2.0"
-    github_url: str = "https://github.com/YasirM0/journal-intelligence"
 
     debug: bool = False
 

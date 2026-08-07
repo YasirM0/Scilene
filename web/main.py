@@ -26,14 +26,15 @@ if str(ROOT) not in sys.path:
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from services.app_info import APP_NAME, APP_VERSION
 from web.config import get_settings
 from web.routers import home, pages, search
 
 settings = get_settings()
 
 app = FastAPI(
-    title=settings.app_name,
-    version=settings.app_version,
+    title=APP_NAME,
+    version=APP_VERSION,
     debug=settings.debug,
 )
 

@@ -4,7 +4,7 @@
 
             <a href="/" class="flex items-center gap-2 font-semibold text-gray-900 shrink-0">
                 <span aria-hidden="true">📚</span>
-                <span class="hidden sm:inline">{{ settings.app_name }}</span>
+                <span class="hidden sm:inline">{{ app.name }}</span>
             </a>
 
             <div class="flex items-center gap-0.5 sm:gap-1 overflow-x-auto">
@@ -23,7 +23,7 @@
                 {% endfor %}
 
                 <a
-                    href="{{ settings.github_url }}"
+                    href="{{ app.github }}"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors flex items-center gap-1 whitespace-nowrap"

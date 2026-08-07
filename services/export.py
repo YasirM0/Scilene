@@ -89,7 +89,7 @@ def export_to_csv(
 
     if context is not None:
         header_lines = [
-            f"# Journal Intelligence v{context.app_version}",
+            f"# {context.app_name} v{context.app_version}",
             f"# Generated: {context.generated_at} UTC",
             f"# Search Strategy: {context.strategy_label}",
             f"# Database Sources: {context.database_sources}",

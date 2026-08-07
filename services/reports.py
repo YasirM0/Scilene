@@ -94,7 +94,7 @@ def _apc_label(result):
 def _metadata_lines(context):
     """The small header block requested for every export format."""
     return [
-        f"Journal Intelligence v{context.app_version}",
+        f"{context.app_name} v{context.app_version}",
         f"Generated: {context.generated_at} UTC",
         "",
         f"Search Strategy: {context.strategy_label}",
@@ -171,7 +171,7 @@ def generate_docx(context) -> bytes:
     doc = Document()
 
     meta = doc.add_paragraph()
-    meta_run = meta.add_run(f"Journal Intelligence v{context.app_version}")
+    meta_run = meta.add_run(f"{context.app_name} v{context.app_version}")
     meta_run.bold = True
     meta.add_run(f"\nGenerated: {context.generated_at} UTC")
     meta.add_run(f"\nSearch Strategy: {context.strategy_label}")
@@ -236,7 +236,7 @@ def generate_docx(context) -> bytes:
 def generate_xlsx(context) -> bytes:
 
     info_rows = [
-        ("Journal Intelligence", f"v{context.app_version}"),
+        (context.app_name, f"v{context.app_version}"),
         ("Generated", f"{context.generated_at} UTC"),
         ("Search Strategy", context.strategy_label),
         ("Database Sources", context.database_sources),
@@ -301,7 +301,7 @@ def generate_pdf(context) -> bytes:
         pdf.multi_cell(0, height, text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     pdf.set_font("DejaVu", "B", 13)
-    write(f"Journal Intelligence v{context.app_version}", 7)
+    write(f"{context.app_name} v{context.app_version}", 7)
     pdf.set_font("DejaVu", "", 9)
     write(
         f"Generated: {context.generated_at} UTC\n"
