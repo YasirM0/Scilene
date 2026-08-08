@@ -26,6 +26,12 @@ other doesn't) will not be merged and will end up as separate rows.
 That's a real, deliberate limitation: safer to leave two rows for the
 same journal unmerged than to risk tagging a journal with a source it
 was never actually confirmed in.
+
+Match order (#100): ISSN, then normalized primary title, then a known
+alias (journal_aliases — translated/former/related titles imported by
+importers/aliases.py). Alias matching is a fallback of a fallback: it
+only runs once a direct title match has already failed, and is held
+to the exact same word-count and country guards as a title match.
 """
 
 import re
@@ -59,7 +65,9 @@ class JournalIndex:
     def __init__(self, conn):
         self.by_issn = {}
         self.by_title = {}
+        self.by_alias = {}
         self.country_by_id = {}
+        self.title_by_id = {}
 
         rows = conn.execute(
             "SELECT id, title, issn_print, issn_online, country FROM journals"
@@ -74,6 +82,22 @@ class JournalIndex:
             if normalized:
                 self.by_title.setdefault(normalized, journal_id)
             self.country_by_id[journal_id] = _normalize_country(country)
+            self.title_by_id[journal_id] = title
+
+        # Alias titles (#100) — same collision risk as a normalized
+        # title match (arguably worse: aliases are more often short
+        # abbreviations), so find() below applies the exact same
+        # MIN_TITLE_WORDS_FOR_MATCH + country guard to these as it
+        # does to `by_title`, and only tries them once title matching
+        # has already failed.
+        alias_rows = conn.execute(
+            "SELECT journal_id, alias FROM journal_aliases"
+        ).fetchall()
+
+        for journal_id, alias in alias_rows:
+            normalized = normalize_title(alias)
+            if normalized:
+                self.by_alias.setdefault(normalized, journal_id)
 
     def find(self, issns, title, country=None):
         """Returns (journal_id, match_type) or (None, None)."""
@@ -90,6 +114,12 @@ class JournalIndex:
             return None, None
 
         candidate_id = self.by_title.get(normalized)
+        match_type = "title"
+
+        if candidate_id is None:
+            candidate_id = self.by_alias.get(normalized)
+            match_type = "alias"
+
         if candidate_id is None:
             return None, None
 
@@ -102,7 +132,7 @@ class JournalIndex:
             # journal. Don't merge.
             return None, None
 
-        return candidate_id, "title"
+        return candidate_id, match_type
 
     def add(self, journal_id, issns, title, country=None):
         """Register a newly created journal so later rows in the same
@@ -114,3 +144,4 @@ class JournalIndex:
         if normalized:
             self.by_title.setdefault(normalized, journal_id)
         self.country_by_id[journal_id] = _normalize_country(country)
+        self.title_by_id[journal_id] = title

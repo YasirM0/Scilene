@@ -15,6 +15,7 @@ from services.app_info import APP
 from web.search_presentation import CONFIDENCE_COLORS, CONFIDENCE_STARS, CONFIDENCE_STAR_COLORS
 from utils.indexing import format_source_chip, format_index_summary, format_enrichment_badges
 from utils.subjects import format_subjects
+from utils.aliases import format_alias_line
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
@@ -33,6 +34,7 @@ templates.env.globals["format_source_chip"] = format_source_chip
 templates.env.globals["format_index_summary"] = format_index_summary
 templates.env.globals["format_enrichment_badges"] = format_enrichment_badges
 templates.env.globals["format_subjects"] = format_subjects
+templates.env.globals["format_alias_line"] = format_alias_line
 templates.env.globals["confidence_colors"] = CONFIDENCE_COLORS
 templates.env.globals["confidence_stars"] = CONFIDENCE_STARS
 templates.env.globals["confidence_star_colors"] = CONFIDENCE_STAR_COLORS

@@ -29,6 +29,13 @@ Then, from data/enrichment/:
                        journal an enrichment provider can't match by
                        ISSN is simply skipped, never turned into a new
                        journal row.
+  - doaj.csv, Elsevier.csv, erihplus.csv (again) -> alternate/
+                       historical titles (#100, journal_aliases) --
+                       DOAJ alternative titles, Elsevier former/
+                       continued/related titles, ERIH PLUS original &
+                       English titles. Matched to an existing journal
+                       by ISSN only, same skip-if-unmatched rule as
+                       above; see importers/aliases.py.
 
 To update any dataset: replace the matching file in data/raw/ with a
 newer export (same filename) and re-run this script. No code changes
@@ -58,6 +65,7 @@ from importers.enrichment.erihplus import ERIHPlusProvider
 from importers.enrichment.scielo import SciELOProvider
 from importers.enrichment.ajol import AJOLProvider
 from importers.enrichment.runner import run_offline_provider
+from importers.aliases import import_doaj_aliases, import_elsevier_aliases, import_erihplus_aliases
 from services.dedup import JournalIndex
 from services.repository import get_connection, count_journals, DB_PATH
 
@@ -128,6 +136,13 @@ def main():
 
     print("--- Enrichment: AJOL ---")
     run_offline_provider(AJOLProvider(DATA_ENRICHMENT / "ajol.csv"), conn)
+    conn.commit()
+    print()
+
+    print("--- Journal Aliases (DOAJ, Elsevier, ERIH PLUS) ---")
+    import_doaj_aliases(DATA_RAW / "doaj.csv", index, conn)
+    import_elsevier_aliases(DATA_ENRICHMENT / "Elsevier.csv", index, conn)
+    import_erihplus_aliases(DATA_ENRICHMENT / "erihplus.csv", index, conn)
     conn.commit()
     print()
 

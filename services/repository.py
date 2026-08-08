@@ -94,6 +94,40 @@ def _fetch_enrichment(conn, journal_ids):
     return enrichment_by_id
 
 
+def _fetch_aliases(conn, journal_ids):
+    """
+    Batch-fetch alternate/historical titles (#100) for a set of
+    journal ids. Returns {journal_id: [{"alias", "alias_type",
+    "source"}, ...]}. Display-only, like source_details/enrichment --
+    never read by services/recommender.py.
+    """
+
+    journal_ids = list(journal_ids)
+
+    if not journal_ids:
+        return {}
+
+    aliases_by_id = {}
+
+    for chunk in _chunked(journal_ids, _SQL_IN_CHUNK_SIZE):
+        placeholders = ",".join("?" for _ in chunk)
+
+        rows = conn.execute(
+            f"SELECT journal_id, alias, alias_type, source FROM journal_aliases "
+            f"WHERE journal_id IN ({placeholders})",
+            chunk,
+        ).fetchall()
+
+        for journal_id, alias, alias_type, source in rows:
+            aliases_by_id.setdefault(journal_id, []).append({
+                "alias": alias,
+                "alias_type": alias_type,
+                "source": source,
+            })
+
+    return aliases_by_id
+
+
 def _rows_to_journals(dataframe, conn=None):
     """
     Convert a pandas DataFrame into Journal objects, attaching each
@@ -111,12 +145,14 @@ def _rows_to_journals(dataframe, conn=None):
     journal_ids = dataframe["id"].tolist()
     sources_by_id = _fetch_sources(conn, journal_ids)
     enrichment_by_id = _fetch_enrichment(conn, journal_ids)
+    aliases_by_id = _fetch_aliases(conn, journal_ids)
 
     journals = [
         Journal.from_row(
             row,
             source_details=sources_by_id.get(row["id"], []),
             enrichment=enrichment_by_id.get(row["id"], {}),
+            aliases=aliases_by_id.get(row["id"], []),
         )
         for _, row in dataframe.iterrows()
     ]
@@ -276,10 +312,16 @@ def keyword_document_frequency(keyword):
 def search_candidates(keywords, languages=None, free_only=False, indexing=None,
                        quartiles=None, sinta_levels=None, max_review_weeks=None):
     """
-    Search journals matching any keyword in the title, subjects, or
-    keywords fields, optionally narrowed by language(s), free-only,
-    confirmed indexing source(s), Scopus/WoS quartile(s), SINTA
-    accreditation level(s), and/or a maximum typical review time.
+    Search journals matching any keyword in the title, subjects,
+    keywords, or alias (#100, journal_aliases -- translated/former/
+    related titles) fields, optionally narrowed by language(s),
+    free-only, confirmed indexing source(s), Scopus/WoS quartile(s),
+    SINTA accreditation level(s), and/or a maximum typical review time.
+
+    Alias matching is plain deterministic LIKE matching against the
+    same journal_aliases table importers/aliases.py populates -- not a
+    separate ranking signal, and structurally identical to the title/
+    subjects/keywords match it's OR'd alongside.
 
     languages:
         Optional list (e.g. ["English", "Arabic"], #89). Matches a
@@ -315,9 +357,10 @@ def search_candidates(keywords, languages=None, free_only=False, indexing=None,
         keyword_conditions = []
         for keyword in keywords:
             keyword_conditions.append(
-                "(title LIKE ? OR subjects LIKE ? OR keywords LIKE ?)"
+                "(title LIKE ? OR subjects LIKE ? OR keywords LIKE ? OR "
+                "id IN (SELECT journal_id FROM journal_aliases WHERE alias LIKE ?))"
             )
-            params.extend([f"%{keyword}%"] * 3)
+            params.extend([f"%{keyword}%"] * 4)
         conditions.append("(" + " OR ".join(keyword_conditions) + ")")
 
     if languages:
@@ -516,6 +559,29 @@ def tag_enrichment(conn, journal_id, provider, data, fetched_at=None):
     )
 
 
+def insert_alias(conn, journal_id, alias, alias_type, source):
+    """
+    Attach an alternate/historical title to a journal that already
+    exists (#100). Never creates a journal row, same rule as
+    tag_source/tag_enrichment -- callers only pass a journal_id
+    already resolved by matching against `journals`.
+
+    Upserts on (journal_id, alias, source): re-running an import
+    updates alias_type for an already-recorded alias (e.g. a source
+    corrects its own classification) rather than duplicating the row.
+    """
+
+    conn.execute(
+        """
+        INSERT INTO journal_aliases (journal_id, alias, alias_type, source)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(journal_id, alias, source) DO UPDATE SET
+            alias_type = excluded.alias_type
+        """,
+        (journal_id, alias, alias_type, source),
+    )
+
+
 def insert_journals(journals):
     """
     Insert Journal objects into the database, along with their confirmed
@@ -528,7 +594,7 @@ def insert_journals(journals):
     journal_columns = [
         column.name
         for column in Journal.__dataclass_fields__.values()
-        if column.name not in ("id", "source_details", "enrichment")
+        if column.name not in ("id", "source_details", "enrichment", "aliases")
     ]
 
     placeholders = ", ".join("?" for _ in journal_columns)

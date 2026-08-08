@@ -38,6 +38,32 @@ A fourth table, `journal_enrichment`, holds display-only metadata
 filtering, or ranking — deliberately kept separate from the two tables
 above. See `docs/ENRICHMENT.md`.
 
+A fifth table, **`journal_aliases`**, holds alternate/historical
+titles — DOAJ alternative titles, Elsevier former/continued/related
+titles, ERIH PLUS original & English titles (one row per (journal,
+alias, source), see `importers/aliases.py`). Unlike `journal_enrichment`,
+this table DOES affect search and import-time matching, but only as a
+fallback:
+
+- `services/repository.py`'s `search_candidates()` matches a keyword
+  against `journal_aliases.alias` with the exact same deterministic
+  `LIKE` pattern it already uses for `title`/`subjects`/`keywords` —
+  it's additive, never a separate ranking signal.
+- `services/dedup.py`'s `JournalIndex.find()` tries an alias match only
+  once ISSN and primary-title matching have both failed, under the
+  same word-count and country guards a title match requires (see
+  Deduplication / merge strategy below).
+
+Each alias keeps its `alias_type` (e.g. "Formerly known as", "English
+title") and `source`, so provenance is never lost. A journal card shows
+at most one alias, in a secondary style below the title.
+
+Not yet wired: ROAD/Crossref/OpenAlex/Wikidata as alias sources (the
+schema supports it — one more `import_*_aliases()` function, no schema
+change), and aliases are not used by `importers/scimago.py` /
+`importers/sinta.py` / `importers/elsevier.py`'s own matching passes,
+since `importers/aliases.py` runs after them in the build pipeline.
+
 Separately, `importers/elsevier.py` uses the Elsevier Scopus Source
 List to fill Scopus-indexing gaps SCImago's snapshot hasn't caught up
 to yet (writes to `journal_sources`, same as SCImago — this one DOES
@@ -46,11 +72,14 @@ affect the Scopus filter). See `docs/ENRICHMENT.md`'s Elsevier note.
 ## Import pipeline
 
 Run `python3 scripts/build_database.py` from the project root. This is
-a **full rebuild**: it drops and recreates `journals` and
-`journal_sources`, then imports all four sources in order (DOAJ →
-Scopus → Web of Science → SINTA). To refresh any dataset, replace the
-matching file in `data/raw/` (same filename) and re-run the script —
-no code changes needed for a routine data update.
+a **full rebuild**: it drops and recreates every table, then imports
+the base sources in order (DOAJ → Scopus → Web of Science → Elsevier →
+SINTA), tags display-only enrichment (ROAD, ERIH PLUS, SciELO, AJOL),
+and finally imports aliases (DOAJ, Elsevier, ERIH PLUS — see
+`journal_aliases` above) once every journal that could match one
+already exists. To refresh any dataset, replace the matching file in
+`data/raw/` or `data/enrichment/` (same filename) and re-run the
+script — no code changes needed for a routine data update.
 
 ## Deduplication / merge strategy
 

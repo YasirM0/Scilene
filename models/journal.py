@@ -60,6 +60,14 @@ class Journal:
     # columns -- see insert_journals().
     enrichment: dict = field(default_factory=dict)
 
+    # Alternate/historical titles (#100), e.g.
+    # [{"alias": "Advanced Research Letters", "alias_type": "Formerly known as", "source": "Elsevier"}, ...]
+    # Like source_details/enrichment, populated separately by the
+    # repository layer (journal_aliases, not a `journals` column) --
+    # excluded anywhere Journal fields are mapped 1:1 onto `journals`
+    # columns, see insert_journals().
+    aliases: list[dict] = field(default_factory=list)
+
     @property
     def sources(self):
         """Plain list of confirmed source names, e.g. ["DOAJ", "Scopus"]."""
@@ -79,7 +87,7 @@ class Journal:
         return value
 
     @classmethod
-    def from_row(cls, row, source_details=None, enrichment=None):
+    def from_row(cls, row, source_details=None, enrichment=None, aliases=None):
         """
         Create a Journal from a database row.
 
@@ -91,6 +99,10 @@ class Journal:
         `enrichment` (optional) is the {provider: data} dict looked up
         separately from journal_enrichment. Defaults to {} (no
         enrichment data), never fabricated from anything on the row.
+
+        `aliases` (optional) is the list of alternate/historical titles
+        (#100) looked up separately from journal_aliases. Defaults to
+        [] (no known aliases).
         """
 
         clean = cls._clean
@@ -124,4 +136,5 @@ class Journal:
             source=clean(row["source"]),
             source_details=source_details,
             enrichment=enrichment or {},
+            aliases=aliases or [],
         )

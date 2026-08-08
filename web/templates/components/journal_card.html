@@ -7,6 +7,11 @@
         {{ recommendation_badge(journal.confidence) }}
     </div>
 
+    {% set alias_line = format_alias_line(journal.aliases) %}
+    {% if alias_line %}
+    <p class="text-xs text-gray-400 dark:text-gray-500 italic mt-0.5">{{ alias_line }}</p>
+    {% endif %}
+
     <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
         {% for detail in journal.source_details %}
             <span class="inline-flex items-center gap-1 mr-3">✓ {{ format_source_chip(detail) }}</span>

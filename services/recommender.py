@@ -228,6 +228,8 @@ class JournalRecommender:
                 "source_details": journal.source_details,
                 # Display-only (docs/ENRICHMENT.md) -- passed through
                 "enrichment": journal.enrichment,
+                # Display-only (#100) -- passed through, never scored
+                "aliases": journal.aliases,
                 "score": score,
                 "normalized_score": (score / max_possible) if max_possible else 0.0,
                 "explanation": explanation,

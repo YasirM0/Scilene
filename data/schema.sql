@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS journal_aliases;
 DROP TABLE IF EXISTS journal_enrichment;
 DROP TABLE IF EXISTS journal_sources;
 DROP TABLE IF EXISTS journals;
@@ -83,3 +84,23 @@ CREATE TABLE journal_enrichment (
 );
 
 CREATE INDEX idx_journal_enrichment_journal_id ON journal_enrichment(journal_id);
+
+-- Alternate/historical titles for a journal (#100) -- translated
+-- titles, former names, "continued as" successors, related titles.
+-- Purely additive: a journal with no known aliases just has zero rows
+-- here, nothing else in the schema changes shape. alias_type keeps
+-- provenance (e.g. "Formerly known as", "English title") instead of
+-- treating every alias the same, per the issue's acceptance criteria.
+CREATE TABLE journal_aliases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    journal_id INTEGER NOT NULL,
+    alias TEXT NOT NULL,
+    alias_type TEXT NOT NULL,
+    source TEXT NOT NULL,
+
+    FOREIGN KEY (journal_id) REFERENCES journals(id)
+);
+
+CREATE UNIQUE INDEX idx_journal_aliases_unique ON journal_aliases(journal_id, alias, source);
+CREATE INDEX idx_journal_aliases_journal_id ON journal_aliases(journal_id);
+CREATE INDEX idx_journal_aliases_alias ON journal_aliases(alias);
