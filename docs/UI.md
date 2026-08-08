@@ -67,6 +67,13 @@ Export Results
 
 # Search Modes
 
+**Update, v0.2.5:** the Simple Mode fields below reflect the original
+v0.1 design. The actual form has since changed — Title was removed
+entirely, and Keywords was replaced by the Research Interpreter
+("Suggested by Scilene") flow plus a tag-based fallback for users
+without an abstract. See `docs/RESEARCH_INTERPRETER.md` for the
+current design; this section is left as the original v0.1 record.
+
 ## Simple Mode
 
 Designed for researchers who want recommendations quickly.

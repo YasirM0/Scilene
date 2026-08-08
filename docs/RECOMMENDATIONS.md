@@ -10,7 +10,10 @@ Before scoring, candidates are pulled from the database by keyword
 (title/subjects/keywords columns, substring match), then narrowed by
 any language/free-only/indexing/quartile/SINTA-level/review-time
 filters. If the person left the keyword field blank, keywords are
-derived from the paper title + abstract instead — stopwords removed
+derived from the paper title + abstract instead (as of v0.2.5, the web
+UI never sends a title — see `docs/RESEARCH_INTERPRETER.md` — so in
+practice this now derives from the abstract alone; the fallback logic
+itself is unchanged) — stopwords removed
 (see `services/stopwords.py`), words over 3 characters, de-duplicated,
 capped at 15. This is still plain substring word extraction, not NLP or
 embeddings.

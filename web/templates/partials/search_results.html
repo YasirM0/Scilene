@@ -64,3 +64,14 @@
 {{ pagination(page, total_pages, show_weaker) }}
 
 {% endif %}
+
+{% if reset_form %}
+{#
+    Only set by /search/clear -- an out-of-band swap so "Clear Search"
+    also visibly clears the confirmed-tags/interpreter panel, which
+    live in the form above #results-panel, not in this fragment.
+#}
+{% from "components/confirmed_tags.html" import confirmed_tags %}
+{{ confirmed_tags([], oob=True) }}
+<div id="interpreter-panel" hx-swap-oob="true"></div>
+{% endif %}

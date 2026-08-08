@@ -1,0 +1,28 @@
+{% macro confirmed_tags(tags, oob=False) %}
+{#
+    Plain chips -- once a tag is here (accepted suggestion or manually
+    added), the UI treats it exactly the same regardless of where it
+    came from (docs/RESEARCH_INTERPRETER.md). `oob` renders this same
+    fragment as an HTMX out-of-band swap, for routes whose primary
+    target is elsewhere (e.g. accepting a suggestion updates both the
+    interpreter panel AND this list from one response).
+#}
+<div id="confirmed-tags" {% if oob %}hx-swap-oob="true"{% endif %} class="flex flex-wrap gap-2">
+    {% for tag in tags %}
+    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+        {{ tag }}
+        <button
+            type="button"
+            hx-post="/search/tags/remove/{{ loop.index0 }}"
+            hx-target="#confirmed-tags"
+            hx-swap="outerHTML"
+            aria-label="Remove {{ tag }}"
+            class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-100"
+        >&times;</button>
+    </span>
+    {% endfor %}
+    {% if not tags %}
+    <p class="text-xs text-gray-400 dark:text-gray-500">No concepts confirmed yet — accept a suggestion below or add your own tags.</p>
+    {% endif %}
+</div>
+{% endmacro %}

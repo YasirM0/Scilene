@@ -107,6 +107,15 @@ Explains the CI pipeline and how to deploy the app (Docker or Heroku).
 
 ---
 
+## RESEARCH_INTERPRETER.md
+
+Architecture for the "Suggested by Scilene" tag-suggestion UI — a
+placeholder today, but documents the real contract a future
+embedding-based interpreter will plug into, and why it's built as
+server-rendered HTMX state rather than client-side JavaScript.
+
+---
+
 # Documentation Status
 
 | Document | Status |
@@ -124,6 +133,7 @@ Explains the CI pipeline and how to deploy the app (Docker or Heroku).
 | ROADMAP | ✅ Approved |
 | CONTRIBUTING | ✅ Approved |
 | DEPLOYMENT | ✅ Approved |
+| RESEARCH_INTERPRETER | 🟡 Scaffolding only |
 
 ---
 

@@ -10,7 +10,7 @@
         {% for entry in history %}
         <div class="flex items-center justify-between gap-3 py-2 border-t border-gray-100 dark:border-gray-700">
             <div>
-                <p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ entry.search_meta.title }}</p>
+                <p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ entry.search_meta.display_label or "Untitled search" }}</p>
                 <p class="text-xs text-gray-400 dark:text-gray-500">
                     {{ entry.timestamp }} UTC &middot; {{ entry.search_meta.strategy_label }} &middot; {{ entry.result_count }} results
                 </p>

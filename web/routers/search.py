@@ -20,6 +20,7 @@ from services.report_context import ReportContext, build_filters_summary
 from services.reports import generate_pdf, generate_docx, generate_xlsx, generate_markdown
 
 from web.dependencies import get_session_state, attach_session_cookie
+from web.interpreter_presentation import current_suggestions_context
 from web.search_cache import cached_search
 from web.session_store import MAX_HISTORY_ENTRIES
 from web.search_presentation import (
@@ -69,6 +70,34 @@ def _filter_context():
     }
 
 
+def _interpreter_form_context(session):
+    """
+    Research Interpreter panel + confirmed-tags state for the initial
+    page render (web/routers/interpreter.py owns every subsequent HTMX
+    update to this same state) — see web/interpreter_presentation.py.
+    """
+    return {
+        "confirmed_tags": session.get("confirmed_tags", []),
+        **current_suggestions_context(session),
+    }
+
+
+def _display_label(abstract, concepts):
+    """
+    Search history / export reports need a short human-readable label
+    for a search that no longer necessarily has a title (v0.2.5 --
+    abstract or tags only). Falls back through abstract -> concepts ->
+    a plain placeholder; services/report_context.py's own "Untitled
+    Search" fallback still applies wherever this ends up empty.
+    """
+    if abstract:
+        return abstract[:80] + ("…" if len(abstract) > 80 else "")
+    if concepts:
+        shown = ", ".join(concepts[:3])
+        return shown + ("…" if len(concepts) > 3 else "")
+    return ""
+
+
 def _results_context(session):
     """
     Builds the template context for the results panel from whatever is
@@ -104,7 +133,7 @@ def _results_context(session):
 
 @router.get("")
 def search_page(request: Request, session=Depends(get_session_state)):
-    context = {**_filter_context(), **_results_context(session)}
+    context = {**_filter_context(), **_results_context(session), **_interpreter_form_context(session)}
     return _render(request, "pages/search.html", context, session)
 
 
@@ -112,9 +141,8 @@ def search_page(request: Request, session=Depends(get_session_state)):
 def run_search(
     request: Request,
     session=Depends(get_session_state),
-    title: str = Form(""),
     abstract: str = Form(""),
-    keywords: str = Form(""),
+    fallback_tags: str = Form(""),
     strategy_label: str = Form(...),
     language: str = Form("Any"),
     budget_choice: str = Form("Any"),
@@ -123,14 +151,25 @@ def run_search(
     quartiles: list[str] = Form([]),
     sinta_levels: list[str] = Form([]),
 ):
-    title = title.strip()
     abstract = abstract.strip()
 
-    if not title or not abstract:
+    # Confirmed concepts (accepted Research Interpreter suggestions +
+    # anything manually added) and the "no abstract" fallback tags feed
+    # the SAME recommender `keywords` list -- the UI doesn't distinguish
+    # between them once confirmed (docs/RESEARCH_INTERPRETER.md).
+    confirmed = session.get("confirmed_tags", [])
+    parsed_fallback = [t.strip() for t in fallback_tags.replace(";", ",").split(",") if t.strip()]
+    concepts = confirmed + [t for t in parsed_fallback if t not in confirmed]
+
+    if not abstract and len(concepts) < 10:
         context = {
             **_filter_context(),
             **_results_context(session),
-            "warning": "Please enter both a title and an abstract.",
+            **_interpreter_form_context(session),
+            "warning": (
+                "Please provide an abstract, or at least 10 descriptive tags "
+                f"if you don't have one ({len(concepts)} so far)."
+            ),
         }
         return _render(request, "partials/search_results.html", context, session)
 
@@ -147,11 +186,10 @@ def run_search(
         context = {
             **_filter_context(),
             **_results_context(session),
+            **_interpreter_form_context(session),
             "warning": "Please select at least one journal index before searching.",
         }
         return _render(request, "partials/search_results.html", context, session)
-
-    keyword_list = [k.strip() for k in keywords.replace(";", ",").split(",") if k.strip()]
 
     resolved_language = None if language == "Any" else language
     free_only, min_budget, max_budget = budget_to_range(budget_choice)
@@ -159,8 +197,8 @@ def run_search(
     resolved_strategy = STRATEGY_LABELS[strategy_label]
 
     results = cached_search(
-        title=title,
-        keywords=keyword_list,
+        title="",
+        keywords=concepts,
         abstract=abstract,
         language=resolved_language,
         free_only=free_only,
@@ -185,9 +223,9 @@ def run_search(
     )
 
     search_meta = {
-        "title": title,
+        "display_label": _display_label(abstract, concepts),
         "abstract": abstract,
-        "keywords": keyword_list,
+        "keywords": concepts,
         "strategy_label": strategy_label,
         "filters_summary": filters_summary,
     }
@@ -244,13 +282,20 @@ def clear_search(request: Request, session=Depends(get_session_state)):
     session["show_weaker"] = False
     session["page"] = 1
 
-    context = {**_filter_context(), **_results_context(session)}
+    # A full reset, not just the results -- otherwise "Clear Search"
+    # would leave confirmed tags and interpreter suggestions from the
+    # previous search sitting in the form.
+    session["confirmed_tags"] = []
+    session["interpreter_suggestions"] = []
+    session["interpreter_abstract_snapshot"] = None
+
+    context = {**_filter_context(), **_results_context(session), "reset_form": True}
     return _render(request, "partials/search_results.html", context, session)
 
 
 def _build_report_context(search_meta, results):
     return ReportContext(
-        title=search_meta.get("title", ""),
+        title=search_meta.get("display_label", ""),
         abstract=search_meta.get("abstract", ""),
         keywords=search_meta.get("keywords", []),
         strategy_label=search_meta.get("strategy_label", ""),

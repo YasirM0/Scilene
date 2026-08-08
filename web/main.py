@@ -28,7 +28,7 @@ from fastapi.staticfiles import StaticFiles
 
 from services.app_info import APP_NAME, APP_VERSION
 from web.config import get_settings
-from web.routers import home, pages, search
+from web.routers import home, pages, search, interpreter
 
 settings = get_settings()
 
@@ -47,3 +47,4 @@ app.mount(
 app.include_router(home.router)
 app.include_router(pages.router)
 app.include_router(search.router)
+app.include_router(interpreter.router)

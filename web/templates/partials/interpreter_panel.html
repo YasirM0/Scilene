@@ -1,0 +1,96 @@
+{#
+    Renders whichever state the Research Interpreter panel is in.
+    Always targeted as a whole (#interpreter-panel) except the initial
+    "analyzing" state, which auto-follows up with a GET for "reveal"
+    after a short delay -- see docs/RESEARCH_INTERPRETER.md for why
+    that's pure HTMX (hx-trigger="load delay:...") rather than
+    hand-written JS.
+#}
+
+{% if state == "analyzing" %}
+<div class="px-4 py-3 rounded-md bg-navy-50 dark:bg-gray-900 text-sm text-navy-700 dark:text-navy-300"
+     hx-get="/search/interpret/reveal"
+     hx-trigger="load delay:900ms"
+     hx-target="#interpreter-panel"
+     hx-swap="innerHTML"
+>
+    <p class="font-medium mb-1">Analyzing your abstract...</p>
+    <p>✓ Field of Study identified</p>
+    <p>✓ Key Research Focus identified</p>
+</div>
+
+{% elif state == "changed_notice" %}
+<div class="px-4 py-3 rounded-md bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 text-sm text-yellow-800 dark:text-yellow-300">
+    <p class="mb-2">Your abstract has changed.</p>
+    <div class="flex gap-3">
+        <button type="button"
+            hx-post="/search/interpret/refresh"
+            hx-include="[name=abstract]"
+            hx-target="#interpreter-panel"
+            hx-swap="innerHTML"
+            class="font-medium hover:text-yellow-900 dark:hover:text-yellow-100"
+        >↻ Refresh suggested tags</button>
+        <button type="button"
+            hx-post="/search/interpret/keep"
+            hx-include="[name=abstract]"
+            hx-target="#interpreter-panel"
+            hx-swap="innerHTML"
+            class="font-medium hover:text-yellow-900 dark:hover:text-yellow-100"
+        >Keep current tags</button>
+    </div>
+</div>
+
+{% elif state == "suggestions" and suggestions %}
+<div>
+    <p class="text-sm font-medium text-navy-600 dark:text-navy-300 mb-2">Suggested by Scilene</p>
+    <div class="space-y-2">
+        {% for tag in suggestions %}
+        {% set colors = {
+            "blue": "bg-blue-50 dark:bg-blue-900 text-blue-800 dark:text-blue-200",
+            "gold": "bg-gold-50 dark:bg-gold-700 text-gold-700 dark:text-gold-50",
+        } %}
+        <div class="flex items-center justify-between gap-3 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ colors.get(tag.color, 'bg-gray-100 text-gray-600') }}">
+                    {{ tag.value }}
+                </span>
+                <span class="text-xs text-gray-400 dark:text-gray-500">{{ tag.label }}</span>
+            </div>
+            <div class="flex items-center gap-3 text-xs font-medium shrink-0">
+                <button type="button"
+                    hx-post="/search/interpret/accept/{{ tag.category }}"
+                    hx-target="#interpreter-panel"
+                    hx-swap="innerHTML"
+                    class="text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500"
+                >✓ Looks good</button>
+                <button type="button"
+                    hx-post="/search/interpret/suggest-another/{{ tag.category }}"
+                    hx-target="#interpreter-panel"
+                    hx-swap="innerHTML"
+                    class="text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300"
+                >↻ Suggest another</button>
+                {% if tag.cycled %}
+                <button type="button"
+                    hx-post="/search/interpret/remove/{{ tag.category }}"
+                    hx-target="#interpreter-panel"
+                    hx-swap="innerHTML"
+                    class="text-gray-400 dark:text-gray-500 hover:text-red-600"
+                >Remove</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if confirmed_tags_oob is defined %}
+{#
+    Set only by routes that also changed confirmed_tags (accepting a
+    suggestion) -- an HTMX out-of-band swap so both regions update from
+    one response even though #interpreter-panel is this response's
+    primary target, not #confirmed-tags.
+#}
+{% from "components/confirmed_tags.html" import confirmed_tags %}
+{{ confirmed_tags(confirmed_tags_oob, oob=True) }}
+{% endif %}

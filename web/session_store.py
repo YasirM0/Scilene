@@ -42,10 +42,24 @@ def get_session(session_id: str) -> dict:
         _SESSIONS[session_id] = {
             "current_results": None,      # full, unfiltered results from the last search
             "visible_results": None,      # confidence-filtered results currently on screen (what exports read)
-            "search_meta": None,          # title/abstract/keywords/strategy_label/filters_summary of the last search
+            "search_meta": None,          # abstract/display_label/strategy_label/filters_summary of the last search
             "show_weaker": False,
             "page": 1,
             "history": [],                # list of {results, search_meta, timestamp, result_count}
+
+            # Research Interpreter (docs/RESEARCH_INTERPRETER.md) --
+            # suggestions the user hasn't accepted/removed yet.
+            "interpreter_suggestions": [],
+            # The abstract text suggestions were last generated from,
+            # to detect "abstract changed since suggesting" without
+            # comparing against confirmed_tags (which can also change
+            # for unrelated reasons, e.g. removing a manually-added tag).
+            "interpreter_abstract_snapshot": None,
+            # Plain strings -- accepted interpreter suggestions and
+            # manually-added/fallback tags land here indistinguishably.
+            # This list (plus any fallback_tags parsed at submit time)
+            # is exactly what becomes the recommender's `keywords`.
+            "confirmed_tags": [],
         }
 
     _SESSIONS[session_id]["_last_access"] = time.time()
