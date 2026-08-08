@@ -218,17 +218,32 @@ Done (scaffolding only, no real model anywhere):
   changing anything that calls `detect_disciplines()`.
 - Research Idea Assistant (#85, `web/routers/research_idea.py`) — the
   full "Start from a Research Idea" modal → generate → review/edit →
-  "Continue to Search" flow, feeding the exact same Submission Search
-  page (`session["confirmed_tags"]` + a one-shot `prefill_abstract`)
-  a manual search already uses. `PlaceholderProvider.generate_search_inputs()`
-  deliberately does NOT write new prose — writing a plausible title/
-  abstract from a one-line idea is genuine text generation, which
-  needs a real model to do honestly. It only restructures the
-  researcher's own words (title = first sentence, abstract = the idea
-  verbatim, keywords = stopword-filtered significant words) — a real
-  generative provider would override this method without any web-
-  layer change. `get_default_provider()` is the one place a future
+  "Continue to Search" flow, feeding `session["confirmed_tags"]` — the
+  exact tag-based path a manual search already uses.
+  `PlaceholderProvider.generate_search_inputs()` deliberately does NOT
+  write new prose — writing a plausible title/abstract from a one-line
+  idea is genuine text generation, which needs a real model to do
+  honestly. It only restructures the researcher's own words (title =
+  first sentence, abstract = the idea verbatim, keywords =
+  stopword-filtered significant words, capped at 15) — a real
+  generative provider would override this method without any
+  web-layer change. `get_default_provider()` is the one place a future
   settings-driven provider choice would plug in.
+
+  **Issue-priority correction:** #85's original design also called for
+  a "suggested abstract" pre-filling the search page's abstract field.
+  #110 (implemented after #85, and the actual current shape of the
+  Submission Search page) explicitly says a user without an abstract
+  should "provide at least 10 descriptive tags... No abstract
+  generation is required" — a direct contradiction. Per this project's
+  rule for contradicting issues (newer wins), the web layer only ever
+  reads `keywords` from `generate_search_inputs()`'s response;
+  `title`/`abstract` are computed (the interface still returns them,
+  since a different future consumer legitimately might want them) but
+  never surfaced or carried into a search. There is no
+  `prefill_abstract` session field or abstract-textarea pre-fill
+  anymore — that mechanism was built, then removed once the
+  contradiction was caught.
 
 Not done:
 

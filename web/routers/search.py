@@ -233,10 +233,6 @@ def search_page(request: Request, session=Depends(get_session_state)):
         **_results_context(session),
         **_interpreter_form_context(session),
         **language_form_context(session),
-        # #85 -- one-shot: shown once after "Continue to Search" from
-        # the Research Idea modal, then gone, so a later plain reload
-        # of /search doesn't keep re-showing stale text.
-        "prefill_abstract": session.pop("prefill_abstract", None),
     }
     return _render(request, "pages/search.html", context, session)
 

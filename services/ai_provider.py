@@ -120,12 +120,24 @@ class PlaceholderProvider(AIProvider):
           - keywords: significant words extracted from the idea via
             the same stopword filter services/recommender.py's own
             fallback tokenizer uses (services/stopwords.py) -- real,
-            reused logic, not a new heuristic invented for this.
+            reused logic, not a new heuristic invented for this, capped
+            at 15 like that same fallback (not 10 -- see below).
 
-        A real generative provider (CloudAIProvider pointed at an
-        actual model, or a future local one) would override this to
-        genuinely draft a title/abstract -- the interface and the web
-        flow calling it don't change either way.
+        Interface note: this returns all three fields, since a future
+        real generative provider (or a different consumer of this
+        interface) may genuinely want title/abstract text. But #110
+        (Redesign Search Experience -- newer than this issue, and the
+        currently-implemented shape of the Submission Search page)
+        explicitly says, for a user without an abstract: "Instead of
+        generating a temporary abstract, Scilene asks the user to
+        provide at least 10 descriptive tags... No abstract generation
+        is required." A generated "suggested abstract" is exactly the
+        thing that sentence rules out, and arguably crosses into #85's
+        own "AI manuscript writing" out-of-scope line too. Per this
+        project's issue-priority rule (newer issue wins on a genuine
+        contradiction), web/routers/research_idea.py -- the only
+        current caller -- deliberately only reads `keywords` from this
+        response and ignores `title`/`abstract` entirely.
         """
         from services.stopwords import filter_stopwords
 
@@ -147,7 +159,7 @@ class PlaceholderProvider(AIProvider):
             if word not in seen:
                 seen.add(word)
                 keywords.append(word)
-        keywords = keywords[:10]
+        keywords = keywords[:15]
 
         return AIResponse(
             ok=True,

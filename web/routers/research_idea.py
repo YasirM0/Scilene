@@ -4,11 +4,23 @@ Research Idea Assistant (#85).
 Not a second search workflow -- an AI-assisted entry point that feeds
 the SAME Submission Search page every other search already uses (the
 issue's "Canonical Search Principle"). AI only ever prepares input
-text/tags for the user to review and edit; it never sees or influences
-a recommendation. See services/ai_provider.py's generate_search_inputs()
+tags for the user to review and edit; it never sees or influences a
+recommendation. See services/ai_provider.py's generate_search_inputs()
 for what "AI generates" honestly means here (restructuring the user's
 own words, not writing new prose -- no concrete generative provider is
 configured anywhere in this app yet).
+
+Deliberately keywords-only, not abstract-generation, even though the
+underlying AIResponse also carries a title/abstract (see
+generate_search_inputs()'s docstring): #110, implemented after #85 and
+authoritative on the Submission Search page's actual shape, says a
+user without an abstract should provide "at least 10 descriptive
+tags... No abstract generation is required." So "Continue to Search"
+here feeds session["confirmed_tags"] -- the exact tag-based path #110
+describes -- never a pre-filled abstract. A user WITH a real abstract
+should paste it directly on the Submission Search page; this entry
+point is specifically for the no-abstract-yet case #110 already
+designed for.
 """
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -44,8 +56,6 @@ def generate(request: Request, idea: str = Form("")):
 
     return _render(request, "partials/research_idea_result.html", {
         "ok": True,
-        "title": response.data["title"],
-        "abstract": response.data["abstract"],
         "keywords": response.data["keywords"],
     })
 
@@ -53,22 +63,19 @@ def generate(request: Request, idea: str = Form("")):
 @router.post("/continue")
 def continue_to_search(
     request: Request,
-    abstract: str = Form(""),
     keywords: str = Form(""),
     session=Depends(get_session_state),
 ):
     """
-    Carries the (possibly user-edited) abstract + keywords into the
-    SAME session fields a manual search already populates --
-    confirmed_tags is exactly the list interpret_accept() appends
-    accepted Research Interpreter suggestions to (web/routers/interpreter.py),
-    so the recommender receives identical input either way, per the
-    issue's Design Principles. `title` isn't carried anywhere: the
-    Submission Search page (v0.2.5's redesign, #110) has no title
-    field at all, only abstract + tags -- the idea's first sentence is
-    already the abstract's own opening line, so nothing is lost.
+    Carries the (possibly user-edited) keywords into
+    session["confirmed_tags"] -- the exact same list
+    interpret_accept() appends accepted Research Interpreter
+    suggestions to (web/routers/interpreter.py), so the recommender
+    receives identical input either way, per #85's own Design
+    Principles. No abstract is generated or carried anywhere -- see
+    this module's docstring for why (#110 supersedes that part of
+    #85's original design).
     """
-    abstract = abstract.strip()
     parsed_keywords = [k.strip() for k in keywords.replace(";", ",").split(",") if k.strip()]
 
     confirmed = session.get("confirmed_tags", [])
@@ -76,8 +83,6 @@ def continue_to_search(
         if keyword not in confirmed:
             confirmed.append(keyword)
     session["confirmed_tags"] = confirmed
-
-    session["prefill_abstract"] = abstract or None
 
     response = templates.TemplateResponse(
         request=request, name="partials/empty.html", context={}
