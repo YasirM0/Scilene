@@ -1,6 +1,6 @@
 {% macro index_badge(name, count) %}
-<div class="flex items-center justify-between px-4 py-3 bg-white rounded-lg border border-gray-200">
-    <span class="font-medium text-gray-900">{{ name }}</span>
-    <span class="text-sm text-gray-500">{{ "{:,}".format(count) }} journals</span>
+<div class="flex items-center justify-between px-4 py-3 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+    <span class="font-medium text-gray-900 dark:text-gray-50">{{ name }}</span>
+    <span class="text-sm text-gray-500 dark:text-gray-400">{{ "{:,}".format(count) }} journals</span>
 </div>
 {% endmacro %}

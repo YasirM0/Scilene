@@ -5,12 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ app.name }}{% endblock %}</title>
 
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='img/scilene-logo.png') }}">
+
     <link rel="stylesheet" href="{{ url_for('static', path='css/output.css') }}">
     <script src="{{ url_for('static', path='js/htmx.min.js') }}" defer></script>
 
+    <script>
+        // Dark is the default appearance (v0.2.5 Issue 4); light is an
+        // explicit, remembered opt-out. Runs synchronously in <head>,
+        // before first paint, so there's no flash of the wrong theme --
+        // an inline script is the only way to do that (a deferred one,
+        // or one in extra_scripts at the end of <body>, would paint
+        // light first and flip afterward).
+        if (localStorage.getItem("theme") !== "light") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
+
     {% block extra_head %}{% endblock %}
 </head>
-<body class="h-full min-h-screen flex flex-col bg-gray-50 text-gray-900 antialiased">
+<body class="h-full min-h-screen flex flex-col bg-gray-50 text-gray-900 antialiased dark:bg-gray-900 dark:text-gray-100 transition-colors">
 
     {% include "partials/nav.html" %}
 

@@ -26,12 +26,32 @@ STRATEGY_LABELS = {
 }
 assert set(STRATEGY_LABELS.values()) == set(STRATEGIES)
 
+# Brand mapping (docs/DESIGN_SYSTEM.md): Excellent -> Guiding Gold,
+# Strong -> Navigation Navy, Moderate -> Horizon Blue, Weak/Poor ->
+# neutral gray (only the first three tiers have a brand color; "Poor"
+# was never assigned one, so it stays a plainer, slightly duller gray
+# than "Weak" to keep the two visually distinct). Dark-mode pairs use
+# navy-50/horizon-50/gold-50 text on a dark badge instead of light-bg
+# variants (see recommendation_badge.html) -- a light-tinted 50-shade
+# background barely shows up on a dark surface.
 CONFIDENCE_COLORS = {
-    "Excellent": "bg-green-100 text-green-800",
-    "Strong": "bg-blue-100 text-blue-800",
-    "Moderate": "bg-yellow-100 text-yellow-800",
-    "Weak": "bg-orange-100 text-orange-800",
-    "Poor": "bg-gray-100 text-gray-600",
+    "Excellent": "bg-gold-50 text-gold-700 dark:bg-gold-700 dark:text-gold-50",
+    "Strong": "bg-navy-50 text-navy-700 dark:bg-navy-700 dark:text-navy-50",
+    "Moderate": "bg-horizon-50 text-horizon-700 dark:bg-horizon-700 dark:text-horizon-50",
+    "Weak": "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300",
+    "Poor": "bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
+}
+
+# Stars were always plain gray-400 before, regardless of tier -- low
+# visibility and no relationship to the badge next to them. Now
+# colored per tier (same hue as the badge text) so the two reinforce
+# each other instead of the stars just fading into the page.
+CONFIDENCE_STAR_COLORS = {
+    "Excellent": "text-gold-600 dark:text-gold-500",
+    "Strong": "text-navy-600 dark:text-navy-300",
+    "Moderate": "text-horizon-600 dark:text-horizon-500",
+    "Weak": "text-gray-400 dark:text-gray-500",
+    "Poor": "text-gray-300 dark:text-gray-600",
 }
 
 CONFIDENCE_STARS = {

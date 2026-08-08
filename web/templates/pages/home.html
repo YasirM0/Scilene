@@ -8,21 +8,21 @@
 {% block content %}
 
 <section class="text-center py-14 sm:py-20">
-    <p class="text-sm font-medium text-horizon-600 mb-3">
+    <p class="text-sm font-medium text-navy-600 dark:text-navy-300 mb-3">
         Research Assistant for Journal Selection
     </p>
-    <h1 class="text-3xl sm:text-5xl font-bold text-gray-900 tracking-tight mb-5 leading-tight">
+    <h1 class="text-3xl sm:text-5xl font-bold text-navy-600 dark:text-navy-300 tracking-tight mb-5 leading-tight">
         Find the right journal<br class="hidden sm:block"> for your manuscript
     </h1>
     {% if stats %}
-    <p class="text-gray-500 max-w-xl mx-auto mb-8">
+    <p class="text-gray-500 dark:text-gray-400 max-w-xl mx-auto mb-8">
         {{ app.name }} matches your manuscript's title, abstract, and keywords
         against {{ "{:,}".format(stats.total_journals) }} journals across DOAJ, Scopus,
         Web of Science, and SINTA &mdash; with a plain-language explanation for every
         recommendation.
     </p>
     {% else %}
-    <p class="text-gray-500 max-w-xl mx-auto mb-8">
+    <p class="text-gray-500 dark:text-gray-400 max-w-xl mx-auto mb-8">
         {{ app.name }} matches your manuscript against journals from DOAJ, Scopus,
         Web of Science, and SINTA &mdash; with a plain-language explanation for every
         recommendation.
@@ -44,7 +44,7 @@
         <button
             type="button"
             disabled
-            class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gray-100 text-gray-400 font-medium disabled:cursor-not-allowed"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 font-medium disabled:cursor-not-allowed"
         >
             I have a research idea
             <span class="text-xs font-normal">(Coming Soon)</span>
@@ -52,8 +52,8 @@
     </div>
 </section>
 
-<section class="py-10 border-t border-gray-200">
-    <h2 class="text-center text-sm font-medium text-gray-400 uppercase tracking-wide mb-6">
+<section class="py-10 border-t border-gray-200 dark:border-gray-700">
+    <h2 class="text-center text-sm font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-6">
         Journal Database
     </h2>
     {% if stats %}
@@ -65,16 +65,16 @@
         {{ stat_card("{:,}".format(stats.by_source.get("SINTA", 0)), "SINTA") }}
     </div>
     {% else %}
-    <p class="text-center text-sm text-gray-400">Could not reach the database &mdash; see server logs.</p>
+    <p class="text-center text-sm text-gray-400 dark:text-gray-500">Could not reach the database &mdash; see server logs.</p>
     {% endif %}
 </section>
 
 {% if stats %}
-<section class="py-10 border-t border-gray-200">
-    <h2 class="text-center text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">
+<section class="py-10 border-t border-gray-200 dark:border-gray-700">
+    <h2 class="text-center text-sm font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">
         Supported Indexes &amp; Coverage
     </h2>
-    <p class="text-center text-xs text-gray-400 max-w-xl mx-auto mb-6">
+    <p class="text-center text-xs text-gray-400 dark:text-gray-500 max-w-xl mx-auto mb-6">
         Some journals are indexed in multiple databases — for example,
         every Web of Science journal here is also Scopus-indexed
         (Web of Science is tracked as a tag on Scopus journals, not a
@@ -112,8 +112,8 @@
 </section>
 {% endif %}
 
-<section class="py-10 border-t border-gray-200">
-    <h2 class="text-center text-sm font-medium text-gray-400 uppercase tracking-wide mb-6">
+<section class="py-10 border-t border-gray-200 dark:border-gray-700">
+    <h2 class="text-center text-sm font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-6">
         What It Does
     </h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -126,8 +126,8 @@
     </div>
 </section>
 
-<div class="text-center py-6 border-t border-gray-200">
-    <p class="text-xs text-gray-400">
+<div class="text-center py-6 border-t border-gray-200 dark:border-gray-700">
+    <p class="text-xs text-gray-400 dark:text-gray-500">
         🔒 Privacy-first &middot; No account required &middot; Built for researchers
     </p>
 </div>

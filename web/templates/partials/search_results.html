@@ -4,7 +4,7 @@
 {% from "components/journal_card.html" import journal_card %}
 
 {% if warning %}
-<div class="px-4 py-3 rounded-md bg-yellow-50 text-yellow-800 text-sm border border-yellow-200 mb-4">
+<div class="px-4 py-3 rounded-md bg-yellow-50 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300 text-sm border border-yellow-200 dark:border-yellow-700 mb-4">
     {{ warning }}
 </div>
 {% endif %}
@@ -15,31 +15,31 @@
 
 <div class="flex items-center justify-between mt-4 mb-2">
     <div>
-        <p class="text-sm font-medium text-green-700">
+        <p class="text-sm font-medium text-green-700 dark:text-green-400">
             Showing {{ visible_count }} of {{ total_count }} recommended journals.
         </p>
         {% if hidden_count and not show_weaker %}
-        <p class="text-xs text-gray-400">{{ hidden_count }} weaker matches hidden — tick the box below to see them.</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500">{{ hidden_count }} weaker matches hidden — tick the box below to see them.</p>
         {% endif %}
     </div>
     <button
         hx-post="/search/clear"
         hx-target="#results-panel"
         hx-swap="innerHTML"
-        class="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
+        class="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
     >
         🗑️ Clear Search
     </button>
 </div>
 
-<label class="flex items-center gap-2 text-sm text-gray-600 mb-4">
+<label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
     <input
         type="checkbox" name="show_weaker" {% if show_weaker %}checked{% endif %}
         hx-get="/search/results?page=1"
         hx-target="#results-panel"
         hx-swap="innerHTML"
         hx-trigger="change"
-        class="rounded border-gray-300 text-horizon-600 focus:ring-horizon-500"
+        class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500"
     >
     Show weaker matches too (Moderate / Weak / Poor)
 </label>
@@ -50,7 +50,7 @@
 </div>
 {% endif %}
 
-<p class="text-xs text-gray-400 mb-4">
+<p class="text-xs text-gray-400 dark:text-gray-500 mb-4">
     🔒 Search results are stored only for this browser session and are never saved permanently.
     &middot; Data: DOAJ &middot; SCImago Journal &amp; Country Rank &middot; SINTA
 </p>

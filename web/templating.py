@@ -12,7 +12,7 @@ from pathlib import Path
 from fastapi.templating import Jinja2Templates
 
 from services.app_info import APP
-from web.search_presentation import CONFIDENCE_COLORS, CONFIDENCE_STARS
+from web.search_presentation import CONFIDENCE_COLORS, CONFIDENCE_STARS, CONFIDENCE_STAR_COLORS
 from utils.indexing import format_source_chip, format_index_summary, format_enrichment_badges
 from utils.subjects import format_subjects
 
@@ -35,6 +35,7 @@ templates.env.globals["format_enrichment_badges"] = format_enrichment_badges
 templates.env.globals["format_subjects"] = format_subjects
 templates.env.globals["confidence_colors"] = CONFIDENCE_COLORS
 templates.env.globals["confidence_stars"] = CONFIDENCE_STARS
+templates.env.globals["confidence_star_colors"] = CONFIDENCE_STAR_COLORS
 
 # Defined once, here, so every page's nav bar (via partials/nav.html)
 # stays in sync automatically — a new page just needs an entry added

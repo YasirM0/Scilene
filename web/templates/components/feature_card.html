@@ -1,7 +1,7 @@
 {% macro feature_card(icon, title, description) %}
-<div class="p-6 bg-white rounded-lg border border-gray-200 h-full">
+<div class="p-6 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 h-full">
     <div class="text-2xl mb-3" aria-hidden="true">{{ icon }}</div>
-    <h3 class="font-semibold text-gray-900 mb-1">{{ title }}</h3>
-    <p class="text-sm text-gray-500 leading-relaxed">{{ description }}</p>
+    <h3 class="font-semibold text-gray-900 dark:text-gray-50 mb-1">{{ title }}</h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{{ description }}</p>
 </div>
 {% endmacro %}

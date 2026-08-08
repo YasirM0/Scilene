@@ -1,8 +1,14 @@
-<nav class="bg-white border-b border-gray-200 sticky top-0 z-10">
+{#
+    Navy background regardless of light/dark theme -- Navigation Navy
+    is explicitly "for... Navigation bar" in the brand spec
+    (docs/DESIGN_SYSTEM.md), not something that should flip with the
+    theme toggle.
+#}
+<nav class="bg-navy-600 border-b border-navy-700 sticky top-0 z-10">
     <div class="max-w-6xl mx-auto px-4 sm:px-6">
         <div class="flex items-center justify-between h-16 gap-4">
 
-            <a href="/" class="flex items-center gap-2 font-semibold text-gray-900 shrink-0">
+            <a href="/" class="flex items-center gap-2 font-semibold text-white shrink-0">
                 <span aria-hidden="true">📚</span>
                 <span class="hidden sm:inline">{{ app.name }}</span>
             </a>
@@ -13,9 +19,9 @@
                     href="{{ link.href }}"
                     class="px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition-colors
                         {% if request.url.path == link.href %}
-                            text-horizon-600 bg-horizon-50
+                            text-white bg-navy-700
                         {% else %}
-                            text-gray-600 hover:text-gray-900 hover:bg-gray-50
+                            text-horizon-50 hover:text-white hover:bg-navy-700
                         {% endif %}"
                 >
                     {{ link.label }}
@@ -26,15 +32,32 @@
                     href="{{ app.github }}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors flex items-center gap-1 whitespace-nowrap"
+                    class="px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium text-horizon-50 hover:text-white hover:bg-navy-700 transition-colors flex items-center gap-1 whitespace-nowrap"
                 >
                     GitHub
                     <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                 </a>
+
+                <button
+                    id="theme-toggle"
+                    type="button"
+                    aria-label="Switch between dark and light appearance"
+                    class="px-2 py-2 rounded-md text-sm text-horizon-50 hover:text-white hover:bg-navy-700 transition-colors shrink-0"
+                >
+                    <span class="dark:hidden" aria-hidden="true">☀️</span>
+                    <span class="hidden dark:inline" aria-hidden="true">🌙</span>
+                </button>
             </div>
 
         </div>
     </div>
 </nav>
+
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", function () {
+        var isDark = document.documentElement.classList.toggle("dark");
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+    });
+</script>

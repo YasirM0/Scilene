@@ -1,13 +1,13 @@
 {% macro journal_card(journal) %}
-<div class="p-4 sm:p-5 bg-white rounded-lg border border-gray-200">
+<div class="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
 
     <div class="flex items-start justify-between gap-3">
-        <h3 class="font-semibold text-gray-900 leading-snug">{{ journal.title }}</h3>
+        <h3 class="font-semibold text-gray-900 dark:text-gray-50 leading-snug">{{ journal.title }}</h3>
         {% from "components/recommendation_badge.html" import recommendation_badge %}
         {{ recommendation_badge(journal.confidence) }}
     </div>
 
-    <p class="text-sm text-gray-600 mt-2">
+    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
         {% for detail in journal.source_details %}
             <span class="inline-flex items-center gap-1 mr-3">✓ {{ format_source_chip(detail) }}</span>
         {% endfor %}
@@ -21,27 +21,27 @@
         (docs/ENRICHMENT.md), not confirmed indexing sources, and
         should never look like they carry the same weight.
     #}
-    <p class="text-xs text-gray-400 mt-1">
+    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
         Also listed in: {{ enrichment_badges | join(", ") }}
     </p>
     {% endif %}
 
     {% if journal.explanation %}
-    <p class="text-sm text-gray-500 mt-2 italic">{{ journal.explanation }}</p>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 italic">{{ journal.explanation }}</p>
     {% endif %}
 
     <div class="grid grid-cols-3 gap-3 mt-3 text-sm">
         <div>
-            <p class="text-xs text-gray-400 uppercase tracking-wide">Country</p>
-            <p class="text-gray-800">{{ journal.country or "—" }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">Country</p>
+            <p class="text-gray-800 dark:text-gray-200">{{ journal.country or "—" }}</p>
         </div>
         <div>
-            <p class="text-xs text-gray-400 uppercase tracking-wide">Language</p>
-            <p class="text-gray-800">{{ journal.languages or "—" }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">Language</p>
+            <p class="text-gray-800 dark:text-gray-200">{{ journal.languages or "—" }}</p>
         </div>
         <div>
-            <p class="text-xs text-gray-400 uppercase tracking-wide">APC</p>
-            <p class="text-gray-800">
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">APC</p>
+            <p class="text-gray-800 dark:text-gray-200">
                 {% if journal.is_free %}Free
                 {% elif journal.apc_amount is not none %}~${{ "%.0f"|format(journal.apc_amount) }}
                 {% else %}Paid (unconfirmed)
@@ -51,25 +51,25 @@
     </div>
 
     <details class="mt-3 group">
-        <summary class="cursor-pointer text-sm font-medium text-horizon-600 hover:text-horizon-700 list-none flex items-center gap-1">
+        <summary class="cursor-pointer text-sm font-medium text-navy-600 hover:text-horizon-600 dark:text-navy-300 dark:hover:text-horizon-500 list-none flex items-center gap-1">
             <span class="transition-transform group-open:rotate-90">▶</span>
             Show more
         </summary>
 
-        <div class="mt-3 pt-3 border-t border-gray-100 space-y-2 text-sm">
-            <p><span class="font-medium text-gray-700">Publisher:</span> {{ journal.publisher or "Not listed" }}</p>
+        <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 space-y-2 text-sm">
+            <p><span class="font-medium text-gray-700 dark:text-gray-300">Publisher:</span> {{ journal.publisher or "Not listed" }}</p>
 
             {% set subject_tags = format_subjects(journal.subjects) %}
             {% if subject_tags %}
-            <p><span class="font-medium text-gray-700">Subjects:</span> {{ subject_tags }}</p>
+            <p><span class="font-medium text-gray-700 dark:text-gray-300">Subjects:</span> {{ subject_tags }}</p>
             {% endif %}
 
             {% if journal.review_weeks is not none %}
-            <p><span class="font-medium text-gray-700">Typical review time:</span> ~{{ journal.review_weeks }} weeks</p>
+            <p><span class="font-medium text-gray-700 dark:text-gray-300">Typical review time:</span> ~{{ journal.review_weeks }} weeks</p>
             {% endif %}
 
             {% if journal.issn_print or journal.issn_online or journal.license %}
-            <p class="text-xs text-gray-400">
+            <p class="text-xs text-gray-400 dark:text-gray-500">
                 {% if journal.issn_print or journal.issn_online %}
                     ISSN: {{ journal.issn_print or "—" }} (print) / {{ journal.issn_online or "—" }} (online)
                 {% endif %}
@@ -79,10 +79,10 @@
 
             <div class="flex gap-4 pt-1">
                 {% if journal.website %}
-                <a href="{{ journal.website }}" target="_blank" rel="noopener noreferrer" class="text-horizon-600 hover:text-horizon-700 font-medium">Visit Journal ↗</a>
+                <a href="{{ journal.website }}" target="_blank" rel="noopener noreferrer" class="text-navy-600 hover:text-horizon-600 dark:text-navy-300 dark:hover:text-horizon-500 font-medium">Visit Journal ↗</a>
                 {% endif %}
                 {% if journal.doaj_url %}
-                <a href="{{ journal.doaj_url }}" target="_blank" rel="noopener noreferrer" class="text-horizon-600 hover:text-horizon-700 font-medium">View on DOAJ ↗</a>
+                <a href="{{ journal.doaj_url }}" target="_blank" rel="noopener noreferrer" class="text-navy-600 hover:text-horizon-600 dark:text-navy-300 dark:hover:text-horizon-500 font-medium">View on DOAJ ↗</a>
                 {% endif %}
             </div>
         </div>
