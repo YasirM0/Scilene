@@ -39,6 +39,7 @@ ENRICHMENT_LABELS = {
     "erihplus": "ERIH PLUS",
     "scielo": "SciELO",
     "ajol": "AJOL",
+    "garuda": "Garuda",
 }
 
 

@@ -1,6 +1,15 @@
-{% macro stat_card(value, label) %}
+{% macro stat_card(value, label, sublabel=None) %}
+{#
+    `sublabel` documents a relationship between two indexes (#97), e.g.
+    "17,815 also indexed in Web of Science" under the Scopus card --
+    Web of Science isn't an independent dataset in this database, it's
+    a tag on a subset of Scopus journals (docs/DATABASE.md).
+#}
 <div class="text-center px-4 py-6 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
     <p class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-50">{{ value }}</p>
     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ label }}</p>
+    {% if sublabel %}
+    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">↳ {{ sublabel }}</p>
+    {% endif %}
 </div>
 {% endmacro %}

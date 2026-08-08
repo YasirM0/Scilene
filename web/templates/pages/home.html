@@ -60,9 +60,15 @@
     <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {{ stat_card("{:,}".format(stats.total_journals), "Total Journals") }}
         {{ stat_card("{:,}".format(stats.by_source.get("DOAJ", 0)), "DOAJ") }}
-        {{ stat_card("{:,}".format(stats.by_source.get("Scopus", 0)), "Scopus") }}
+        {{ stat_card(
+            "{:,}".format(stats.by_source.get("Scopus", 0)), "Scopus",
+            sublabel="{:,} also indexed in Web of Science".format(stats.by_source.get("Web of Science", 0))
+        ) }}
         {{ stat_card("{:,}".format(stats.by_source.get("Web of Science", 0)), "Web of Science") }}
-        {{ stat_card("{:,}".format(stats.by_source.get("SINTA", 0)), "SINTA") }}
+        {{ stat_card(
+            "{:,}".format(stats.by_source.get("SINTA", 0)), "SINTA",
+            sublabel="{:,} also indexed in Garuda".format(stats.by_enrichment.get("garuda", 0))
+        ) }}
     </div>
     {% else %}
     <p class="text-center text-sm text-gray-400 dark:text-gray-500">Could not reach the database &mdash; see server logs.</p>
@@ -97,6 +103,7 @@
         ("ERIH PLUS", stats.by_enrichment.get("erihplus", 0)),
         ("SciELO", stats.by_enrichment.get("scielo", 0)),
         ("AJOL", stats.by_enrichment.get("ajol", 0)),
+        ("Garuda", stats.by_enrichment.get("garuda", 0)),
     ] %}
     <div class="marquee-viewport overflow-hidden">
         <div class="marquee-track flex gap-4">

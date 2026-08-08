@@ -11,12 +11,21 @@ this project.
 Matches rows against the existing `journals` table by ISSN (p_issn /
 e_issn), falling back to exact normalized title. A match is tagged
 "SINTA" with its accreditation tier. No match becomes a new journal row.
+
+Also tags Garuda indexing (#97) from the same file's `garuda_indexed`
+column, as display-only metadata enrichment (journal_enrichment, not
+journal_sources) -- per the issue, "Garuda should be treated as
+journal metadata rather than a search filter", i.e. it must never
+become filterable or affect ranking, exactly like ROAD/ERIH PLUS/
+SciELO/AJOL (docs/ENRICHMENT.md). Garuda's data happens to arrive
+bundled in the SINTA file rather than its own, so it's tagged here
+rather than as a separate importers/enrichment/ provider.
 """
 
 import pandas as pd
 
 from services.dedup import JournalIndex
-from services.repository import get_connection, insert_minimal_journal, tag_source
+from services.repository import get_connection, insert_minimal_journal, tag_source, tag_enrichment
 from utils.issn import normalize_issn
 
 
@@ -41,6 +50,7 @@ def import_sinta(csv_path, source_label="SINTA", index=None, conn=None):
     matched_by_title = 0
     created = 0
     missing_issn = 0
+    garuda_tagged = 0
 
     for _, row in df.iterrows():
 
@@ -89,6 +99,10 @@ def import_sinta(csv_path, source_label="SINTA", index=None, conn=None):
 
         tag_source(conn, journal_id, source_label, metadata)
 
+        if bool(row.get("garuda_indexed")):
+            tag_enrichment(conn, journal_id, "garuda", {})
+            garuda_tagged += 1
+
     if owns_connection:
         conn.commit()
         conn.close()
@@ -100,12 +114,13 @@ def import_sinta(csv_path, source_label="SINTA", index=None, conn=None):
         "matched_by_title": matched_by_title,
         "created": created,
         "missing_issn": missing_issn,
+        "garuda_tagged": garuda_tagged,
     }
 
     print(
         f"{source_label}: {len(df)} rows | matched by ISSN: {matched_by_issn} | "
         f"matched by title: {matched_by_title} | new journals created: {created} | "
-        f"rows with no usable ISSN: {missing_issn}"
+        f"rows with no usable ISSN: {missing_issn} | Garuda-indexed: {garuda_tagged}"
     )
 
     return index, summary

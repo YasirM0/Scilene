@@ -50,6 +50,7 @@ Local files already collected for this, in `data/enrichment/`:
 | ERIH PLUS | `erihplus.csv` | ERIH PLUS indexing flag, English title, publisher, URL, DOAJ/Sherpa Romeo flags |
 | SciELO | `scielo_journals.csv` | Regional (Latin America) coverage, subject areas, mission statement |
 | AJOL | `ajol.csv` | African journal coverage, Diamond OA flag |
+| Garuda | `data/raw/sinta.csv`'s `garuda_indexed` column (#97) | Indonesian national repository indexing flag. Tagged directly in `importers/sinta.py` rather than its own `importers/enrichment/` provider, since the data arrives bundled in the SINTA file, not a separate one — same `journal_enrichment` storage and same rule (display-only, never a search filter, never affects ranking) as every other provider here. |
 | Elsevier Source List | `Elsevier.csv` | **Not enrichment** — scoped to #98 (redefining how Scopus indexing itself is determined). Implemented narrowly: `importers/elsevier.py` fills Scopus-indexing gaps SCImago's periodic snapshot hasn't caught up to yet, without touching quartile/SJR/H-index. The rest of #98 (title history, ASJC taxonomy, article language, coverage display, Source Record ID, import-order restructuring) is NOT implemented — see "Current implementation state". |
 
 Not yet available locally (per the original issue, these must never
