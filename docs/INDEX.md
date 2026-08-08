@@ -107,6 +107,14 @@ Explains the CI pipeline and how to deploy the app (Docker or Heroku).
 
 ---
 
+## AI_ARCHITECTURE.md
+
+Design for Scilene's optional AI layer (#106) — philosophy, candidate
+models, reliability rules, and the `AIProvider` interface. No real
+model is wired in yet.
+
+---
+
 ## RESEARCH_INTERPRETER.md
 
 Architecture for the "Suggested by Scilene" tag-suggestion UI — a
@@ -134,6 +142,7 @@ server-rendered HTMX state rather than client-side JavaScript.
 | CONTRIBUTING | ✅ Approved |
 | DEPLOYMENT | ✅ Approved |
 | RESEARCH_INTERPRETER | 🟡 Scaffolding only |
+| AI_ARCHITECTURE | 🟡 Design only |
 
 ---
 
