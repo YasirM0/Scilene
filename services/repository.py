@@ -564,6 +564,19 @@ def tag_source(conn, journal_id, source, metadata=None):
     )
 
 
+def update_publication_type(conn, journal_id, publication_type):
+    """
+    Set journals.publication_type (#128) for a journal that already
+    exists -- never creates a row. COALESCEs against the existing
+    value so a caller that has nothing new to say (publication_type is
+    None) can't accidentally blank out a value set by an earlier pass.
+    """
+    conn.execute(
+        "UPDATE journals SET publication_type = COALESCE(?, publication_type) WHERE id = ?",
+        (publication_type, journal_id),
+    )
+
+
 def tag_enrichment(conn, journal_id, provider, data, fetched_at=None):
     """
     Attach a metadata enrichment provider's data to a journal that

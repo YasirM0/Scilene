@@ -4,6 +4,7 @@ import re
 from services.repository import search_candidates, keyword_document_frequency, count_journals
 from services.stopwords import filter_stopwords
 from services.explain import build_explanation
+from utils.publication_types import format_publication_type_badge
 
 # Strategies we can actually support with the data currently in the
 # database. "Highest Prestige" now has real data behind it (Scopus/WoS
@@ -230,6 +231,8 @@ class JournalRecommender:
                 "enrichment": journal.enrichment,
                 # Display-only (#100) -- passed through, never scored
                 "aliases": journal.aliases,
+                # Display-only (#128) -- passed through, never scored
+                "publication_type_badge": format_publication_type_badge(journal),
                 "score": score,
                 "normalized_score": (score / max_possible) if max_possible else 0.0,
                 "explanation": explanation,

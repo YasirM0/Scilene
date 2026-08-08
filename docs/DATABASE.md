@@ -7,6 +7,13 @@ indexes it appears in. Core metadata (title, publisher, country, ISSNs,
 subjects, APC, license, review time, ...) comes from whichever source
 had the richest data for that journal — in practice, DOAJ first, then
 Scopus/SINTA metadata is used to fill in journals DOAJ doesn't have.
+`publication_type` (#128) is the one exception with its own resolution
+rule rather than "richest source wins": only the Elsevier Source List
+populates it (its "Source Type" column — in the real dataset, only
+"Journal"/"Book Series"/"Trade Journal" occur); a journal Elsevier
+hasn't matched shows as "Journal" if it's DOAJ-sourced (DOAJ's whole
+scope is journals, so that's a real fact, not a guess) or "Other"
+otherwise — see `utils/publication_types.py`.
 
 **`journal_sources`** — one row per (journal, source) pair. This is what
 makes the model source-agnostic: a journal with rows for `DOAJ`,

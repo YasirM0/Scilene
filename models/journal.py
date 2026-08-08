@@ -47,6 +47,13 @@ class Journal:
 
     article_count: int | None = None
 
+    # Raw value from importers/elsevier.py's "Source Type" column
+    # (#128) -- e.g. "Journal", "Book Series", "Trade Journal". None
+    # for journals Elsevier hasn't matched; utils/publication_types.py
+    # resolves the DISPLAY label/default, this field stays exactly
+    # what the source said (or nothing).
+    publication_type: str | None = None
+
     source: str | None = None
     # Full detail per confirmed source, e.g.
     # [{"source": "Scopus", "quartile": "Q1", "sjr": 1.2, "h_index": 40, "accreditation": None}, ...]
@@ -133,6 +140,7 @@ class Journal:
             review_weeks=clean(row["review_weeks"]),
             license=clean(row["license"]),
             article_count=clean(row["article_count"]),
+            publication_type=clean(row["publication_type"]),
             source=clean(row["source"]),
             source_details=source_details,
             enrichment=enrichment or {},

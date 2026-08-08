@@ -2,7 +2,20 @@
 <div class="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
 
     <div class="flex items-start justify-between gap-3">
-        <h3 class="font-semibold text-gray-900 dark:text-gray-50 leading-snug">{{ journal.title }}</h3>
+        <div>
+            <h3 class="font-semibold text-gray-900 dark:text-gray-50 leading-snug">{{ journal.title }}</h3>
+            {% set pub_type = journal.publication_type_badge %}
+            {% if pub_type %}
+            {#
+                #128 -- shown for every result (even the common
+                "Journal" case), but deliberately one muted style
+                throughout rather than a color per type, so it never
+                competes with the recommendation-confidence badge for
+                attention.
+            #}
+            <span class="{{ pub_type.classes }} inline-block mt-1">{{ pub_type.icon }} {{ pub_type.label }}</span>
+            {% endif %}
+        </div>
         {% from "components/recommendation_badge.html" import recommendation_badge %}
         {{ recommendation_badge(journal.confidence) }}
     </div>

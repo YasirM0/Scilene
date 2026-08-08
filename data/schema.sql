@@ -35,7 +35,15 @@ CREATE TABLE journals (
     -- The source this row was first created from. A journal's FULL set
     -- of confirmed indexing sources lives in journal_sources below, not
     -- here — this column is historical/informational only.
-    source TEXT
+    source TEXT,
+
+    -- Publication type (#128) -- e.g. "Journal", "Book Series", "Trade
+    -- Journal". Only the Elsevier Source List's "Source Type" column
+    -- currently populates this (importers/elsevier.py); NULL for
+    -- journals Elsevier hasn't matched, resolved to a display default
+    -- at presentation time (utils/publication_types.py), never
+    -- fabricated here.
+    publication_type TEXT
 );
 
 -- A journal may be confirmed in more than one index (DOAJ, Scopus,

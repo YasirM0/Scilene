@@ -30,6 +30,13 @@ Every matched row (Active or Inactive) is tagged, with:
     Elsevier's per-source article language is intentionally NOT wired
     into that filter here, just preserved for later).
 
+Also writes journals.publication_type (#128) from Elsevier's own
+"Source Type" column (currently only ever "Journal", "Book Series", or
+"Trade Journal" in the real dataset) -- a journal-level attribute, not
+per-source, so it's a plain UPDATE via
+services.repository.update_publication_type, not part of the
+journal_sources upsert above.
+
 Runs AFTER importers/scimago.py in scripts/build_database.py.
   - Matched to an existing journal: tagged Scopus (if not already) and
     given whatever Elsevier-only fields it has, without touching a
@@ -48,7 +55,7 @@ separately by importers/aliases.py (#100).
 import pandas as pd
 
 from services.dedup import JournalIndex
-from services.repository import get_connection, tag_source
+from services.repository import get_connection, tag_source, update_publication_type
 from utils.issn import extract_issns
 
 
@@ -125,6 +132,8 @@ def import_elsevier(csv_path, source_label="Scopus", index=None, conn=None):
                 row.get("Article Language in Source (Three-Letter ISO Language Codes)")
             ),
         })
+
+        update_publication_type(conn, journal_id, _clean(row.get("Source Type")))
 
         if journal_id in already_scopus:
             already_tagged += 1
