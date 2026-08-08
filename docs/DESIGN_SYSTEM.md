@@ -112,6 +112,84 @@ utility classes templates use must be followed by
 
 ---
 
+# Typography
+
+## Wordmark
+
+"SCILENE" as set in the logo (`web/static/img/scilene-logo.png`) is a
+fixed image asset, not a live web font — the wordmark's exact letterforms
+aren't reproduced anywhere else in the interface. Body/UI text uses an
+unrelated, ordinary typeface (below); this is deliberate, not an
+oversight — a distinct display wordmark next to plain, highly legible
+UI text is a common and appropriate split, and inventing a second
+"brand" web font to match the logo would add a real asset-loading cost
+for no functional benefit.
+
+## Font choice
+
+No custom web font is loaded. `base.html` uses Tailwind's default
+system font stack (`ui-sans-serif, system-ui, -apple-system, ...`) —
+each platform renders its own native UI font (San Francisco on Apple
+platforms, Segoe UI on Windows, Roboto on Android, etc.). This is a
+deliberate choice, not a placeholder:
+
+- Zero font-loading latency or flash-of-unstyled-text — consistent
+  with the project's offline-first, no-unnecessary-dependencies
+  principles (`docs/ARCHITECTURE.md`).
+- Every platform's native font is already tuned for that platform's
+  screen rendering.
+- "Timeless rather than trendy" (see Design Principles below) argues
+  against chasing a fashionable webfont that will look dated in a few
+  years.
+
+## Spacing & hierarchy
+
+Follows Tailwind's default type scale as used throughout the templates
+— `text-xs`/`text-sm` for secondary/meta text, `text-base`/`text-lg`
+for body copy, `text-2xl`–`text-5xl` for headings, with `font-medium`/
+`font-semibold`/`font-bold` (not italics or letter-spacing tricks) as
+the primary way to establish hierarchy. Headings use `navy-600` (see
+Brand Colors above) rather than pure black, which is itself part of
+the type hierarchy — it's what visually marks a heading as a heading
+before the reader even parses the larger size.
+
+---
+
+# Design Principles
+
+- **Minimalist** — no gradients, no decorative flourishes; every
+  element on screen earns its place.
+- **Flat** — solid fills only; no drop shadows or 3D effects standing
+  in for hierarchy that spacing and color already provide.
+- **Calm and trustworthy** — the interface should never feel like it's
+  competing for attention. This is also why gold stays rare (~5-10% of
+  the interface, see Brand Colors) — its scarcity is what makes it
+  legible as "this matters" when it does appear.
+- **Timeless rather than trendy** — avoid styling choices whose main
+  appeal is that they look current right now.
+- **Academic rather than corporate** — plain language, real citations,
+  no marketing gloss.
+- **Professional rather than flashy.**
+- **Avoid AI clichés** — no glowing effects, neon colors, gradients, or
+  futuristic styling anywhere in the interface, including any future
+  AI-assisted features (see `docs/RESEARCH_INTERPRETER.md`). A
+  suggested tag should look exactly like a normal tag, not like it
+  came from a different, flashier product.
+
+---
+
+# Brand Philosophy
+
+Scilene is about guidance, not automation. The interface should
+inspire confidence rather than excitement — the tagline is "Navigate
+Scholarly Publishing with Confidence," not "Discover journals
+instantly" or similar. Every visual element should exist for a reason
+traceable back to that idea (see Name & Logo above for where the
+navy/gold/guiding-star motif actually comes from) — a component that's
+only there to look impressive doesn't belong.
+
+---
+
 # Shared Components
 
 All reusable pieces live in `web/templates/components/` as Jinja2
@@ -150,7 +228,7 @@ pattern needs to change in more than one place at once.
 
 ---
 
-**Document Version:** 0.1
+**Document Version:** 0.2
 
 **Last Updated:** August 2026
 
