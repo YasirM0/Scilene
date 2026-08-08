@@ -40,6 +40,7 @@ ENRICHMENT_LABELS = {
     "scielo": "SciELO",
     "ajol": "AJOL",
     "garuda": "Garuda",
+    "diamond_oa": "Diamond OA",
 }
 
 

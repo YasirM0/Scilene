@@ -17,12 +17,21 @@ by exact normalized title (see services.dedup). A match gets tagged
 with this source plus its quartile/SJR/H-index. No match becomes a new
 journal row, tagged only with this source — this does not fabricate a
 DOAJ presence or any other metadata for it.
+
+Also tags the "Open Access Diamond" column (#98) as display-only
+metadata enrichment (journal_enrichment, not a journals/journal_sources
+column) — the issue frames Diamond OA as enabling "future filtering",
+which isn't implemented yet; promoting it to a real filterable column
+is separate work. Since a Diamond OA journal is by definition also
+Open Access, and this importer runs for both Scopus and WoS (the same
+underlying SCImago row, just pre-filtered), tagging happens at most
+once per journal regardless of which pass(es) match it.
 """
 
 import pandas as pd
 
 from services.dedup import JournalIndex
-from services.repository import get_connection, insert_minimal_journal, tag_source
+from services.repository import get_connection, insert_minimal_journal, tag_source, tag_enrichment
 from utils.issn import extract_issns
 
 
@@ -57,6 +66,7 @@ def import_scimago(csv_path, source_label, index=None, conn=None):
     matched_by_title = 0
     created = 0
     missing_issn = 0
+    diamond_tagged = 0
 
     for _, row in df.iterrows():
 
@@ -94,6 +104,10 @@ def import_scimago(csv_path, source_label, index=None, conn=None):
 
         tag_source(conn, journal_id, source_label, metadata)
 
+        if _clean(row.get("Open Access Diamond")) == "Yes":
+            tag_enrichment(conn, journal_id, "diamond_oa", {})
+            diamond_tagged += 1
+
     if owns_connection:
         conn.commit()
         conn.close()
@@ -105,12 +119,13 @@ def import_scimago(csv_path, source_label, index=None, conn=None):
         "matched_by_title": matched_by_title,
         "created": created,
         "missing_issn": missing_issn,
+        "diamond_tagged": diamond_tagged,
     }
 
     print(
         f"{source_label}: {len(df)} rows | matched by ISSN: {matched_by_issn} | "
         f"matched by title: {matched_by_title} | new journals created: {created} | "
-        f"rows with no usable ISSN: {missing_issn}"
+        f"rows with no usable ISSN: {missing_issn} | Diamond OA: {diamond_tagged}"
     )
 
     return index, summary
