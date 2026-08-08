@@ -1,15 +1,31 @@
 {% macro export_panel() %}
+{#
+    Three most-used formats shown directly (#92); the rest live behind
+    a "More" disclosure. Native <details>/<summary> -- keyboard
+    accessible for free (Tab to focus, Enter/Space to toggle), same
+    pattern used everywhere else in this app, no JS. Flex, not grid,
+    so the expanded XLSX/CSV row can appear without the details
+    element being squeezed into a fixed grid cell.
+#}
 <div>
     <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">📤 Export Results</h3>
     <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">
         Markdown is the best choice for pasting into an AI assistant like ChatGPT or Claude.
     </p>
-    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+    <div class="flex flex-wrap gap-2 items-start">
         <a href="/search/export/pdf" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">📄 PDF</a>
         <a href="/search/export/docx" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">📝 DOCX</a>
-        <a href="/search/export/xlsx" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">📊 XLSX</a>
         <a href="/search/export/md" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">📋 Markdown</a>
-        <a href="/search/export/csv" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">📥 CSV</a>
+        <details class="group">
+            <summary class="cursor-pointer list-none flex items-center gap-1 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+                More
+                <span class="transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
+            </summary>
+            <div class="mt-2 flex flex-wrap gap-2">
+                <a href="/search/export/xlsx" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">📊 XLSX</a>
+                <a href="/search/export/csv" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">📥 CSV</a>
+            </div>
+        </details>
     </div>
 </div>
 {% endmacro %}
