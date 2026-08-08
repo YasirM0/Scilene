@@ -1,4 +1,4 @@
-{% macro accordion_card(title, group) %}
+{% macro accordion_card(title, group, icon="") %}
 {#
     Native <details name="..."> makes cards in the same group mutually
     exclusive (only one open at a time) with no JS. The chevron-rotate
@@ -6,14 +6,18 @@
     expand/collapse itself comes from the .accordion-body rule in
     input.css (a CSS-grid 0fr->1fr transition -- animating height:auto
     isn't possible with plain CSS, this is the standard workaround).
+
+    Navy for the heading (an "interactive element" -- the whole summary
+    is the click target), gold reserved for just the expand indicator --
+    per the brand spec's "small accents" rule, not a second heading color.
 #}
-<details name="{{ group }}" class="group bg-white rounded-lg border border-gray-200">
-    <summary class="cursor-pointer list-none flex items-center justify-between gap-4 px-4 sm:px-6 py-4 font-semibold text-gray-900">
-        <span>{{ title }}</span>
-        <span class="shrink-0 text-horizon-600 transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
+<details name="{{ group }}" class="group bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+    <summary class="cursor-pointer list-none flex items-center justify-between gap-4 px-4 sm:px-6 py-4 font-semibold text-navy-600 dark:text-navy-300">
+        <span>{% if icon %}<span aria-hidden="true">{{ icon }}</span> {% endif %}{{ title }}</span>
+        <span class="shrink-0 text-gold-600 transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
     </summary>
     <div class="accordion-body">
-        <div class="px-4 sm:px-6 pb-4 text-sm text-gray-600 leading-relaxed space-y-3">
+        <div class="px-4 sm:px-6 pb-5 text-sm text-gray-600 dark:text-gray-300 leading-relaxed space-y-3">
             {{ caller() }}
         </div>
     </div>

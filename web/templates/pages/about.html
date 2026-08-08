@@ -5,17 +5,23 @@
 
 {% block content %}
 
+{#
+    Tagline is deliberately NOT the dominant visual element here -- the
+    logo (with its own SCILENE wordmark) is the brand mark; the tagline
+    is muted gold, lighter weight, letter-spaced, secondary to it. See
+    docs/DESIGN_SYSTEM.md's brand color table for why gold stays this
+    restrained (~5-10% of the interface, not a headline color).
+#}
 <section class="px-4 sm:px-6 py-14 sm:py-20 bg-navy-600 rounded-lg text-center">
     <img
         src="{{ url_for('static', path='img/scilene-logo.png') }}"
         alt="Scilene logo"
-        class="block mx-auto w-24 h-24 mb-6"
+        class="block mx-auto w-24 h-24 mb-8"
     >
-    <p class="text-sm font-medium text-gold-600 mb-3">About Scilene</p>
-    <h1 class="text-3xl sm:text-5xl font-bold text-white tracking-tight mb-5 leading-tight">
-        Navigate Scholarly Publishing<br class="hidden sm:block"> with Confidence
+    <h1 class="text-sm sm:text-base font-normal text-gold-600 tracking-wide mb-4">
+        Navigate Scholarly Publishing with Confidence
     </h1>
-    <p class="text-horizon-50 max-w-xl mx-auto">
+    <p class="text-horizon-50 max-w-xl mx-auto text-sm">
         Scilene helps researchers find the right academic journals through
         transparent, explainable recommendations — and understand the
         thinking behind every one of them.
@@ -24,7 +30,7 @@
 
 <section class="py-10 space-y-4">
 
-    {% call accordion_card("What is Scilene?", "about") %}
+    {% call accordion_card("What is Scilene?", "about", "🧭") %}
     <p>
         Scilene is an open-source platform that helps researchers discover
         the right academic journals for their work — and understand why
@@ -39,7 +45,7 @@
     </p>
     {% endcall %}
 
-    {% call accordion_card("Why was Scilene created?", "about") %}
+    {% call accordion_card("Why was Scilene created?", "about", "💡") %}
     <p>
         Many existing journal finders return a ranked list without
         explaining their reasoning — relying on paid services or
@@ -50,7 +56,7 @@
     </p>
     {% endcall %}
 
-    {% call accordion_card('Why the name "Scilene"?', "about") %}
+    {% call accordion_card('Why the name "Scilene"?', "about", "🌙") %}
     <p>
         Scilene combines <strong>Sci</strong>, for science, with
         <strong>Selene</strong>, the Greek personification of the moon.
@@ -64,48 +70,54 @@
     </p>
     {% endcall %}
 
-    {% call accordion_card("What does the logo represent?", "about") %}
+    {% call accordion_card("What does the logo represent?", "about", "🎨") %}
     <p>
         The mark is the letter "S," traced by a subtle, abstract crescent
-        meant to suggest an orbit or research journey rather than a literal
-        moon. Above it, a small gold star stands in for a guiding star —
-        discovery, direction, and confidence.
+        meant to suggest an orbit or research journey — only a very quiet
+        nod to Selene, not a literal moon. Above it, a small gold star
+        stands in for a guiding star: discovery, direction, and
+        confidence.
     </p>
-    <p>
-        The deep navy represents the night sky, trust, and academia; gold
-        represents discovery, insight, and progress. Together they trace
-        back to the same idea behind the name: a steady guide through the
-        scholarly landscape.
-    </p>
+    <div class="grid grid-cols-2 gap-3">
+        <div class="rounded-md overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div class="h-16 bg-navy-600"></div>
+            <p class="px-3 py-2 text-xs text-gray-600 dark:text-gray-300">Navy — night sky, trust, academic credibility</p>
+        </div>
+        <div class="rounded-md overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div class="h-16 bg-gold-600"></div>
+            <p class="px-3 py-2 text-xs text-gray-600 dark:text-gray-300">Gold — discovery, insight, progress</p>
+        </div>
+    </div>
     {% endcall %}
 
-    {% call accordion_card("Why offline-first?", "about") %}
+    {% call accordion_card("Why offline-first?", "about", "🔒") %}
     <p>
         Scilene's core recommendation engine is designed to work without
         depending on external APIs or an internet connection. Optional
         AI-assisted features may be added later, but they will never
         become mandatory for getting a recommendation.
     </p>
-    <p>
-        That keeps the tool fast, predictable, and independent of any
-        single service staying online — a search you can rely on the same
-        way today and a year from now.
-    </p>
+    <div class="bg-navy-50 dark:bg-gray-900 rounded-md px-4 py-3 text-sm text-navy-700 dark:text-navy-300">
+        In practice: the same search returns the same results whether
+        you're at a conference with no signal or at your desk — no
+        service outage ever blocks a recommendation.
+    </div>
     {% endcall %}
 
-    {% call accordion_card("Why is AI optional?", "about") %}
+    {% call accordion_card("Why is AI optional?", "about", "🤖") %}
     <p>
         Scilene's recommendations come from a deterministic, explainable
         ranking engine, not a black box. Where AI is introduced, it's
         meant to enrich and assist that process, never to replace it.
     </p>
-    <p>
-        Recommendations should stay understandable by the researcher
-        reading them — not only interpretable by an algorithm.
-    </p>
+    <div class="bg-navy-50 dark:bg-gray-900 rounded-md px-4 py-3 text-sm text-navy-700 dark:text-navy-300">
+        In practice: turning AI features off never changes which
+        journals get recommended — only how much help you get finding
+        the right words to search with.
+    </div>
     {% endcall %}
 
-    {% call accordion_card("Why open source?", "about") %}
+    {% call accordion_card("Why open source?", "about", "🌍") %}
     <p>
         Scilene is developed in the open so that anyone can inspect how
         recommendations are produced, suggest improvements, or contribute
@@ -118,7 +130,7 @@
     </p>
     {% endcall %}
 
-    {% call accordion_card("Our vision", "about") %}
+    {% call accordion_card("Our vision", "about", "🚀") %}
     <p>
         Scilene aims to become a trusted, open-source reference tool for
         journal selection — and, over time, a broader research
