@@ -273,13 +273,20 @@ def keyword_document_frequency(keyword):
     return count
 
 
-def search_candidates(keywords, language=None, free_only=False, indexing=None,
+def search_candidates(keywords, languages=None, free_only=False, indexing=None,
                        quartiles=None, sinta_levels=None, max_review_weeks=None):
     """
     Search journals matching any keyword in the title, subjects, or
-    keywords fields, optionally narrowed by language, free-only,
+    keywords fields, optionally narrowed by language(s), free-only,
     confirmed indexing source(s), Scopus/WoS quartile(s), SINTA
     accreditation level(s), and/or a maximum typical review time.
+
+    languages:
+        Optional list (e.g. ["English", "Arabic"], #89). Matches a
+        journal if ANY selected language appears in its (possibly
+        multi-language) `languages` field -- same OR-of-LIKE pattern
+        as `indexing`/`quartiles`/`sinta_levels` below, just against a
+        free-text column instead of a normalized one.
 
     quartiles:
         Optional list (e.g. ["Q1", "Q2"]). Matches a journal if ANY of
@@ -289,8 +296,6 @@ def search_candidates(keywords, language=None, free_only=False, indexing=None,
     sinta_levels:
         Optional list (e.g. ["SINTA 1", "SINTA 2"]). Matches a journal
         if its SINTA accreditation is one of these.
-
-    (language/free_only/indexing documented above.)
 
     Note: budget (max APC) filtering is NOT done here — see recommender.
     """
@@ -315,9 +320,10 @@ def search_candidates(keywords, language=None, free_only=False, indexing=None,
             params.extend([f"%{keyword}%"] * 3)
         conditions.append("(" + " OR ".join(keyword_conditions) + ")")
 
-    if language:
-        conditions.append("languages LIKE ?")
-        params.append(f"%{language}%")
+    if languages:
+        language_conditions = " OR ".join("languages LIKE ?" for _ in languages)
+        conditions.append(f"({language_conditions})")
+        params.extend(f"%{lang}%" for lang in languages)
 
     if free_only:
         conditions.append("apc = 'No'")

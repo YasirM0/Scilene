@@ -64,7 +64,7 @@ class JournalRecommender:
         title,
         keywords=None,
         abstract="",
-        language=None,
+        languages=None,
         free_only=False,
         min_budget=None,
         max_budget=None,
@@ -76,9 +76,9 @@ class JournalRecommender:
     ):
         """
         Recommend journals based on a paper title, keywords, and
-        (optionally) an abstract, narrowed by language/budget/indexing/
-        review-time filters and reordered according to a recommendation
-        strategy.
+        (optionally) an abstract, narrowed by language(s)/budget/
+        indexing/review-time filters and reordered according to a
+        recommendation strategy.
 
         Returns the FULL sorted list of matching journals (searches and
         scores the complete candidate set rather than an early-truncated
@@ -129,7 +129,7 @@ class JournalRecommender:
         # after parsing the free-text apc_amount.
         candidates = search_candidates(
             keywords,
-            language=language,
+            languages=languages,
             free_only=free_only,
             indexing=indexing,
             quartiles=quartiles,

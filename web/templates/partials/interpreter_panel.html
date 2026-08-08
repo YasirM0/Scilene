@@ -94,3 +94,21 @@
 {% from "components/confirmed_tags.html" import confirmed_tags %}
 {{ confirmed_tags(confirmed_tags_oob, oob=True) }}
 {% endif %}
+
+{% if language_card_oob is defined %}
+{#
+    #89 -- set only by /search/interpret when the abstract's detected
+    language changed, so the language filter card (in the Advanced
+    Mode panel, not #interpreter-panel) picks up the newly pre-checked
+    language from the SAME abstract-blur request that updates
+    suggestions, without a second competing trigger on the textarea.
+#}
+{% from "components/language_filter_card.html" import language_filter_card %}
+{{ language_filter_card(
+    language_card_oob.language_options,
+    language_card_oob.selected_languages,
+    language_card_oob.detected_language,
+    language_card_oob.language_touched,
+    oob=True
+) }}
+{% endif %}

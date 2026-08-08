@@ -34,7 +34,7 @@ class ReportContext:
             self.generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
 
 
-def build_filters_summary(language=None, free_only=False, min_budget=None,
+def build_filters_summary(languages=None, free_only=False, min_budget=None,
                            max_budget=None, indexing=None, quartiles=None,
                            sinta_levels=None, max_review_weeks=None):
     """
@@ -45,8 +45,8 @@ def build_filters_summary(language=None, free_only=False, min_budget=None,
 
     lines = []
 
-    if language:
-        lines.append(f"Language: {language}")
+    if languages:
+        lines.append(f"Language: {', '.join(languages)}")
 
     if free_only:
         lines.append("Budget: Free (No APC)")

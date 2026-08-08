@@ -28,7 +28,7 @@ def _cache_key(**kwargs):
         kwargs.get("title"),
         tuple(kwargs.get("keywords") or ()),
         kwargs.get("abstract"),
-        kwargs.get("language"),
+        tuple(kwargs["languages"]) if kwargs.get("languages") else None,
         kwargs.get("free_only"),
         kwargs.get("min_budget"),
         kwargs.get("max_budget"),

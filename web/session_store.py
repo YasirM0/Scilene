@@ -69,6 +69,14 @@ def get_session(session_id: str) -> dict:
             # version (human-readable filters_summary, not reusable
             # raw values), which is why this exists separately.
             "last_search_params": None,
+
+            # Cross-language discovery (#89) -- the language the
+            # abstract was detected as (services/language_detection.py),
+            # and whether the user has manually touched the language
+            # checkboxes since (if so, the "detected X" hint stops
+            # showing, even though the detected value is kept).
+            "detected_language": None,
+            "language_touched": False,
         }
 
     _SESSIONS[session_id]["_last_access"] = time.time()

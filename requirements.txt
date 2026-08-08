@@ -20,3 +20,8 @@ pydantic-settings==2.7.1
 # Never imported by services/recommender.py; the deterministic engine
 # has no dependency on this. See docs/ENRICHMENT.md.
 requests==2.34.2
+
+# Cross-language journal discovery (#89) -- deterministic statistical
+# language detection (NOT an LLM), used only to pre-select a filter
+# checkbox. See services/language_detection.py.
+langdetect==1.0.9

@@ -106,4 +106,6 @@
 {% from "components/confirmed_tags.html" import confirmed_tags %}
 {{ confirmed_tags([], oob=True) }}
 <div id="interpreter-panel" hx-swap-oob="true"></div>
+{% from "components/language_filter_card.html" import language_filter_card %}
+{{ language_filter_card(language_options, [], none, false, oob=True) }}
 {% endif %}

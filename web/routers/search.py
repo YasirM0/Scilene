@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from io import BytesIO
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
 
 from services import search_service
 from services.discipline_detection import detect_disciplines
@@ -22,6 +22,7 @@ from services.reports import generate_pdf, generate_docx, generate_xlsx, generat
 
 from web.dependencies import get_session_state, attach_session_cookie
 from web.interpreter_presentation import current_suggestions_context
+from web.language_presentation import language_form_context
 from web.search_cache import cached_search
 from web.session_store import MAX_HISTORY_ENTRIES
 from web.search_presentation import (
@@ -30,6 +31,7 @@ from web.search_presentation import (
     INDEXING_OPTIONS,
     QUARTILE_OPTIONS,
     SINTA_LEVEL_OPTIONS,
+    LANGUAGE_OPTIONS,
     REVIEW_TIME_BANDS,
     budget_to_range,
     filter_visible_results,
@@ -67,6 +69,7 @@ def _filter_context():
         "indexing_options": INDEXING_OPTIONS,
         "quartile_options": QUARTILE_OPTIONS,
         "sinta_level_options": SINTA_LEVEL_OPTIONS,
+        "language_options": LANGUAGE_OPTIONS,
         "review_time_options": list(REVIEW_TIME_BANDS.keys()),
     }
 
@@ -142,7 +145,7 @@ def _results_context(session):
     }
 
 
-def _execute_search(session, abstract, concepts, strategy_label, resolved_language,
+def _execute_search(session, abstract, concepts, strategy_label, resolved_languages,
                      free_only, min_budget, max_budget, indexing, quartiles,
                      sinta_levels, max_review_weeks, resolved_strategy):
     """
@@ -158,7 +161,7 @@ def _execute_search(session, abstract, concepts, strategy_label, resolved_langua
         title="",
         keywords=concepts,
         abstract=abstract,
-        language=resolved_language,
+        languages=resolved_languages,
         free_only=free_only,
         min_budget=min_budget,
         max_budget=max_budget,
@@ -170,7 +173,7 @@ def _execute_search(session, abstract, concepts, strategy_label, resolved_langua
     )
 
     filters_summary = build_filters_summary(
-        language=resolved_language,
+        languages=resolved_languages,
         free_only=free_only,
         min_budget=min_budget,
         max_budget=max_budget,
@@ -204,7 +207,7 @@ def _execute_search(session, abstract, concepts, strategy_label, resolved_langua
     session["last_search_params"] = {
         "abstract": abstract,
         "strategy_label": strategy_label,
-        "resolved_language": resolved_language,
+        "resolved_languages": resolved_languages,
         "free_only": free_only,
         "min_budget": min_budget,
         "max_budget": max_budget,
@@ -220,7 +223,12 @@ def _execute_search(session, abstract, concepts, strategy_label, resolved_langua
 
 @router.get("")
 def search_page(request: Request, session=Depends(get_session_state)):
-    context = {**_filter_context(), **_results_context(session), **_interpreter_form_context(session)}
+    context = {
+        **_filter_context(),
+        **_results_context(session),
+        **_interpreter_form_context(session),
+        **language_form_context(session),
+    }
     return _render(request, "pages/search.html", context, session)
 
 
@@ -231,7 +239,7 @@ def run_search(
     abstract: str = Form(""),
     fallback_tags: str = Form(""),
     strategy_label: str = Form(...),
-    language: str = Form("Any"),
+    languages: list[str] = Form([]),
     budget_choice: str = Form("Any"),
     review_time_choice: str = Form("Any"),
     indexing: list[str] = Form([]),
@@ -278,13 +286,13 @@ def run_search(
         }
         return _render(request, "partials/search_results.html", context, session)
 
-    resolved_language = None if language == "Any" else language
+    resolved_languages = languages or None
     free_only, min_budget, max_budget = budget_to_range(budget_choice)
     max_review_weeks = REVIEW_TIME_BANDS[review_time_choice]
     resolved_strategy = STRATEGY_LABELS[strategy_label]
 
     results = _execute_search(
-        session, abstract, concepts, strategy_label, resolved_language,
+        session, abstract, concepts, strategy_label, resolved_languages,
         free_only, min_budget, max_budget, indexing, quartiles,
         sinta_levels, max_review_weeks, resolved_strategy,
     )
@@ -328,7 +336,7 @@ def refine_with_disciplines(request: Request, session=Depends(get_session_state)
 
     results = _execute_search(
         session, params["abstract"], concepts, params["strategy_label"],
-        params["resolved_language"], params["free_only"], params["min_budget"],
+        params["resolved_languages"], params["free_only"], params["min_budget"],
         params["max_budget"], params["indexing"], params["quartiles"],
         params["sinta_levels"], params["max_review_weeks"], params["resolved_strategy"],
     )
@@ -379,9 +387,30 @@ def clear_search(request: Request, session=Depends(get_session_state)):
     session["interpreter_suggestions"] = []
     session["interpreter_abstract_snapshot"] = None
     session["last_search_params"] = None
+    session["detected_language"] = None
+    session["language_touched"] = False
 
-    context = {**_filter_context(), **_results_context(session), "reset_form": True}
+    context = {
+        **_filter_context(),
+        **_results_context(session),
+        **language_form_context(session),
+        "reset_form": True,
+    }
     return _render(request, "partials/search_results.html", context, session)
+
+
+@router.post("/language-filter/touch")
+def touch_language_filter(session=Depends(get_session_state)):
+    """
+    Fired once (event delegation, see language_filter_card.html's
+    wrapping div) whenever any language checkbox changes by hand --
+    per #89: "Once the user changes the language filter manually, the
+    hint disappears." Doesn't touch which languages are selected,
+    only whether the "detected X" hint should still show.
+    """
+    session["language_touched"] = True
+    response = HTMLResponse("")
+    return attach_session_cookie(response, session)
 
 
 def _build_report_context(search_meta, results):

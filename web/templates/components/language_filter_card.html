@@ -1,0 +1,30 @@
+{% macro language_filter_card(language_options, selected_languages, detected_language, language_touched, oob=False) %}
+{#
+    Multi-select (#89) -- was a single-select Any/English/Indonesian
+    dropdown before. The wrapping div's hx-trigger="change" catches
+    bubbled change events from ANY checkbox inside it (one listener,
+    not one per checkbox) and clears the "detected" hint -- per the
+    issue: "The hint should only appear while the language selection
+    is automatic. Once the user changes the language filter manually,
+    the hint disappears." `oob` lets web/routers/interpreter.py's
+    /search/interpret re-render this whole card (with the detected
+    language pre-checked) as an out-of-band swap after abstract blur.
+#}
+<div id="language-filter-card" {% if oob %}hx-swap-oob="true"{% endif %} class="bg-gray-50 dark:bg-gray-900 rounded-md p-3">
+    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Journal Languages</p>
+    <div hx-post="/search/language-filter/touch" hx-trigger="change" hx-target="#language-hint" hx-swap="innerHTML" class="space-y-1">
+        {% for option in language_options %}
+        <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+            <input type="checkbox" name="languages" value="{{ option }}" {% if option in selected_languages %}checked{% endif %}
+                class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
+            {{ option }}
+        </label>
+        {% endfor %}
+    </div>
+    <div id="language-hint" class="mt-1">
+        {% if detected_language and not language_touched %}
+        <p class="text-xs text-navy-600 dark:text-navy-300">✓ Detected {{ detected_language }} from your manuscript. Select additional journal languages to broaden your search.</p>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}

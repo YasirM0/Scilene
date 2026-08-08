@@ -67,6 +67,10 @@ STRONG_TIERS = {"Excellent", "Strong"}
 INDEXING_OPTIONS = ["DOAJ", "Scopus", "SINTA", "Web of Science"]
 QUARTILE_OPTIONS = ["Q1", "Q2", "Q3", "Q4"]
 SINTA_LEVEL_OPTIONS = [f"SINTA {n}" for n in range(1, 7)]
+# Multi-select, matching the indexing/quartile/SINTA pattern (#89) --
+# was a single-select Any/English/Indonesian dropdown before. Must
+# match services.language_detection.SUPPORTED_LANGUAGES' values.
+LANGUAGE_OPTIONS = ["English", "Arabic", "Indonesian"]
 
 BUDGET_OPTIONS = [
     "Any",
