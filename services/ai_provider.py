@@ -79,10 +79,7 @@ class AIProvider:
         raise NotImplementedError
 
     def generate_search_inputs(self, research_idea):
-        """Idea -> suggested title/abstract/keywords (#85). No
-        provider implements this yet -- generating prose needs a real
-        model; unlike suggest_concepts(), a hardcoded placeholder
-        wouldn't demonstrate real value, so #85 hasn't been built."""
+        """Idea -> suggested title/abstract/keywords (#85)."""
         raise NotImplementedError
 
 
@@ -104,6 +101,69 @@ class PlaceholderProvider(AIProvider):
             return AIResponse(ok=False, error="No abstract provided.")
 
         return AIResponse(ok=True, data={"suggestions": suggest_concepts(abstract)}, confidence=None)
+
+    def generate_search_inputs(self, research_idea):
+        """
+        #85's "AI generates: Suggested title, Suggested abstract,
+        Suggested keywords" -- deliberately does NOT write new prose.
+        Writing a plausible-sounding title/abstract from a one-line
+        idea is genuine text generation, which needs a real language
+        model to do honestly (unlike suggest_concepts()' fixed-pool
+        tag suggestion, there's no non-fabricating way to invent
+        sentences that weren't typed). So this only ever
+        deterministically RESTRUCTURES the researcher's own words:
+
+          - title: the idea's first sentence (or the whole thing if
+            short), never generated text.
+          - abstract: the idea, verbatim -- the "suggested abstract"
+            IS what the user typed, not a rewrite of it.
+          - keywords: significant words extracted from the idea via
+            the same stopword filter services/recommender.py's own
+            fallback tokenizer uses (services/stopwords.py) -- real,
+            reused logic, not a new heuristic invented for this.
+
+        A real generative provider (CloudAIProvider pointed at an
+        actual model, or a future local one) would override this to
+        genuinely draft a title/abstract -- the interface and the web
+        flow calling it don't change either way.
+        """
+        from services.stopwords import filter_stopwords
+
+        idea = (research_idea or "").strip()
+        if not idea:
+            return AIResponse(ok=False, error="No research idea provided.")
+
+        first_sentence = idea.split(".")[0].strip()
+        title = first_sentence[:120] if first_sentence else idea[:120]
+
+        words = filter_stopwords([
+            word.strip(".,;:()\"'").lower()
+            for word in idea.split()
+            if len(word.strip(".,;:()\"'")) > 3
+        ])
+        seen = set()
+        keywords = []
+        for word in words:
+            if word not in seen:
+                seen.add(word)
+                keywords.append(word)
+        keywords = keywords[:10]
+
+        return AIResponse(
+            ok=True,
+            data={"title": title, "abstract": idea, "keywords": keywords},
+            confidence=None,
+        )
+
+
+def get_default_provider():
+    """
+    The one place that resolves "which AIProvider is active" -- today,
+    always PlaceholderProvider (no settings/config for choosing a real
+    cloud or local provider exists yet). A future settings page adding
+    that choice only needs to change this function, not any caller.
+    """
+    return PlaceholderProvider()
 
 
 class CloudAIProvider(AIProvider):

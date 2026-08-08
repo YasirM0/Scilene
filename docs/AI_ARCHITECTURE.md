@@ -216,6 +216,19 @@ Done (scaffolding only, no real model anywhere):
   matches #102's own "reuse existing metadata, avoid new taxonomies"
   guidance. A future real classifier could replace this without
   changing anything that calls `detect_disciplines()`.
+- Research Idea Assistant (#85, `web/routers/research_idea.py`) — the
+  full "Start from a Research Idea" modal → generate → review/edit →
+  "Continue to Search" flow, feeding the exact same Submission Search
+  page (`session["confirmed_tags"]` + a one-shot `prefill_abstract`)
+  a manual search already uses. `PlaceholderProvider.generate_search_inputs()`
+  deliberately does NOT write new prose — writing a plausible title/
+  abstract from a one-line idea is genuine text generation, which
+  needs a real model to do honestly. It only restructures the
+  researcher's own words (title = first sentence, abstract = the idea
+  verbatim, keywords = stopword-filtered significant words) — a real
+  generative provider would override this method without any web-
+  layer change. `get_default_provider()` is the one place a future
+  settings-driven provider choice would plug in.
 
 Not done:
 

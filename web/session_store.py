@@ -85,6 +85,13 @@ def get_session(session_id: str) -> dict:
             "detected_language": None,
             "language_touched": False,
 
+            # #85 -- abstract text to pre-fill the Submission Search
+            # page's abstract textarea with, set by "Continue to
+            # Search" from the Research Idea modal. Popped (read once)
+            # by web/routers/search.py's search_page(), not persisted
+            # across a later, unrelated page load.
+            "prefill_abstract": None,
+
             # #108 -- whether the "Get more info online" button appears
             # on journal cards at all. On by default (the lazy-click
             # design already means nothing fetches without an explicit
