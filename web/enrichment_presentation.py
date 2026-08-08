@@ -16,17 +16,18 @@ PROVIDER_LABELS = {
 def format_enrichment_result(result):
     """
     `result` is services.online_enrichment.enrich()'s return value
-    (None, or {"provider": ..., "data": {...}}). Returns a flat dict
-    for the template, or None if there's nothing to show.
+    (None, or {"providers": [...], "data": {...}} -- `data` is already
+    the merge of every contributing provider's fields, #108). Returns a
+    flat dict for the template, or None if there's nothing to show.
     """
     if not result:
         return None
 
-    provider = result["provider"]
+    providers = result["providers"]
     data = result["data"]
 
     return {
-        "source_label": PROVIDER_LABELS.get(provider, provider),
+        "source_label": " + ".join(PROVIDER_LABELS.get(p, p) for p in providers),
         "publisher": data.get("publisher"),
         "is_open_access": data.get("is_open_access"),
         "apc_usd": data.get("apc_usd"),

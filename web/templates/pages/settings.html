@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Settings — {{ app.name }}{% endblock %}
+
+{% block content %}
+
+<section class="max-w-xl mx-auto py-10">
+    <h1 class="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-1">Settings</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+        Session-only preferences — cleared like the rest of your search state
+        (docs/ENRICHMENT.md), not saved to an account.
+    </p>
+
+    {% if saved %}
+    <div class="mb-4 px-4 py-2 rounded-md bg-navy-50 dark:bg-gray-900 text-sm text-navy-700 dark:text-navy-300">
+        ✓ Saved.
+    </div>
+    {% endif %}
+
+    <form method="post" action="/settings" class="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+        <label class="flex items-start gap-3">
+            <input type="checkbox" name="enrichment_enabled" {% if enrichment_enabled %}checked{% endif %}
+                class="mt-1 rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
+            <span>
+                <span class="block text-sm font-medium text-gray-800 dark:text-gray-200">
+                    Online metadata enrichment
+                </span>
+                <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    Shows a "🌐 Get more info online (OpenAlex / Crossref)" button on
+                    journal cards. Nothing is ever fetched automatically — this only
+                    controls whether the button appears at all. Turning it off never
+                    changes which journals are recommended; it only removes an
+                    optional, informational lookup.
+                </span>
+            </span>
+        </label>
+
+        <button type="submit"
+            class="mt-4 px-4 py-2 text-sm font-medium rounded-md bg-navy-600 text-white hover:bg-navy-700"
+        >Save</button>
+    </form>
+</section>
+
+{% endblock %}

@@ -89,7 +89,7 @@
 
 <div class="space-y-3">
     {% for journal in page_results %}
-        {{ journal_card(journal) }}
+        {{ journal_card(journal, enrichment_enabled=enrichment_enabled) }}
     {% endfor %}
 </div>
 

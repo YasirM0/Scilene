@@ -113,7 +113,11 @@ def _results_context(session):
     all_results = session.get("current_results")
 
     if all_results is None:
-        return {"has_search": False, "history": session["history"]}
+        return {
+            "has_search": False,
+            "history": session["history"],
+            "enrichment_enabled": session.get("enrichment_enabled", True),
+        }
 
     visible_results = filter_visible_results(all_results, session["show_weaker"])
     session["visible_results"] = visible_results
@@ -142,6 +146,7 @@ def _results_context(session):
         "total_pages": total_pages,
         "history": session["history"],
         "detected_disciplines": detected_disciplines,
+        "enrichment_enabled": session.get("enrichment_enabled", True),
     }
 
 

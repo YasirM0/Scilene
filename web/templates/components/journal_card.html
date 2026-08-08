@@ -1,4 +1,4 @@
-{% macro journal_card(journal) %}
+{% macro journal_card(journal, enrichment_enabled=True) %}
 <div class="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
 
     <div class="flex items-start justify-between gap-3">
@@ -100,12 +100,14 @@
                 {% endif %}
             </div>
 
-            {% if journal.issn_print or journal.issn_online %}
+            {% if enrichment_enabled and (journal.issn_print or journal.issn_online) %}
             {#
                 Online enrichment (#107) -- lazy-loaded on click, never
                 on page load, so a search never waits on or depends on
                 an external API (docs/ENRICHMENT.md). Optional and
-                clearly separate from the recommendation itself.
+                clearly separate from the recommendation itself. The
+                button itself only appears when Settings' "Online
+                metadata enrichment" preference (#108) is on.
             #}
             <button
                 type="button"

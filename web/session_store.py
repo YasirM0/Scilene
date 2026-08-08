@@ -84,6 +84,15 @@ def get_session(session_id: str) -> dict:
             # showing, even though the detected value is kept).
             "detected_language": None,
             "language_touched": False,
+
+            # #108 -- whether the "Get more info online" button appears
+            # on journal cards at all. On by default (the lazy-click
+            # design already means nothing fetches without an explicit
+            # per-journal click -- see docs/ENRICHMENT.md's "Implementation
+            # note" on why that already satisfies web's consent needs);
+            # this lets a user opt all the way out if they'd rather this
+            # app never talk to an external API on their behalf.
+            "enrichment_enabled": True,
         }
 
     _SESSIONS[session_id]["_last_access"] = time.time()

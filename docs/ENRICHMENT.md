@@ -271,13 +271,21 @@ Done:
   a nonexistent ISSN (graceful "not found"), and a simulated network
   timeout (returned `None` in ~5s, not a hang).
 
+Settings page integration and result merging from #108's checklist ARE
+now implemented (a later pass): `/settings` (`web/routers/settings.py`)
+has one real preference, "Online metadata enrichment" — off hides the
+"Get more info online" button entirely (`journal_card.html`), on is
+the existing lazy-click behavior, unchanged. `services/online_enrichment.py`'s
+`enrich()` now queries every provider rather than stopping at the
+first success, merging their fields (OpenAlex wins a field both have,
+Crossref only fills gaps) — `format_enrichment_result()`'s
+`source_label` shows "OpenAlex + Crossref" when both contributed.
+
 Not done (still real implementation work, not this pass):
 
 - The desktop consent flow from #108's checklist — blocked on the
   desktop app existing at all (see `docs/ARCHITECTURE_DECISIONS.md`);
   see the "Implementation note" above for why web needs no dialog.
-- Settings page integration from #108's checklist — there's no
-  settings page yet at all.
 - The `tools/generate_scielo.py` / `generate_sherpa.py` annual
   regeneration scripts.
 - The rest of #98: ASJC taxonomy, top-level disciplines, and

@@ -1,13 +1,15 @@
 """
 Online metadata enrichment orchestration (#107).
 
-The one entry point the web layer calls -- owns provider fallback
-order (OpenAlex first, Crossref second), a short retry on a transient
-miss, and a process-wide in-memory TTL cache (mirrors
-web/search_cache.py's pattern/reasoning: identical input, identical
-result, no reason to scope per-session). Metadata like publisher/APC
-doesn't change minute to minute, so a day-long TTL is generous, not
-risky.
+The one entry point the web layer calls -- queries every provider
+(not just until the first success) and merges their fields (#108's
+"Merge enrichment results" -- OpenAlex's value wins per field when
+both have one, since it's the richer API; Crossref only fills fields
+OpenAlex left empty), plus a short retry on a transient miss and a
+process-wide in-memory TTL cache (mirrors web/search_cache.py's
+pattern/reasoning: identical input, identical result, no reason to
+scope per-session). Metadata like publisher/APC doesn't change minute
+to minute, so a day-long TTL is generous, not risky.
 
 Deliberately NOT imported by services/recommender.py or anything in
 the deterministic search path (see docs/ENRICHMENT.md) -- this only
@@ -43,8 +45,10 @@ class _MinimalJournal:
 
 def enrich(issn_print, issn_online):
     """
-    Returns {"provider": "openalex" | "crossref", "data": {...}} from
-    whichever provider has data first, or None.
+    Returns {"providers": ["openalex", "crossref", ...], "data": {...}}
+    -- `data` is the union of every responding provider's fields
+    (earlier providers in _PROVIDERS win a field both have), `providers`
+    lists only the ones that actually had something. None if nobody did.
     """
 
     cache_key = (issn_print or "", issn_online or "")
@@ -56,13 +60,19 @@ def enrich(issn_print, issn_online):
         return cached[1]
 
     journal = _MinimalJournal(issn_print, issn_online)
-    result = None
 
+    contributors = []
+    merged_data = {}
     for provider in _PROVIDERS:
         data = _fetch_with_retry(provider, journal)
-        if data:
-            result = {"provider": provider.name, "data": data}
-            break
+        if not data:
+            continue
+        contributors.append(provider.name)
+        for key, value in data.items():
+            if key not in merged_data and value not in (None, "", []):
+                merged_data[key] = value
+
+    result = {"providers": contributors, "data": merged_data} if contributors else None
 
     if len(_cache) >= _CACHE_MAX_ENTRIES:
         _cache.pop(next(iter(_cache)))  # drop the oldest entry (dicts preserve insertion order)

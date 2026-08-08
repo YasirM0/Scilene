@@ -28,7 +28,7 @@ from fastapi.staticfiles import StaticFiles
 
 from services.app_info import APP_NAME, APP_VERSION
 from web.config import get_settings
-from web.routers import home, pages, search, interpreter, enrichment
+from web.routers import home, pages, search, interpreter, enrichment, settings as settings_router
 
 settings = get_settings()
 
@@ -49,3 +49,4 @@ app.include_router(pages.router)
 app.include_router(search.router)
 app.include_router(interpreter.router)
 app.include_router(enrichment.router)
+app.include_router(settings_router.router)
