@@ -1,90 +1,107 @@
+{#
+    Layout/spacing/typography polish only (#90) -- every field name,
+    id, option, and default stays exactly as it was; only how they're
+    grouped and spaced changed. Two named groups (uppercase, muted
+    tracking-wide labels, same style already used for homepage section
+    headings) replace the previous mix of single full-width fields and
+    a 2-column grid, and the three checkbox groups get their own
+    tinted card so they read as one visual unit instead of floating in
+    open space -- addresses the issue's "weak visual separation" and
+    "large unused horizontal space" complaints directly.
+#}
 <details class="bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 group" open>
-    <summary class="cursor-pointer list-none px-4 py-3 flex items-center justify-between">
+    <summary class="cursor-pointer list-none px-4 sm:px-6 py-4 flex items-center justify-between">
         <span class="text-base font-semibold text-gray-800 dark:text-gray-100">⚙️ Publication Preferences</span>
         <span class="text-gray-400 dark:text-gray-500 transition-transform group-open:rotate-90">▶</span>
     </summary>
 
-    <div class="px-4 pb-4 space-y-4 border-t border-gray-100 dark:border-gray-700 pt-4">
+    <div class="px-4 sm:px-6 pb-6 space-y-6 border-t border-gray-100 dark:border-gray-700 pt-5">
 
         <div>
-            <label for="strategy_label" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recommendation Strategy</label>
-            <select id="strategy_label" name="strategy_label"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
-                {% for label in strategy_labels %}
-                <option value="{{ label }}">{{ label }}</option>
-                {% endfor %}
-            </select>
-        </div>
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Search Settings</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label for="strategy_label" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recommendation Strategy</label>
+                    <select id="strategy_label" name="strategy_label"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
+                        {% for label in strategy_labels %}
+                        <option value="{{ label }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-                <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preferred Language</label>
-                <select id="language" name="language"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
-                    <option value="Any">Any</option>
-                    <option value="English">English</option>
-                    <option value="Indonesian">Indonesian</option>
-                </select>
-            </div>
+                <div>
+                    <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preferred Language</label>
+                    <select id="language" name="language"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
+                        <option value="Any">Any</option>
+                        <option value="English">English</option>
+                        <option value="Indonesian">Indonesian</option>
+                    </select>
+                </div>
 
-            <div>
-                <label for="budget_choice" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Publication Budget</label>
-                <select id="budget_choice" name="budget_choice"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
-                    {% for option in budget_options %}
-                    <option value="{{ option }}">{{ option }}</option>
-                    {% endfor %}
-                </select>
+                <div>
+                    <label for="budget_choice" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Publication Budget</label>
+                    <select id="budget_choice" name="budget_choice"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
+                        {% for option in budget_options %}
+                        <option value="{{ option }}">{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="review_time_choice" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Maximum Review Time</label>
+                    <select id="review_time_choice" name="review_time_choice"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
+                        {% for option in review_time_options %}
+                        <option value="{{ option }}">{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
         </div>
 
         <div>
-            <label for="review_time_choice" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Maximum Review Time</label>
-            <select id="review_time_choice" name="review_time_choice"
-                class="w-full sm:w-1/2 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
-                {% for option in review_time_options %}
-                <option value="{{ option }}">{{ option }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-gray-100 dark:border-gray-700">
-            <div>
-                <p class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Preferred Indexing</p>
-                <div class="space-y-1">
-                    {% for option in indexing_options %}
-                    <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                        <input type="checkbox" name="indexing" value="{{ option }}" {% if option == "DOAJ" %}checked{% endif %}
-                            class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
-                        {{ option }}
-                    </label>
-                    {% endfor %}
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Filter by Index &amp; Quality</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-md p-3">
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Preferred Indexing</p>
+                    <div class="space-y-1">
+                        {% for option in indexing_options %}
+                        <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                            <input type="checkbox" name="indexing" value="{{ option }}" {% if option == "DOAJ" %}checked{% endif %}
+                                class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
+                            {{ option }}
+                        </label>
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
 
-            <div>
-                <p class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Scopus / WoS Quartile</p>
-                <div class="space-y-1">
-                    {% for option in quartile_options %}
-                    <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                        <input type="checkbox" name="quartiles" value="{{ option }}"
-                            class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
-                        {{ option }}
-                    </label>
-                    {% endfor %}
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-md p-3">
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Scopus / WoS Quartile</p>
+                    <div class="space-y-1">
+                        {% for option in quartile_options %}
+                        <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                            <input type="checkbox" name="quartiles" value="{{ option }}"
+                                class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
+                            {{ option }}
+                        </label>
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
 
-            <div>
-                <p class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">SINTA Level</p>
-                <div class="space-y-1 max-h-28 overflow-y-auto pr-2">
-                    {% for option in sinta_level_options %}
-                    <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                        <input type="checkbox" name="sinta_levels" value="{{ option }}"
-                            class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
-                        {{ option }}
-                    </label>
-                    {% endfor %}
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-md p-3">
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">SINTA Level</p>
+                    <div class="space-y-1 max-h-28 overflow-y-auto pr-2">
+                        {% for option in sinta_level_options %}
+                        <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                            <input type="checkbox" name="sinta_levels" value="{{ option }}"
+                                class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
+                            {{ option }}
+                        </label>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
