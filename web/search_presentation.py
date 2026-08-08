@@ -110,10 +110,31 @@ def apc_label(result):
     return "Paid (unconfirmed)"
 
 
+def is_inactive_scopus(result):
+    """
+    True if this journal's Scopus entry is explicitly marked inactive
+    by the Elsevier Source List (#98) -- False for a confirmed-active
+    Scopus journal AND for a journal not indexed in Scopus at all
+    (source_details simply won't have a "Scopus" entry, `active` is
+    only ever set by importers/elsevier.py).
+    """
+    for detail in result.get("source_details", []):
+        if detail["source"] == "Scopus" and detail.get("active") is False:
+            return True
+    return False
+
+
 def filter_visible_results(all_results, show_weaker):
+    """
+    "Show weaker recommendations" reused, per #98, as the one toggle
+    that also reveals inactive-Scopus journals -- no separate filter.
+    """
     if show_weaker:
         return all_results
-    return [r for r in all_results if r["confidence"] in STRONG_TIERS]
+    return [
+        r for r in all_results
+        if r["confidence"] in STRONG_TIERS and not is_inactive_scopus(r)
+    ]
 
 
 def paginate(results, page):

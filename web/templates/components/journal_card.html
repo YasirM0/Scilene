@@ -18,6 +18,15 @@
         {% endfor %}
     </p>
 
+    {% set scopus_detail = journal.source_details | selectattr("source", "equalto", "Scopus") | first %}
+    {% if scopus_detail and scopus_detail.active == False and scopus_detail.coverage %}
+    {#
+        Coverage is only meaningful for an inactive journal (#98) -- an
+        active journal's coverage is just "ongoing", not information.
+    #}
+    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Scopus coverage: {{ scopus_detail.coverage }}</p>
+    {% endif %}
+
     {% set enrichment_badges = format_enrichment_badges(journal.enrichment) %}
     {% if enrichment_badges %}
     {#

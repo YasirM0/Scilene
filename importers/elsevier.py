@@ -7,26 +7,42 @@ Scopus (or drop off it) between SCImago snapshots. The Elsevier Source
 List is Elsevier's own, more current list of what's actually Scopus-
 indexed right now -- this importer uses it to catch Scopus-indexed
 journals SCImago hasn't caught up to yet, WITHOUT touching the
-quartile/SJR/H-index that SCImago already provided.
+quartile/SJR/H-index that SCImago already provided (see
+services.repository.tag_source's COALESCE upsert for how that's kept
+safe even though both importers write to the same journal_sources row).
 
-Only "Active" rows are considered (issue: "Active journals remain the
-default search results" -- Inactive handling, coverage display, title
-history, ASJC taxonomy, and article language from the same issue are
-NOT implemented here, see docs/DATABASE.md).
+Every matched row (Active or Inactive) is tagged, with:
+  - active: 1/0, from Elsevier's "Active or Inactive" column. Journals
+    with active=0 are hidden from default search results and only
+    surfaced via the existing "Show weaker recommendations" toggle
+    (web/search_presentation.py's filter_visible_results) -- no
+    separate filter, per the issue.
+  - coverage: e.g. "1998-2019", shown on the journal card only when
+    active=0 (a still-Active journal's coverage is just "ongoing",
+    not informative).
+  - source_record_id: Elsevier's own Scopus identifier. Matched FIRST
+    on a re-run (via `_by_source_record_id`, built from what a prior
+    run already stored) before falling back to ISSN/title -- this is
+    what makes an annual re-import idempotent and immune to a journal
+    having changed its title or ISSN between Elsevier snapshots.
+  - article_language: stored for future language filtering (#89
+    filters on `journals.languages`, which is DOAJ's field --
+    Elsevier's per-source article language is intentionally NOT wired
+    into that filter here, just preserved for later).
 
-Runs AFTER importers/scimago.py in scripts/build_database.py, and only
-ever fills a gap:
-  - Matched to an existing journal, not yet tagged "Scopus" (e.g. only
-    in DOAJ/SINTA so far, or genuinely missing from SCImago's
-    snapshot): tags it "Scopus" with quartile/sjr/h_index left
-    unavailable (None) rather than inventing a rank.
-  - Matched to a journal ALREADY tagged "Scopus" (via SCImago): left
-    untouched. Re-tagging here would overwrite its real quartile/sjr
-    with None, which is exactly the bug this importer must not cause.
+Runs AFTER importers/scimago.py in scripts/build_database.py.
+  - Matched to an existing journal: tagged Scopus (if not already) and
+    given whatever Elsevier-only fields it has, without touching a
+    quartile/sjr/h_index SCImago already set.
   - Not matched to any existing journal: skipped. This importer never
     creates a new journal row -- Elsevier-only journals not in DOAJ,
     Scopus/SCImago, or SINTA are out of scope for this pass (see #101
     for expanding coverage beyond currently indexed datasets).
+
+Not implemented (out of scope for this pass, see docs/DATABASE.md):
+ASJC codes, top-level disciplines, reordering the import pipeline to
+put Elsevier first. Title history / related titles are handled
+separately by importers/aliases.py (#100).
 """
 
 import pandas as pd
@@ -40,6 +56,15 @@ def _clean(value):
     if value is None or (isinstance(value, float) and pd.isna(value)):
         return None
     return str(value).strip() or None
+
+
+def _load_by_source_record_id(conn, source_label):
+    rows = conn.execute(
+        "SELECT source_record_id, journal_id FROM journal_sources "
+        "WHERE source = ? AND source_record_id IS NOT NULL",
+        (source_label,),
+    ).fetchall()
+    return {record_id: journal_id for record_id, journal_id in rows}
 
 
 def import_elsevier(csv_path, source_label="Scopus", index=None, conn=None):
@@ -60,37 +85,55 @@ def import_elsevier(csv_path, source_label="Scopus", index=None, conn=None):
         ).fetchall()
     }
 
+    by_source_record_id = _load_by_source_record_id(conn, source_label)
+
     newly_tagged = 0
     already_tagged = 0
-    inactive_skipped = 0
+    active_count = 0
+    inactive_count = 0
     no_match = 0
 
     for _, row in df.iterrows():
 
-        if _clean(row.get("Active or Inactive")) != "Active":
-            inactive_skipped += 1
-            continue
-
+        source_record_id = _clean(row.get("Sourcerecord ID"))
         issns = extract_issns(row.get("ISSN")) + extract_issns(row.get("EISSN"))
         title = _clean(row.get("Source Title"))
-        publisher = _clean(row.get("Publisher"))
 
-        journal_id, _match_type = index.find(issns, title, country=None)
+        journal_id = by_source_record_id.get(source_record_id) if source_record_id else None
+        if journal_id is None:
+            journal_id, _match_type = index.find(issns, title, country=None)
 
         if journal_id is None:
             no_match += 1
             continue
 
+        is_active = _clean(row.get("Active or Inactive")) == "Active"
+        if is_active:
+            active_count += 1
+        else:
+            inactive_count += 1
+
+        # No quartile/sjr/h_index passed here -- Scopus-indexed per
+        # Elsevier, but that's SCImago's field to set (or leave
+        # unavailable), tag_source's COALESCE upsert never lets this
+        # call touch it.
+        tag_source(conn, journal_id, source_label, metadata={
+            "active": is_active,
+            "coverage": _clean(row.get("Coverage")),
+            "source_record_id": source_record_id,
+            "article_language": _clean(
+                row.get("Article Language in Source (Three-Letter ISO Language Codes)")
+            ),
+        })
+
         if journal_id in already_scopus:
             already_tagged += 1
-            continue
+        else:
+            already_scopus.add(journal_id)
+            newly_tagged += 1
 
-        # No quartile/sjr/h_index -- Scopus-indexed per Elsevier, but
-        # SCImago hasn't ranked it (yet, or ever). Represented as
-        # "Quartile unavailable" downstream, not missing/invalid data.
-        tag_source(conn, journal_id, source_label, metadata={})
-        already_scopus.add(journal_id)
-        newly_tagged += 1
+        if source_record_id:
+            by_source_record_id[source_record_id] = journal_id
 
     if owns_connection:
         conn.commit()
@@ -101,14 +144,15 @@ def import_elsevier(csv_path, source_label="Scopus", index=None, conn=None):
         "rows": len(df),
         "newly_tagged": newly_tagged,
         "already_tagged": already_tagged,
-        "inactive_skipped": inactive_skipped,
+        "active": active_count,
+        "inactive": inactive_count,
         "no_match": no_match,
     }
 
     print(
         f"{source_label} (Elsevier): {len(df)} rows | newly tagged Scopus (no SCImago rank yet): "
         f"{newly_tagged} | already Scopus via SCImago: {already_tagged} | "
-        f"inactive (skipped): {inactive_skipped} | no match in database: {no_match}"
+        f"active: {active_count} | inactive: {inactive_count} | no match in database: {no_match}"
     )
 
     return index, summary

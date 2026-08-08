@@ -49,18 +49,26 @@ def _fetch_sources(conn, journal_ids):
         placeholders = ",".join("?" for _ in chunk)
 
         rows = conn.execute(
-            f"SELECT journal_id, source, quartile, sjr, h_index, accreditation "
+            f"SELECT journal_id, source, quartile, sjr, h_index, accreditation, "
+            f"active, coverage, source_record_id, article_language "
             f"FROM journal_sources WHERE journal_id IN ({placeholders})",
             chunk,
         ).fetchall()
 
-        for journal_id, source, quartile, sjr, h_index, accreditation in rows:
+        for (journal_id, source, quartile, sjr, h_index, accreditation,
+             active, coverage, source_record_id, article_language) in rows:
             details_by_id.setdefault(journal_id, []).append({
                 "source": source,
                 "quartile": quartile,
                 "sjr": sjr,
                 "h_index": h_index,
                 "accreditation": accreditation,
+                # Elsevier Source List only (#98) -- None for every
+                # source/row Elsevier hasn't tagged, not "inactive".
+                "active": bool(active) if active is not None else None,
+                "coverage": coverage,
+                "source_record_id": source_record_id,
+                "article_language": article_language,
             })
 
     return details_by_id
@@ -508,21 +516,38 @@ def tag_source(conn, journal_id, source, metadata=None):
     """
     Confirm a journal in a given source, with any source-specific
     metadata (quartile/sjr/h_index for Scopus/WoS, accreditation for
-    SINTA). Upserts: re-running an import updates the metadata for an
-    already-tagged journal rather than duplicating the row.
+    SINTA, active/coverage/source_record_id/article_language for
+    Elsevier -- #98). Upserts: re-running an import updates the
+    metadata for an already-tagged journal rather than duplicating the
+    row.
+
+    A field a caller doesn't provide (missing from `metadata`) is
+    COALESCEd against whatever's already on the row rather than
+    overwritten with NULL -- this is what makes it safe for
+    importers/elsevier.py to tag a journal SCImago already ranked
+    (Scopus quartile/sjr/h_index) with its own, disjoint fields
+    (active/coverage/source_record_id/article_language) without
+    wiping the rank SCImago set, and vice versa.
     """
 
     metadata = metadata or {}
 
     conn.execute(
         """
-        INSERT INTO journal_sources (journal_id, source, quartile, sjr, h_index, accreditation)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO journal_sources (
+            journal_id, source, quartile, sjr, h_index, accreditation,
+            active, coverage, source_record_id, article_language
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(journal_id, source) DO UPDATE SET
-            quartile = excluded.quartile,
-            sjr = excluded.sjr,
-            h_index = excluded.h_index,
-            accreditation = excluded.accreditation
+            quartile = COALESCE(excluded.quartile, journal_sources.quartile),
+            sjr = COALESCE(excluded.sjr, journal_sources.sjr),
+            h_index = COALESCE(excluded.h_index, journal_sources.h_index),
+            accreditation = COALESCE(excluded.accreditation, journal_sources.accreditation),
+            active = COALESCE(excluded.active, journal_sources.active),
+            coverage = COALESCE(excluded.coverage, journal_sources.coverage),
+            source_record_id = COALESCE(excluded.source_record_id, journal_sources.source_record_id),
+            article_language = COALESCE(excluded.article_language, journal_sources.article_language)
         """,
         (
             journal_id,
@@ -531,6 +556,10 @@ def tag_source(conn, journal_id, source, metadata=None):
             metadata.get("sjr"),
             metadata.get("h_index"),
             metadata.get("accreditation"),
+            metadata.get("active"),
+            metadata.get("coverage"),
+            metadata.get("source_record_id"),
+            metadata.get("article_language"),
         ),
     )
 

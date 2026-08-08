@@ -56,6 +56,19 @@ CREATE TABLE journal_sources (
     -- SINTA
     accreditation TEXT,
 
+    -- Elsevier Source List (#98, source = 'Scopus' rows only). `active`
+    -- is NULL for every non-Elsevier-tagged row (unknown, not "false")
+    -- -- only importers/elsevier.py ever sets it, to 1 or 0. `coverage`
+    -- and `article_language` are display-only, never read by
+    -- services/recommender.py; `active` DOES affect default visibility
+    -- (web/search_presentation.py's filter_visible_results, reusing
+    -- the existing "Show weaker recommendations" toggle -- no separate
+    -- filter, per the issue).
+    active INTEGER,
+    coverage TEXT,
+    source_record_id TEXT,
+    article_language TEXT,
+
     PRIMARY KEY (journal_id, source),
     FOREIGN KEY (journal_id) REFERENCES journals(id)
 );
@@ -66,6 +79,7 @@ CREATE INDEX idx_journals_title ON journals(title);
 CREATE INDEX idx_journals_country ON journals(country);
 CREATE INDEX idx_journal_sources_journal_id ON journal_sources(journal_id);
 CREATE INDEX idx_journal_sources_source ON journal_sources(source);
+CREATE INDEX idx_journal_sources_source_record_id ON journal_sources(source_record_id);
 
 -- Metadata enrichment (docs/ENRICHMENT.md) -- structurally separate
 -- from journal_sources on purpose: nothing in services/recommender.py

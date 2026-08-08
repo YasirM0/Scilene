@@ -51,7 +51,7 @@ Local files already collected for this, in `data/enrichment/`:
 | SciELO | `scielo_journals.csv` | Regional (Latin America) coverage, subject areas, mission statement |
 | AJOL | `ajol.csv` | African journal coverage, Diamond OA flag |
 | Garuda | `data/raw/sinta.csv`'s `garuda_indexed` column (#97) | Indonesian national repository indexing flag. Tagged directly in `importers/sinta.py` rather than its own `importers/enrichment/` provider, since the data arrives bundled in the SINTA file, not a separate one — same `journal_enrichment` storage and same rule (display-only, never a search filter, never affects ranking) as every other provider here. |
-| Elsevier Source List | `Elsevier.csv` | **Not enrichment** — scoped to #98 (redefining how Scopus indexing itself is determined). Implemented narrowly: `importers/elsevier.py` fills Scopus-indexing gaps SCImago's periodic snapshot hasn't caught up to yet, without touching quartile/SJR/H-index. The rest of #98 (title history, ASJC taxonomy, article language, coverage display, Source Record ID, import-order restructuring) is NOT implemented — see "Current implementation state". |
+| Elsevier Source List | `Elsevier.csv` | **Not enrichment** — scoped to #98 (redefining how Scopus indexing itself is determined). `importers/elsevier.py` fills Scopus-indexing gaps SCImago's periodic snapshot hasn't caught up to yet, without touching quartile/SJR/H-index (`services/repository.tag_source`'s COALESCE upsert). Also tags Active/Inactive status, Coverage, Source Record ID, and Article Language (all four `journal_sources` columns, Scopus rows only) — title history is handled separately by `importers/aliases.py` (#100). ASJC taxonomy, top-level disciplines, and reordering the import pipeline to put Elsevier first are NOT implemented — see "Current implementation state". |
 
 Not yet available locally (per the original issue, these must never
 require a live call from the *offline* app — see "Online vs. offline"
@@ -280,12 +280,21 @@ Not done (still real implementation work, not this pass):
   settings page yet at all.
 - The `tools/generate_scielo.py` / `generate_sherpa.py` annual
   regeneration scripts.
-- The rest of #98: title history, ASJC taxonomy, article language,
-  coverage display for inactive journals, Source Record ID as the
-  canonical identifier, and reordering the import pipeline to put
-  Elsevier first. What's implemented only fills the specific gap
-  (Scopus-indexed-but-not-yet-ranked) the Elsevier file was collected
-  for.
+- The rest of #98: ASJC taxonomy, top-level disciplines, and
+  reordering the import pipeline to put Elsevier first (Source Record
+  ID matching now makes a re-import idempotent regardless of order,
+  but the pipeline still runs Elsevier third, after Scopus/WoS, not
+  first as the issue originally specified).
+- Active/Inactive, Coverage, Source Record ID, and Article Language
+  ARE now implemented (a later pass) -- see `importers/elsevier.py`
+  and `journal_sources`' four new columns. Inactive journals are
+  hidden from default search results and surfaced only via the
+  existing "Show weaker recommendations" toggle
+  (`web/search_presentation.is_inactive_scopus` /
+  `filter_visible_results`) -- no separate filter, per the issue.
+  Title history moved to `importers/aliases.py` (#100) instead of
+  living here, since it's genuinely a title-matching concern shared
+  with DOAJ and ERIH PLUS, not Scopus-specific.
 
 ---
 
