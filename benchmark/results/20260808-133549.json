@@ -1,0 +1,19 @@
+{
+  "dataset_version": "20260808-133549",
+  "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+  "num_records_evaluated": 166,
+  "num_records_skipped": 0,
+  "recommendation_engine_version": "0.2.5",
+  "recommender": {
+    "recall@5": 0.0,
+    "recall@10": 0.0,
+    "recall@20": 0.0,
+    "mrr": 0.0
+  },
+  "baseline_tfidf": {
+    "recall@5": 0.030120481927710843,
+    "recall@10": 0.04216867469879518,
+    "recall@20": 0.05421686746987952,
+    "mrr": 0.020887119908204244
+  }
+}

@@ -4,16 +4,45 @@ This directory contains the benchmarking framework used to evaluate Scilene's re
 
 The goal is to ensure every significant change is validated using reproducible experiments rather than intuition.
 
-## Planned Structure
+## Structure
 
 ```
 benchmark/
-├── datasets/      # Benchmark datasets
-├── scripts/       # Evaluation scripts
-├── results/       # Benchmark results
-├── baselines/     # Baseline implementations (e.g., TF-IDF)
-└── README.md
+├── datasets/      # Benchmark datasets, one JSON file per build
+├── scripts/       # build_dataset.py, evaluate.py
+├── results/       # Evaluation reports, one JSON file per run
+├── baselines/     # Baseline implementations (tfidf.py)
+└── README
 ```
+
+## Usage
+
+Both scripts run from the project root (they import the app's own
+`services/` package, so they need to run in the same environment as
+the app, not standalone).
+
+Build a dataset (samples journals already in the local database, then
+pulls real published papers for them from OpenAlex):
+
+```
+python3 -m benchmark.scripts.build_dataset --num-journals 150
+```
+
+Useful flags: `--per-journal` (works per journal, default 3),
+`--min-year` (default 2015), `--seed` (default 42, for reproducible
+sampling), `--mailto you@example.com` (optional — OpenAlex's "polite
+pool" gives faster, more reliable rate limits if you include a contact
+email), `--output` (defaults to a timestamped file under `datasets/`).
+
+Evaluate a dataset against both the real recommender and the TF-IDF
+baseline:
+
+```
+python3 -m benchmark.scripts.evaluate benchmark/datasets/dataset_<...>.json
+```
+
+Prints a Recall@5/10/20 + MRR table for both, and writes the full
+report to `benchmark/results/<dataset version>.json`.
 
 ## Purpose
 
