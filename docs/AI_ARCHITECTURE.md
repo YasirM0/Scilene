@@ -140,6 +140,35 @@ can be upgraded later without changing the user experience. Users only
 ever interact with "Scilene AI"; the implementation behind that name
 can evolve freely.
 
+### Provider request/response contract (#87)
+
+Every concrete provider — local or cloud — speaks the same wire
+contract, which is what makes "local and cloud AI interchangeable"
+concretely true rather than aspirational. A cloud provider
+(`CloudAIProvider`) makes this an HTTP call; a local provider would
+implement the identical shape however it talks to its runtime
+(subprocess, local socket, in-process call):
+
+```
+request  -> {"task": "suggest_concepts" | "detect_disciplines" | "generate_search_inputs",
+             "input": {...task-specific fields...}}
+
+response <- {"ok": true | false, "data": {...} | null,
+             "confidence": 0.0-1.0 | null, "error": string | null}
+```
+
+The response shape is `AIResponse` itself (`services/ai_provider.py`)
+serialized as JSON — a provider that returns exactly this is
+automatically interchangeable with every other provider, since nothing
+downstream of `AIProvider` ever branches on which one answered.
+
+`CloudAIProvider` is a real, working HTTP client against this contract
+(verified in `tests/test_ai_provider.py` against a real local server,
+including the failure path) — not wired to a specific paid vendor,
+since this project has no API key or hosting budget to commit to one.
+Pointing it at a real service that implements the contract is a
+configuration change (`endpoint_url`, `api_key`), not a code change.
+
 ## Naming
 
 Working name: **Scilene AI**. The public-facing name should be
@@ -173,8 +202,11 @@ Done (scaffolding only, no real model anywhere):
   `services/recommender.py`, and both degrade every failure mode to
   "just don't show the enrichment" rather than an error.
 - `services/ai_provider.py` (#88) — the `AIProvider` interface this
-  document's "Future-proofing" section asks for. No concrete provider
-  (local or cloud) implements it yet.
+  document's "Future-proofing" section asks for, plus two concrete
+  providers: `PlaceholderProvider` (wraps the existing hardcoded
+  research_interpreter.py logic) and `CloudAIProvider` (#87 — a real
+  HTTP client against the request/response contract above, not
+  pointed at any actual paid vendor). No local-model provider yet.
 - `services/discipline_detection.py` (#102) — "Detected Research
   Areas" after a search, letting a user refine recommendations with
   selected disciplines. Deliberately real and deterministic rather

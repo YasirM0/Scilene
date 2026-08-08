@@ -17,16 +17,24 @@ feature needs a suggestion, never by the deterministic search path.
             ▼
     (reviewed/edited by the user, then) Recommendation Engine
 
-No concrete real provider is implemented here (#87 Online AI Provider,
-future local model support) -- this is the interface only, matching
-docs/AI_ARCHITECTURE.md's "Future-Proofing" section: one internal
-interface so the underlying model can change later without changing
-the UI. PlaceholderProvider below wraps the existing hardcoded
-research_interpreter.py logic behind this same interface, so it's
-demonstrably real and wireable, not just a decorative abstract class.
+Two concrete providers exist here: PlaceholderProvider (wraps the
+existing hardcoded research_interpreter.py logic) and CloudAIProvider
+(#87 -- a real, generic HTTP client for any cloud AI service that
+speaks the request/response contract below; not wired to a specific
+paid vendor, since this project has no API key or budget to commit to
+one, but genuinely functional against anything implementing the
+contract -- see its class docstring, and docs/AI_ARCHITECTURE.md's
+"Future-Proofing" section for the contract itself). Local model
+support (also future work per docs/AI_ARCHITECTURE.md) would be a
+third provider implementing the exact same contract -- that's the
+point: services/recommender.py never depends on a specific LLM, and
+never imports this module at all, and neither does any caller need to
+know or care which provider answered.
 """
 
 from dataclasses import dataclass
+
+import requests
 
 
 @dataclass
@@ -96,3 +104,93 @@ class PlaceholderProvider(AIProvider):
             return AIResponse(ok=False, error="No abstract provided.")
 
         return AIResponse(ok=True, data={"suggestions": suggest_concepts(abstract)}, confidence=None)
+
+
+class CloudAIProvider(AIProvider):
+    """
+    Cloud-based AI for users who don't (or can't) install a local
+    model (#87). Genuinely functional -- not a stub -- against any
+    endpoint implementing this request/response contract, but not
+    wired to a specific paid vendor: this project has no API key or
+    hosting budget to commit to one, and hardcoding a "real" call to a
+    service nobody's actually running would just be a different kind
+    of fake AI. Verified in tests/test_ai_provider.py against a real
+    local HTTP server implementing the contract, both success and
+    failure paths.
+
+    Request/response contract (docs/AI_ARCHITECTURE.md's "Future-
+    Proofing" section -- this is intentionally the SAME contract any
+    future local-model provider should speak too, which is what makes
+    "local and cloud AI interchangeable" concretely true rather than
+    aspirational):
+
+        POST {endpoint_url}
+        {"task": "suggest_concepts" | "detect_disciplines" | "generate_search_inputs",
+         "input": {...task-specific fields...}}
+
+        -> 200 OK
+        {"ok": true, "data": {...}, "confidence": 0.0-1.0 | null, "error": null}
+
+    A malformed response, a non-200 status, a timeout, or a connection
+    failure all produce AIResponse(ok=False, error=...) -- per
+    AIProvider's contract, a provider never raises for an expected
+    failure, only for a genuine programming error (e.g. constructing
+    this class with no endpoint_url).
+    """
+
+    name = "cloud"
+
+    def __init__(self, endpoint_url, api_key=None, timeout=10):
+        if not endpoint_url:
+            raise ValueError("CloudAIProvider requires an endpoint_url.")
+        self.endpoint_url = endpoint_url
+        self.api_key = api_key
+        self.timeout = timeout
+
+    def _call(self, task, input_payload):
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        try:
+            response = requests.post(
+                self.endpoint_url,
+                json={"task": task, "input": input_payload},
+                headers=headers,
+                timeout=self.timeout,
+            )
+        except requests.RequestException as exc:
+            return AIResponse(ok=False, error=f"Request failed: {exc}")
+
+        if response.status_code != 200:
+            return AIResponse(ok=False, error=f"Provider returned HTTP {response.status_code}")
+
+        try:
+            body = response.json()
+        except ValueError:
+            return AIResponse(ok=False, error="Provider response was not valid JSON.")
+
+        if not isinstance(body, dict) or "ok" not in body:
+            return AIResponse(ok=False, error="Provider response did not match the expected contract.")
+
+        return AIResponse(
+            ok=bool(body.get("ok")),
+            data=body.get("data"),
+            confidence=body.get("confidence"),
+            error=body.get("error"),
+        )
+
+    def suggest_concepts(self, abstract):
+        if not abstract or not abstract.strip():
+            return AIResponse(ok=False, error="No abstract provided.")
+        return self._call("suggest_concepts", {"abstract": abstract})
+
+    def detect_disciplines(self, abstract):
+        if not abstract or not abstract.strip():
+            return AIResponse(ok=False, error="No abstract provided.")
+        return self._call("detect_disciplines", {"abstract": abstract})
+
+    def generate_search_inputs(self, research_idea):
+        if not research_idea or not research_idea.strip():
+            return AIResponse(ok=False, error="No research idea provided.")
+        return self._call("generate_search_inputs", {"research_idea": research_idea})
