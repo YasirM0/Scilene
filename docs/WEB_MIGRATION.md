@@ -10,6 +10,11 @@ running as a regression reference and has not been deleted, but nothing
 in it is exclusive anymore — every user-facing feature it has also
 exists in `web/`.
 
+**Update, v0.2.5:** Publication Academy has since been removed
+entirely — it belonged to the Streamlit-era prototype and no longer
+fit the product's direction. The paragraph above is left as a
+historical record of what Phase 4 actually shipped, not current state.
+
 ## Why
 
 Streamlit is a fast way to build an internal tool, but it isn't a

@@ -131,7 +131,6 @@ contain business logic — they only render data already computed by
 | `search_history.html` | List of past searches from the session, each rerunnable. |
 | `pagination.html` | Page-number controls for the results list. |
 | `export_panel.html` | The row of export-format buttons (PDF/DOCX/XLSX/MD/CSV). |
-| `info_section.html` | Generic titled text block (used on the Academy page). |
 | `accordion_card.html` | One expandable card for a `<details name="...">` group — same `name` on every card in a group makes them mutually exclusive natively, no JS. Used by the About page. |
 
 ## Shared card pattern
