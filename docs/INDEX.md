@@ -124,6 +124,18 @@ server-rendered HTMX state rather than client-side JavaScript.
 
 ---
 
+## QUERY_PIPELINE.md
+
+Design for the full query-normalization pipeline (#109) — language
+detection, translation, normalization, keyword expansion, and
+discipline detection, mapped honestly against what's real today (#89
+language detection, #102 discipline detection) vs. genuinely
+unimplemented (translation, expansion). Defines the canonical search
+representation and states precisely why none of it can influence
+ranking.
+
+---
+
 # Documentation Status
 
 | Document | Status |
@@ -143,6 +155,7 @@ server-rendered HTMX state rather than client-side JavaScript.
 | DEPLOYMENT | ✅ Approved |
 | RESEARCH_INTERPRETER | 🟡 Scaffolding only |
 | AI_ARCHITECTURE | 🟡 Design only |
+| QUERY_PIPELINE | 🟡 Design only |
 
 ---
 
