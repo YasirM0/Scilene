@@ -16,6 +16,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import StreamingResponse
 
 from services import search_service
+from services.discipline_detection import detect_disciplines
 from services.report_context import ReportContext, build_filters_summary
 from services.reports import generate_pdf, generate_docx, generate_xlsx, generate_markdown
 
@@ -117,6 +118,15 @@ def _results_context(session):
     page_results, page, total_pages = paginate(visible_results, session["page"])
     session["page"] = page
 
+    # Detected Research Areas (#102) -- real subject-frequency signal
+    # over the results already produced, not a fake AI call. Excludes
+    # anything already a confirmed search concept, since re-offering a
+    # discipline the user already searched with is not new information.
+    confirmed = session.get("confirmed_tags", [])
+    detected_disciplines = [
+        d for d in detect_disciplines(all_results) if d not in confirmed
+    ]
+
     return {
         "has_search": True,
         "search_meta": session["search_meta"],
@@ -128,7 +138,84 @@ def _results_context(session):
         "page": page,
         "total_pages": total_pages,
         "history": session["history"],
+        "detected_disciplines": detected_disciplines,
     }
+
+
+def _execute_search(session, abstract, concepts, strategy_label, resolved_language,
+                     free_only, min_budget, max_budget, indexing, quartiles,
+                     sinta_levels, max_review_weeks, resolved_strategy):
+    """
+    Runs a search and stores everything about it in the session --
+    results, display metadata, history, AND the raw parameters
+    (`last_search_params`), so a later action that only changes the
+    concept list (#102's "refine with detected disciplines") can
+    genuinely re-run the same search rather than fake it. Shared by
+    run_search() and refine_with_disciplines().
+    """
+
+    results = cached_search(
+        title="",
+        keywords=concepts,
+        abstract=abstract,
+        language=resolved_language,
+        free_only=free_only,
+        min_budget=min_budget,
+        max_budget=max_budget,
+        indexing=indexing or None,
+        quartiles=quartiles or None,
+        sinta_levels=sinta_levels or None,
+        max_review_weeks=max_review_weeks,
+        strategy=resolved_strategy,
+    )
+
+    filters_summary = build_filters_summary(
+        language=resolved_language,
+        free_only=free_only,
+        min_budget=min_budget,
+        max_budget=max_budget,
+        indexing=indexing or None,
+        quartiles=quartiles or None,
+        sinta_levels=sinta_levels or None,
+        max_review_weeks=max_review_weeks,
+    )
+
+    search_meta = {
+        "display_label": _display_label(abstract, concepts),
+        "abstract": abstract,
+        "keywords": concepts,
+        "strategy_label": strategy_label,
+        "filters_summary": filters_summary,
+    }
+
+    session["current_results"] = results
+    session["search_meta"] = search_meta
+    session["show_weaker"] = False
+    session["page"] = 1
+
+    session["history"].insert(0, {
+        "results": results,
+        "search_meta": search_meta,
+        "result_count": len(results),
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"),
+    })
+    session["history"] = session["history"][:MAX_HISTORY_ENTRIES]
+
+    session["last_search_params"] = {
+        "abstract": abstract,
+        "strategy_label": strategy_label,
+        "resolved_language": resolved_language,
+        "free_only": free_only,
+        "min_budget": min_budget,
+        "max_budget": max_budget,
+        "indexing": indexing,
+        "quartiles": quartiles,
+        "sinta_levels": sinta_levels,
+        "max_review_weeks": max_review_weeks,
+        "resolved_strategy": resolved_strategy,
+    }
+
+    return results
 
 
 @router.get("")
@@ -196,52 +283,55 @@ def run_search(
     max_review_weeks = REVIEW_TIME_BANDS[review_time_choice]
     resolved_strategy = STRATEGY_LABELS[strategy_label]
 
-    results = cached_search(
-        title="",
-        keywords=concepts,
-        abstract=abstract,
-        language=resolved_language,
-        free_only=free_only,
-        min_budget=min_budget,
-        max_budget=max_budget,
-        indexing=indexing or None,
-        quartiles=quartiles or None,
-        sinta_levels=sinta_levels or None,
-        max_review_weeks=max_review_weeks,
-        strategy=resolved_strategy,
+    results = _execute_search(
+        session, abstract, concepts, strategy_label, resolved_language,
+        free_only, min_budget, max_budget, indexing, quartiles,
+        sinta_levels, max_review_weeks, resolved_strategy,
     )
 
-    filters_summary = build_filters_summary(
-        language=resolved_language,
-        free_only=free_only,
-        min_budget=min_budget,
-        max_budget=max_budget,
-        indexing=indexing or None,
-        quartiles=quartiles or None,
-        sinta_levels=sinta_levels or None,
-        max_review_weeks=max_review_weeks,
+    context = {**_filter_context(), **_results_context(session)}
+    if not results:
+        context["warning"] = (
+            "No journals matched your current filters. Try a broader search, "
+            "a different budget/language, or fewer indexing/quartile filters."
+        )
+
+    return _render(request, "partials/search_results.html", context, session)
+
+
+@router.post("/refine-with-disciplines")
+def refine_with_disciplines(request: Request, session=Depends(get_session_state), disciplines: list[str] = Form([])):
+    """
+    #102's "[Edit] -> confirm -> recalculates recommendations using
+    the updated disciplines as an additional signal" -- adds the
+    user-selected Detected Research Areas to confirmed_tags and
+    genuinely re-runs the exact same search (via last_search_params,
+    set by _execute_search) with the expanded concept list. The
+    traditional recommendation signals are otherwise unchanged; this
+    only adds more concepts to the same keyword-matching path every
+    manually-typed tag already goes through.
+    """
+
+    params = session.get("last_search_params")
+    if not params:
+        # Nothing to refine -- no search has run yet this session.
+        context = {**_filter_context(), **_results_context(session)}
+        return _render(request, "partials/search_results.html", context, session)
+
+    confirmed = session.get("confirmed_tags", [])
+    for discipline in disciplines:
+        if discipline not in confirmed:
+            confirmed.append(discipline)
+    session["confirmed_tags"] = confirmed
+
+    concepts = confirmed  # same list identity used by run_search's own concepts computation
+
+    results = _execute_search(
+        session, params["abstract"], concepts, params["strategy_label"],
+        params["resolved_language"], params["free_only"], params["min_budget"],
+        params["max_budget"], params["indexing"], params["quartiles"],
+        params["sinta_levels"], params["max_review_weeks"], params["resolved_strategy"],
     )
-
-    search_meta = {
-        "display_label": _display_label(abstract, concepts),
-        "abstract": abstract,
-        "keywords": concepts,
-        "strategy_label": strategy_label,
-        "filters_summary": filters_summary,
-    }
-
-    session["current_results"] = results
-    session["search_meta"] = search_meta
-    session["show_weaker"] = False
-    session["page"] = 1
-
-    session["history"].insert(0, {
-        "results": results,
-        "search_meta": search_meta,
-        "result_count": len(results),
-        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"),
-    })
-    session["history"] = session["history"][:MAX_HISTORY_ENTRIES]
 
     context = {**_filter_context(), **_results_context(session)}
     if not results:
@@ -288,6 +378,7 @@ def clear_search(request: Request, session=Depends(get_session_state)):
     session["confirmed_tags"] = []
     session["interpreter_suggestions"] = []
     session["interpreter_abstract_snapshot"] = None
+    session["last_search_params"] = None
 
     context = {**_filter_context(), **_results_context(session), "reset_form": True}
     return _render(request, "partials/search_results.html", context, session)

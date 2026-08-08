@@ -1,14 +1,20 @@
 """
-Format a journal's raw `subjects` field (DOAJ-style hierarchical text,
+Parse a journal's raw `subjects` field (DOAJ-style hierarchical text,
 e.g. "Law: Law of nations | Law: Comparative and uniform law.
-Jurisprudence") into compact, de-duplicated tags for display, e.g.
-"Law of nations • Comparative and uniform law • Jurisprudence".
+Jurisprudence") into clean, de-duplicated tags.
 """
 
 
-def format_subjects(raw, max_tags=6):
+def extract_subject_tags(raw):
+    """
+    Returns the full, untruncated list of clean tags, e.g.
+    ["Law of nations", "Comparative and uniform law", "Jurisprudence"].
+    Used both by format_subjects() below (for display) and by
+    services/discipline_detection.py (#102 -- frequency analysis needs
+    the raw list, not a truncated, joined display string).
+    """
     if not raw:
-        return None
+        return []
 
     entries = [entry.strip() for entry in str(raw).split("|") if entry.strip()]
 
@@ -29,6 +35,16 @@ def format_subjects(raw, max_tags=6):
                 continue
             seen.add(key)
             tags.append(fragment)
+
+    return tags
+
+
+def format_subjects(raw, max_tags=6):
+    """
+    Compact, de-duplicated display string, e.g.
+    "Law of nations • Comparative and uniform law • Jurisprudence".
+    """
+    tags = extract_subject_tags(raw)
 
     if not tags:
         return None

@@ -175,6 +175,15 @@ Done (scaffolding only, no real model anywhere):
 - `services/ai_provider.py` (#88) — the `AIProvider` interface this
   document's "Future-proofing" section asks for. No concrete provider
   (local or cloud) implements it yet.
+- `services/discipline_detection.py` (#102) — "Detected Research
+  Areas" after a search, letting a user refine recommendations with
+  selected disciplines. Deliberately real and deterministic rather
+  than a fake AI call: subject-tag frequency across the top results,
+  reusing `journals.subjects` (already imported from DOAJ/SCImago)
+  rather than a new taxonomy or hardcoded placeholder — directly
+  matches #102's own "reuse existing metadata, avoid new taxonomies"
+  guidance. A future real classifier could replace this without
+  changing anything that calls `detect_disciplines()`.
 
 Not done:
 

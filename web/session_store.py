@@ -60,6 +60,15 @@ def get_session(session_id: str) -> dict:
             # This list (plus any fallback_tags parsed at submit time)
             # is exactly what becomes the recommender's `keywords`.
             "confirmed_tags": [],
+
+            # Raw kwargs from the last real search (#102) -- lets
+            # "refine with detected disciplines" genuinely re-run the
+            # same search with an expanded concept list, rather than
+            # faking a recalculation. Set by web/routers/search.py's
+            # _execute_search(); search_meta above is the *display*
+            # version (human-readable filters_summary, not reusable
+            # raw values), which is why this exists separately.
+            "last_search_params": None,
         }
 
     _SESSIONS[session_id]["_last_access"] = time.time()
