@@ -62,6 +62,7 @@ def interpret(request: Request, abstract: str = Form(""), session=Depends(get_se
     if not abstract:
         session["interpreter_suggestions"] = []
         session["interpreter_abstract_snapshot"] = None
+        session["interpreter_editing_category"] = None
         context = {"state": "empty"}
         if language_changed:
             context["language_card_oob"] = language_form_context(session)
@@ -73,6 +74,7 @@ def interpret(request: Request, abstract: str = Form(""), session=Depends(get_se
         # First run for this abstract.
         session["interpreter_suggestions"] = suggest_concepts(abstract)
         session["interpreter_abstract_snapshot"] = abstract
+        session["interpreter_editing_category"] = None
         context = {"state": "analyzing"}
         if language_changed:
             context["language_card_oob"] = language_form_context(session)
@@ -103,6 +105,7 @@ def interpret_refresh(request: Request, abstract: str = Form(""), session=Depend
     abstract = abstract.strip()
     session["interpreter_suggestions"] = suggest_concepts(abstract)
     session["interpreter_abstract_snapshot"] = abstract
+    session["interpreter_editing_category"] = None
     return _render_panel(request, session, {"state": "analyzing"})
 
 
@@ -119,6 +122,7 @@ def interpret_suggest_another(request: Request, category: str, session=Depends(g
         if tag is not None:
             tag["value"] = next_suggestion(category, tag["value"])
             tag["cycled"] = True
+    session["interpreter_editing_category"] = None
     return _render_panel(request, session, current_suggestions_context(session))
 
 
@@ -132,6 +136,7 @@ def interpret_accept(request: Request, category: str, session=Depends(get_sessio
             ]
             if tag["value"] not in session["confirmed_tags"]:
                 session["confirmed_tags"].append(tag["value"])
+    session["interpreter_editing_category"] = None
 
     context = current_suggestions_context(session)
     context["confirmed_tags_oob"] = session["confirmed_tags"]
@@ -144,6 +149,40 @@ def interpret_remove(request: Request, category: str, session=Depends(get_sessio
         session["interpreter_suggestions"] = [
             t for t in session["interpreter_suggestions"] if t["category"] != category
         ]
+    session["interpreter_editing_category"] = None
+    return _render_panel(request, session, current_suggestions_context(session))
+
+
+@router.post("/interpret/edit-start/{category}")
+def interpret_edit_start(request: Request, category: str, session=Depends(get_session_state)):
+    """
+    #110 "✏ Edit" -- swaps one suggestion row into an inline text
+    input (see interpreter_panel.html's editing_category branch)
+    instead of duplicating suggest_concepts()' pool logic here; the
+    row's current value is just prefilled as the input's starting text.
+    """
+    if category in CATEGORIES and _find_suggestion(session, category) is not None:
+        session["interpreter_editing_category"] = category
+    return _render_panel(request, session, current_suggestions_context(session))
+
+
+@router.post("/interpret/edit-cancel")
+def interpret_edit_cancel(request: Request, session=Depends(get_session_state)):
+    session["interpreter_editing_category"] = None
+    return _render_panel(request, session, current_suggestions_context(session))
+
+
+@router.post("/interpret/edit-save/{category}")
+def interpret_edit_save(request: Request, category: str, value: str = Form(""), session=Depends(get_session_state)):
+    value = value.strip()
+    if category in CATEGORIES and value:
+        tag = _find_suggestion(session, category)
+        if tag is not None:
+            tag["value"] = value
+            # Same reasoning as suggest-another: no longer the pool's
+            # placeholder default, so "Remove" becomes available too.
+            tag["cycled"] = True
+    session["interpreter_editing_category"] = None
     return _render_panel(request, session, current_suggestions_context(session))
 
 

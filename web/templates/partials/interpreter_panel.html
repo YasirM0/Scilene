@@ -49,6 +49,33 @@
             "blue": "bg-blue-50 dark:bg-blue-900 text-blue-800 dark:text-blue-200",
             "gold": "bg-gold-50 dark:bg-gold-700 text-gold-700 dark:text-gold-50",
         } %}
+        {% if editing_category == tag.category %}
+        {#
+            #110 "✏ Edit" -- inline text input replacing this one row's
+            normal ✓/↻ actions. Server-rendered like every other
+            interpreter state: Save/Cancel are plain HTMX round trips,
+            not client-side form handling.
+        #}
+        <form
+            hx-post="/search/interpret/edit-save/{{ tag.category }}"
+            hx-target="#interpreter-panel"
+            hx-swap="innerHTML"
+            class="flex items-center gap-2 px-3 py-2 rounded-md border border-navy-300 dark:border-navy-600"
+        >
+            <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ tag.label }}</span>
+            <input type="text" name="value" value="{{ tag.value }}" autofocus
+                class="flex-1 min-w-0 text-sm px-2 py-1 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
+            <button type="submit"
+                class="text-xs font-medium text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 shrink-0"
+            >Save</button>
+            <button type="button"
+                hx-post="/search/interpret/edit-cancel"
+                hx-target="#interpreter-panel"
+                hx-swap="innerHTML"
+                class="text-xs font-medium text-gray-400 dark:text-gray-500 hover:text-red-600 shrink-0"
+            >Cancel</button>
+        </form>
+        {% else %}
         <div class="flex items-center justify-between gap-3 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700">
             <div class="flex items-center gap-2">
                 <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ colors.get(tag.color, 'bg-gray-100 text-gray-600') }}">
@@ -69,6 +96,12 @@
                     hx-swap="innerHTML"
                     class="text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300"
                 >↻ Suggest another</button>
+                <button type="button"
+                    hx-post="/search/interpret/edit-start/{{ tag.category }}"
+                    hx-target="#interpreter-panel"
+                    hx-swap="innerHTML"
+                    class="text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300"
+                >✏ Edit</button>
                 {% if tag.cycled %}
                 <button type="button"
                     hx-post="/search/interpret/remove/{{ tag.category }}"
@@ -79,6 +112,7 @@
                 {% endif %}
             </div>
         </div>
+        {% endif %}
         {% endfor %}
     </div>
 </div>

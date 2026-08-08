@@ -29,7 +29,10 @@ nothing that calls it, and nothing in the templates.
 
 - **Preferred:** paste an abstract → the interpreter suggests a Field
   of Study and a Key Research Focus, which the user accepts, cycles
-  ("Suggest another"), or removes.
+  ("Suggest another"), edits inline ("✏ Edit" — #110, replaces the row
+  with a plain text input; Save writes the typed text as that
+  suggestion's value, same as if the pool had suggested it), or
+  removes.
 - **No abstract:** the user provides at least 10 descriptive tags
   directly (`fallback_tags` on the search form) instead.
 

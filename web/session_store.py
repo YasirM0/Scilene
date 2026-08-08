@@ -61,6 +61,13 @@ def get_session(session_id: str) -> dict:
             # is exactly what becomes the recommender's `keywords`.
             "confirmed_tags": [],
 
+            # Which suggestion category (if any) is currently showing
+            # an inline edit input instead of its normal ✓/↻ row (#110,
+            # "✏ Edit"). At most one at a time -- like
+            # interpreter_suggestions, this is UI state, never read by
+            # the recommender.
+            "interpreter_editing_category": None,
+
             # Raw kwargs from the last real search (#102) -- lets
             # "refine with detected disciplines" genuinely re-run the
             # same search with an expanded concept list, rather than
