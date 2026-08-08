@@ -149,13 +149,29 @@ and the dataset-specific issues), not this design pass.
 
 ## Online vs. offline behavior
 
-This is the one place the design has to branch by which frontend is
-running, because the two have different defaults per
-`docs/ARCHITECTURE.md`'s "Privacy First" principle:
+**Implementation note:** this section originally specified automatic,
+no-dialog fetching for the web app ("may be fetched automatically. No
+permission dialog"). The actual implementation is stricter than that
+for both web and desktop: enrichment is **lazy and explicit** — a
+"🌐 Get more info online" button on each journal card, fetched only on
+click, never automatically after a search. Reasoning: a search
+returns up to 10 visible results, and auto-fetching all of them would
+mean up to 10 external API round-trips (each capped at 5s) on every
+single search — directly contradicting the "Fast, Local Search: no
+external API calls or rate limits" claim already made elsewhere in the
+app (`web/templates/pages/home.html`'s feature grid). A per-card,
+on-demand click costs nothing until a researcher actually wants it.
 
-- **Web app**: already requires an internet connection to be reached
-  at all. Online enrichment (Crossref/OpenAlex) may be fetched
-  automatically. No permission dialog.
+This makes the web/desktop distinction below aspirational rather than
+current: since fetching is already opt-in per click on web, no
+additional consent dialog is needed there. The distinction remains
+relevant for a *future* desktop app, whose offline-by-default posture
+(`docs/ARCHITECTURE.md`'s "Privacy First") may still warrant an
+explicit one-time notice before the *first* click, even though every
+click is already a deliberate action:
+
+- **Web app**: no permission dialog — every fetch is already a
+  deliberate click, not something that happens on page load.
 - **Desktop app** (once it exists — see `docs/ARCHITECTURE_DECISIONS.md`,
   currently not being built): offline by default. Before making any
   online enrichment call, show:
@@ -233,14 +249,35 @@ Done:
   the same top matches with the same scores before and after —
   confirming enrichment cannot influence recommendation results, per
   the design's core rule.
+- **Crossref and OpenAlex** (`importers/enrichment/openalex.py`,
+  `crossref.py`) — real `OnlineEnrichmentProvider` implementations.
+  OpenAlex queried first (richer: publisher, OA status, APC, topics,
+  citation counts), Crossref as fallback (publisher, subjects, work
+  count) when OpenAlex has nothing for that ISSN. 5s timeout, one
+  retry, both handled entirely inside the provider (`requests.RequestException`
+  and non-200 responses both just return `None` — never raise).
+  `services/online_enrichment.py` owns the fallback order and a
+  process-wide, 24-hour in-memory TTL cache (mirrors
+  `web/search_cache.py`'s pattern). **Deviates from the storage design
+  above on purpose**: results are *not* written to the
+  `journal_enrichment` table — they're fetched fresh (or served from
+  the in-memory cache) on every explicit click, never persisted to the
+  database. Persisting live API data into what's otherwise a pure
+  offline snapshot would blur a distinction this whole document is
+  built around; an in-memory cache gets the "don't hammer the API"
+  benefit without that. `web/routers/enrichment.py` (`POST
+  /search/enrich`) is the one web route involved — stateless, no
+  session, verified with a real journal (returned real OpenAlex data),
+  a nonexistent ISSN (graceful "not found"), and a simulated network
+  timeout (returned `None` in ~5s, not a hang).
 
 Not done (still real implementation work, not this pass):
 
-- Crossref and OpenAlex (`OnlineEnrichmentProvider`) — need actual
-  HTTP calls, caching, retries, and timeout handling.
-- The desktop consent flow and "Settings page integration" from
-  #108's checklist — blocked on the desktop app existing at all
-  (see `docs/ARCHITECTURE_DECISIONS.md`).
+- The desktop consent flow from #108's checklist — blocked on the
+  desktop app existing at all (see `docs/ARCHITECTURE_DECISIONS.md`);
+  see the "Implementation note" above for why web needs no dialog.
+- Settings page integration from #108's checklist — there's no
+  settings page yet at all.
 - The `tools/generate_scielo.py` / `generate_sherpa.py` annual
   regeneration scripts.
 - The rest of #98: title history, ASJC taxonomy, article language,
@@ -252,8 +289,8 @@ Not done (still real implementation work, not this pass):
 
 ---
 
-**Document Version:** 0.2
+**Document Version:** 0.3
 
 **Last Updated:** August 2026
 
-**Status:** Approved (ROAD, ERIH PLUS) — remaining providers pending
+**Status:** Approved — all planned providers (ROAD, ERIH PLUS, SciELO, AJOL, Garuda, Diamond OA, OpenAlex, Crossref) implemented; Sherpa Romeo and the desktop consent flow remain

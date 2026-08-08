@@ -85,6 +85,28 @@
                 <a href="{{ journal.doaj_url }}" target="_blank" rel="noopener noreferrer" class="text-navy-600 hover:text-horizon-600 dark:text-navy-300 dark:hover:text-horizon-500 font-medium">View on DOAJ ↗</a>
                 {% endif %}
             </div>
+
+            {% if journal.issn_print or journal.issn_online %}
+            {#
+                Online enrichment (#107) -- lazy-loaded on click, never
+                on page load, so a search never waits on or depends on
+                an external API (docs/ENRICHMENT.md). Optional and
+                clearly separate from the recommendation itself.
+            #}
+            <button
+                type="button"
+                hx-post="/search/enrich"
+                hx-vals='{"issn_print": "{{ journal.issn_print or "" }}", "issn_online": "{{ journal.issn_online or "" }}"}'
+                hx-target="#online-enrichment-{{ journal.id }}"
+                hx-swap="innerHTML"
+                hx-indicator="#online-enrichment-loading-{{ journal.id }}"
+                class="mt-2 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300"
+            >
+                🌐 Get more info online (OpenAlex / Crossref)
+                <span id="online-enrichment-loading-{{ journal.id }}" class="htmx-indicator">…</span>
+            </button>
+            <div id="online-enrichment-{{ journal.id }}"></div>
+            {% endif %}
         </div>
     </details>
 
