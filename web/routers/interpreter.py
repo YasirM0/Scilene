@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, Form, Request
 
 from services.language_detection import detect_language
 from services.research_interpreter import suggest_concepts, next_suggestion, CATEGORIES
+from web.confirmed_tags import add_confirmed_tag
 from web.dependencies import get_session_state, attach_session_cookie
 from web.interpreter_presentation import current_suggestions_context
 from web.language_presentation import language_form_context
@@ -135,8 +136,7 @@ def interpret_accept(request: Request, category: str, session=Depends(get_sessio
             session["interpreter_suggestions"] = [
                 t for t in session["interpreter_suggestions"] if t["category"] != category
             ]
-            if tag["value"] not in session["confirmed_tags"]:
-                session["confirmed_tags"].append(tag["value"])
+            add_confirmed_tag(session, tag["value"], origin="ai")
     session["interpreter_editing_category"] = None
 
     context = current_suggestions_context(session)
@@ -195,5 +195,22 @@ def remove_confirmed_tag(request: Request, index: int, session=Depends(get_sessi
 
     response = templates.TemplateResponse(
         request=request, name="partials/confirmed_tags_standalone.html", context={"tags": tags}
+    )
+    return attach_session_cookie(response, session)
+
+
+@router.post("/tags/add")
+def add_tag(request: Request, value: str = Form(""), session=Depends(get_session_state)):
+    """
+    #139 -- the "Add a tag..." field below AI suggestions. Always
+    origin="user": this is the one path that's genuinely just the
+    researcher's own words, not something Scilene proposed first.
+    """
+    add_confirmed_tag(session, value, origin="user")
+
+    response = templates.TemplateResponse(
+        request=request,
+        name="partials/tag_added.html",
+        context={"tags": session["confirmed_tags"]},
     )
     return attach_session_cookie(response, session)

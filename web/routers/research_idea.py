@@ -26,6 +26,7 @@ designed for.
 from fastapi import APIRouter, Depends, Form, Request
 
 from services.ai_provider import get_default_provider
+from web.confirmed_tags import add_confirmed_tag
 from web.dependencies import get_session_state, attach_session_cookie
 from web.templating import templates
 
@@ -78,11 +79,8 @@ def continue_to_search(
     """
     parsed_keywords = [k.strip() for k in keywords.replace(";", ",").split(",") if k.strip()]
 
-    confirmed = session.get("confirmed_tags", [])
     for keyword in parsed_keywords:
-        if keyword not in confirmed:
-            confirmed.append(keyword)
-    session["confirmed_tags"] = confirmed
+        add_confirmed_tag(session, keyword, origin="ai")
 
     response = templates.TemplateResponse(
         request=request, name="partials/empty.html", context={}

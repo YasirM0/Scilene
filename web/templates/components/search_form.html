@@ -44,6 +44,8 @@
             <p class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search Concepts</p>
             {% from "components/confirmed_tags.html" import confirmed_tags as confirmed_tags_chips %}
             {{ confirmed_tags_chips(confirmed_tags) }}
+            {% from "components/add_tag_input.html" import add_tag_input %}
+            <div class="mt-2">{{ add_tag_input() }}</div>
         </div>
     </div>
 </div>

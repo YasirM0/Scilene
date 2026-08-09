@@ -22,6 +22,7 @@ from services.jis_format import serialize_jis, parse_jis_import, InvalidJisFile
 from services.report_context import ReportContext, build_filters_summary
 from services.reports import generate_pdf, generate_docx, generate_xlsx, generate_markdown
 
+from web.confirmed_tags import add_confirmed_tag, confirmed_tag_values
 from web.dependencies import get_session_state, attach_session_cookie
 from web.interpreter_presentation import current_suggestions_context
 from web.language_presentation import language_form_context
@@ -131,9 +132,9 @@ def _results_context(session):
     # over the results already produced, not a fake AI call. Excludes
     # anything already a confirmed search concept, since re-offering a
     # discipline the user already searched with is not new information.
-    confirmed = session.get("confirmed_tags", [])
+    confirmed_values = confirmed_tag_values(session)
     detected_disciplines = [
-        d for d in detect_disciplines(all_results) if d not in confirmed
+        d for d in detect_disciplines(all_results) if d not in confirmed_values
     ]
 
     return {
@@ -259,9 +260,9 @@ def run_search(
     # anything manually added) and the "no abstract" fallback tags feed
     # the SAME recommender `keywords` list -- the UI doesn't distinguish
     # between them once confirmed (docs/RESEARCH_INTERPRETER.md).
-    confirmed = session.get("confirmed_tags", [])
+    confirmed_values = confirmed_tag_values(session)
     parsed_fallback = [t.strip() for t in fallback_tags.replace(";", ",").split(",") if t.strip()]
-    concepts = confirmed + [t for t in parsed_fallback if t not in confirmed]
+    concepts = confirmed_values + [t for t in parsed_fallback if t not in confirmed_values]
 
     if not abstract and len(concepts) < 10:
         context = {
@@ -340,14 +341,13 @@ def refine_with_disciplines(
         context = {**_filter_context(), **_results_context(session)}
         return _render(request, "partials/search_results.html", context, session)
 
-    confirmed = session.get("confirmed_tags", [])
+    for discipline in disciplines:
+        add_confirmed_tag(session, discipline, origin="ai")
     extra = [d.strip() for d in extra_disciplines.replace(";", ",").split(",") if d.strip()]
-    for discipline in list(disciplines) + extra:
-        if discipline not in confirmed:
-            confirmed.append(discipline)
-    session["confirmed_tags"] = confirmed
+    for discipline in extra:
+        add_confirmed_tag(session, discipline, origin="user")
 
-    concepts = confirmed  # same list identity used by run_search's own concepts computation
+    concepts = confirmed_tag_values(session)  # same values run_search's own concepts computation would produce
 
     results = _execute_search(
         session, params["abstract"], concepts, params["strategy_label"],
@@ -504,8 +504,12 @@ def import_jis(request: Request, file: UploadFile = File(...), session=Depends(g
         strategy_label = "⚖️ Balanced (Recommended)"
 
     abstract = (search.get("abstract") or "").strip()
-    confirmed = [str(tag) for tag in (search.get("confirmed_tags") or [])]
-    session["confirmed_tags"] = confirmed
+    # Imported tags aren't fresh Scilene suggestions -- closest fit is
+    # "user" (a prior session's own confirmed concepts), not "ai".
+    session["confirmed_tags"] = []
+    for tag in search.get("confirmed_tags") or []:
+        add_confirmed_tag(session, str(tag), origin="user")
+    confirmed = confirmed_tag_values(session)
 
     _execute_search(
         session, abstract, confirmed, strategy_label,

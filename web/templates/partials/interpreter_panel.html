@@ -43,7 +43,15 @@
 {% elif state == "suggestions" and suggestions %}
 <div>
     <p class="text-sm font-medium text-navy-600 dark:text-navy-300 mb-2">Suggested by Scilene</p>
-    <div class="space-y-2">
+    {#
+        #138 -- flex-wrap instead of a vertical stack, so both
+        suggestions (Field of Study, Key Research Focus) sit side by
+        side on wide enough screens instead of each taking a full-width
+        row. Each non-editing suggestion is now one compact inline
+        pill (value + label + actions all in a row) rather than a
+        full-width bar with actions pushed to the far right.
+    #}
+    <div class="flex flex-wrap gap-2 items-start">
         {% for tag in suggestions %}
         {% set colors = {
             "blue": "bg-blue-50 dark:bg-blue-900 text-blue-800 dark:text-blue-200",
@@ -54,13 +62,14 @@
             #110 "✏ Edit" -- inline text input replacing this one row's
             normal ✓/↻ actions. Server-rendered like every other
             interpreter state: Save/Cancel are plain HTMX round trips,
-            not client-side form handling.
+            not client-side form handling. Full width of its own line
+            (unlike the compact pills) since it holds a text input.
         #}
         <form
             hx-post="/search/interpret/edit-save/{{ tag.category }}"
             hx-target="#interpreter-panel"
             hx-swap="innerHTML"
-            class="flex items-center gap-2 px-3 py-2 rounded-md border border-navy-300 dark:border-navy-600"
+            class="flex items-center gap-2 px-3 py-2 rounded-md border border-navy-300 dark:border-navy-600 w-full"
         >
             <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ tag.label }}</span>
             <input type="text" name="value" value="{{ tag.value }}" autofocus
@@ -76,39 +85,41 @@
             >Cancel</button>
         </form>
         {% else %}
-        <div class="flex items-center justify-between gap-3 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700">
-            <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ colors.get(tag.color, 'bg-gray-100 text-gray-600') }}">
-                    {{ tag.value }}
-                </span>
-                <span class="text-xs text-gray-400 dark:text-gray-500">{{ tag.label }}</span>
-            </div>
-            <div class="flex items-center gap-3 text-xs font-medium shrink-0">
+        <div class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-gray-200 dark:border-gray-700">
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap {{ colors.get(tag.color, 'bg-gray-100 text-gray-600') }}">
+                {{ tag.value }}
+            </span>
+            <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{{ tag.label }}</span>
+            <div class="flex items-center gap-2 text-xs font-medium shrink-0">
                 <button type="button"
                     hx-post="/search/interpret/accept/{{ tag.category }}"
                     hx-target="#interpreter-panel"
                     hx-swap="innerHTML"
+                    aria-label="Accept {{ tag.value }}"
                     class="text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500"
-                >✓ Looks good</button>
+                >✓</button>
                 <button type="button"
                     hx-post="/search/interpret/suggest-another/{{ tag.category }}"
                     hx-target="#interpreter-panel"
                     hx-swap="innerHTML"
+                    aria-label="Suggest another for {{ tag.label }}"
                     class="text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300"
-                >↻ Suggest another</button>
+                >↻</button>
                 <button type="button"
                     hx-post="/search/interpret/edit-start/{{ tag.category }}"
                     hx-target="#interpreter-panel"
                     hx-swap="innerHTML"
+                    aria-label="Edit {{ tag.label }}"
                     class="text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300"
-                >✏ Edit</button>
+                >✏</button>
                 {% if tag.cycled %}
                 <button type="button"
                     hx-post="/search/interpret/remove/{{ tag.category }}"
                     hx-target="#interpreter-panel"
                     hx-swap="innerHTML"
+                    aria-label="Remove {{ tag.label }} suggestion"
                     class="text-gray-400 dark:text-gray-500 hover:text-red-600"
-                >Remove</button>
+                >&times;</button>
                 {% endif %}
             </div>
         </div>

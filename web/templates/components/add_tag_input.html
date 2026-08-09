@@ -1,0 +1,19 @@
+{% macro add_tag_input(oob=False) %}
+{#
+    #139 -- "Add a tag..." below AI suggestions. Enter submits via a
+    plain HTMX keyup trigger (declarative, not hand-written JS) to
+    /search/tags/add, which re-renders #confirmed-tags AND this same
+    input as an out-of-band swap with an empty value -- that's how the
+    field clears itself after each tag with zero JavaScript: the
+    server just sends back a fresh, empty copy of the same input
+    rather than a script resetting the old one.
+#}
+<input type="text" id="add-tag-input" name="value" placeholder="Add a tag..."
+    {% if oob %}hx-swap-oob="true"{% endif %}
+    hx-post="/search/tags/add"
+    hx-trigger="keyup[key=='Enter']"
+    hx-target="#confirmed-tags"
+    hx-swap="outerHTML"
+    hx-include="this"
+    class="w-full sm:w-56 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
+{% endmacro %}
