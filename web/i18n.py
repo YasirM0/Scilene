@@ -197,6 +197,12 @@ _STRINGS = {
         "ar": "🔒 خصوصية أولاً · لا حاجة لحساب · مصمَّم للباحثين",
         "id": "🔒 Mengutamakan privasi · Tanpa akun · Dibuat untuk peneliti",
     },
+
+    "validation.abstract_too_short": {
+        "en": "This abstract looks too short (at least {min_words} words) for Scilene to suggest relevant concepts. Please paste your full abstract.",
+        "ar": "يبدو هذا الملخص قصيرًا جدًا (يلزم {min_words} كلمات على الأقل) ليتمكن Scilene من اقتراح مفاهيم ذات صلة. يرجى لصق الملخص كاملاً.",
+        "id": "Abstrak ini tampaknya terlalu pendek (minimal {min_words} kata) agar Scilene dapat menyarankan konsep yang relevan. Mohon tempel abstrak lengkap Anda.",
+    },
 }
 
 

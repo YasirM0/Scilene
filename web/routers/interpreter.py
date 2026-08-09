@@ -10,6 +10,7 @@ values; nothing here ever touches services/recommender.py.
 
 from fastapi import APIRouter, Depends, Form, Request
 
+from services.abstract_validation import is_too_short
 from services.language_detection import detect_language
 from services.research_interpreter import suggest_concepts, next_suggestion, CATEGORIES
 from web.confirmed_tags import add_confirmed_tag
@@ -69,6 +70,17 @@ def interpret(request: Request, abstract: str = Form(""), session=Depends(get_se
             context["language_card_oob"] = language_form_context(session)
         return _render_panel(request, session, context)
 
+    if is_too_short(abstract):
+        # No snapshot saved -- once the abstract clears the minimum,
+        # this is treated as a genuine first run, not a "changed" one.
+        session["interpreter_suggestions"] = []
+        session["interpreter_abstract_snapshot"] = None
+        session["interpreter_editing_category"] = None
+        context = {"state": "too_short"}
+        if language_changed:
+            context["language_card_oob"] = language_form_context(session)
+        return _render_panel(request, session, context)
+
     snapshot = session.get("interpreter_abstract_snapshot")
 
     if snapshot is None:
@@ -104,6 +116,11 @@ def interpret_reveal(request: Request, session=Depends(get_session_state)):
 @router.post("/interpret/refresh")
 def interpret_refresh(request: Request, abstract: str = Form(""), session=Depends(get_session_state)):
     abstract = abstract.strip()
+    if is_too_short(abstract):
+        session["interpreter_suggestions"] = []
+        session["interpreter_abstract_snapshot"] = None
+        session["interpreter_editing_category"] = None
+        return _render_panel(request, session, {"state": "too_short"})
     session["interpreter_suggestions"] = suggest_concepts(abstract)
     session["interpreter_abstract_snapshot"] = abstract
     session["interpreter_editing_category"] = None

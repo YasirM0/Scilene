@@ -7,7 +7,19 @@
     hand-written JS.
 #}
 
-{% if state == "analyzing" %}
+{% if state == "too_short" %}
+{#
+    #137 -- rejects extremely short abstracts before suggest_concepts()
+    ever runs (see services/abstract_validation.py); no snapshot is
+    saved for a rejected abstract, so typing more text re-triggers a
+    fresh "analyzing" pass once it clears the minimum, same as a
+    genuinely first-time abstract.
+#}
+<div class="px-4 py-3 rounded-md bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 text-sm text-yellow-800 dark:text-yellow-300">
+    {{ t("validation.abstract_too_short", request.state.locale, min_words=5) }}
+</div>
+
+{% elif state == "analyzing" %}
 <div class="px-4 py-3 rounded-md bg-navy-50 dark:bg-gray-900 text-sm text-navy-700 dark:text-navy-300"
      hx-get="/search/interpret/reveal"
      hx-trigger="load delay:900ms"
