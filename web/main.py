@@ -31,7 +31,7 @@ from web.config import get_settings
 from web.dependencies import SESSION_COOKIE_NAME
 from web.i18n import DEFAULT_LOCALE
 from web.routers import (
-    home, pages, search, interpreter, enrichment, settings as settings_router,
+    home, pages, search, interpreter, enrichment,
     research_idea, compare, locale as locale_router,
 )
 from web.session_store import get_session
@@ -72,7 +72,6 @@ app.include_router(pages.router)
 app.include_router(search.router)
 app.include_router(interpreter.router)
 app.include_router(enrichment.router)
-app.include_router(settings_router.router)
 app.include_router(research_idea.router)
 app.include_router(compare.router)
 app.include_router(locale_router.router)

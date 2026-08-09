@@ -2,22 +2,26 @@
     Navy background regardless of light/dark theme -- Navigation Navy
     is explicitly "for... Navigation bar" in the brand spec
     (docs/DESIGN_SYSTEM.md), not something that should flip with the
-    theme toggle.
+    theme toggle. #134 redesign: real logo mark instead of a generic
+    📚 emoji (stronger branding, also closes part of #132), tighter
+    spacing, a compact language control that shows the current
+    selection rather than a bare icon, and the theme button's fixed
+    icon-direction bug (see below).
 #}
 <nav class="bg-navy-600 border-b border-navy-700 sticky top-0 z-10">
     <div class="max-w-6xl mx-auto px-4 sm:px-6">
-        <div class="flex items-center justify-between h-16 gap-4">
+        <div class="flex items-center justify-between h-14 gap-3">
 
             <a href="/" class="flex items-center gap-2 font-semibold text-white shrink-0">
-                <span aria-hidden="true">📚</span>
+                <img src="{{ url_for('static', path='img/scilene-logo.png') }}" alt="" class="w-6 h-6" aria-hidden="true">
                 <span class="hidden sm:inline">{{ app.name }}</span>
             </a>
 
-            <div class="flex items-center gap-0.5 sm:gap-1 overflow-x-auto">
+            <div class="flex items-center gap-0.5 overflow-x-auto">
                 {% for link in nav_links %}
                 <a
                     href="{{ link.href }}"
-                    class="px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition-colors
+                    class="px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition-colors
                         {% if request.url.path == link.href %}
                             text-white bg-navy-700
                         {% else %}
@@ -32,7 +36,7 @@
                     href="{{ app.github }}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium text-horizon-50 hover:text-white hover:bg-navy-700 transition-colors flex items-center gap-1 whitespace-nowrap"
+                    class="px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium text-horizon-50 hover:text-white hover:bg-navy-700 transition-colors items-center gap-1 whitespace-nowrap hidden sm:flex"
                 >
                     GitHub
                     <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -42,20 +46,31 @@
             </div>
 
             {#
-                #84 -- outside the scrollable nav-links strip on
+                A thin divider separates the page links from the two
+                per-visitor controls (language, theme) -- #134's
+                "navigation feels crowded" is partly just these two
+                utility controls reading as more nav items instead of
+                a distinct settings-like group.
+            #}
+            <div class="hidden sm:block w-px h-5 bg-navy-700 shrink-0" aria-hidden="true"></div>
+
+            {#
+                #84/#134 -- outside the scrollable nav-links strip on
                 purpose: that div's overflow-x-auto implicitly clips
                 overflow-y too, which would cut off this dropdown.
                 Native <details>, no JS; each language is a plain form
                 POST (web/routers/locale.py) -- switching touches
                 strings across the whole page, so a full reload is
-                honest, not a partial HTMX swap.
+                honest, not a partial HTMX swap. Shows the current
+                language's short code, not a bare globe, so the
+                control communicates state at a glance (#134).
             #}
             <details class="relative shrink-0">
                 <summary
-                    class="cursor-pointer list-none px-2 py-2 rounded-md text-sm text-horizon-50 hover:text-white hover:bg-navy-700 transition-colors"
+                    class="cursor-pointer list-none px-2 py-1.5 rounded-md text-xs sm:text-sm font-medium text-horizon-50 hover:text-white hover:bg-navy-700 transition-colors flex items-center gap-1"
                     aria-label="{{ t('nav.language', request.state.locale) }}"
-                >🌐</summary>
-                <div class="absolute right-0 mt-1 py-1 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-lg min-w-[8rem] z-20">
+                >🌐 <span class="uppercase">{{ request.state.locale }}</span></summary>
+                <div class="absolute {% if supported_locales[request.state.locale].dir == 'rtl' %}left-0{% else %}right-0{% endif %} mt-1 py-1 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-lg min-w-[8rem] z-20">
                     {% for code, meta in supported_locales.items() %}
                     <form method="post" action="/locale/{{ code }}">
                         <button type="submit"
@@ -66,14 +81,24 @@
                 </div>
             </details>
 
+            {#
+                #134 -- the icon shown is what clicking WILL switch
+                TO, not the current theme (was backwards: dark mode
+                showed a moon, i.e. its own current state, not the
+                sun it would switch to). Stays the crescent moon, not
+                a different glyph -- Scilene's own logo is built
+                around a crescent (docs/DESIGN_SYSTEM.md), so this
+                already is "a proper moon icon that reflects Scilene's
+                identity," not a generic one to replace.
+            #}
             <button
                 id="theme-toggle"
                 type="button"
                 aria-label="Switch between dark and light appearance"
-                class="px-2 py-2 rounded-md text-sm text-horizon-50 hover:text-white hover:bg-navy-700 transition-colors shrink-0"
+                class="px-2 py-1.5 rounded-md text-sm text-horizon-50 hover:text-white hover:bg-navy-700 transition-colors shrink-0"
             >
-                <span class="dark:hidden" aria-hidden="true">☀️</span>
-                <span class="hidden dark:inline" aria-hidden="true">🌙</span>
+                <span class="dark:hidden" aria-hidden="true">🌙</span>
+                <span class="hidden dark:inline" aria-hidden="true">☀️</span>
             </button>
 
         </div>

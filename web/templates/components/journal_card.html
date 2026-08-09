@@ -1,4 +1,4 @@
-{% macro journal_card(journal, enrichment_enabled=True, compare_ids=[]) %}
+{% macro journal_card(journal, compare_ids=[]) %}
 <div class="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
 
     <div class="flex items-start justify-between gap-3">
@@ -142,14 +142,18 @@
                 {% endif %}
             </div>
 
-            {% if enrichment_enabled and (journal.issn_print or journal.issn_online) %}
+            {% if journal.issn_print or journal.issn_online %}
             {#
                 Online enrichment (#107) -- lazy-loaded on click, never
                 on page load, so a search never waits on or depends on
                 an external API (docs/ENRICHMENT.md). Optional and
-                clearly separate from the recommendation itself. The
-                button itself only appears when Settings' "Online
-                metadata enrichment" preference (#108) is on.
+                clearly separate from the recommendation itself.
+                Always available -- #133 removed the settings toggle
+                that used to gate this button as unnecessary
+                complexity ("mainly controls whether an informational
+                button appears"); nothing is ever fetched without this
+                explicit per-journal click either way, which is the
+                real consent boundary, not a settings checkbox.
             #}
             <button
                 type="button"

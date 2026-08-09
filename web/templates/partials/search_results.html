@@ -103,7 +103,7 @@
 
 <div class="space-y-3">
     {% for journal in page_results %}
-        {{ journal_card(journal, enrichment_enabled=enrichment_enabled, compare_ids=compare_ids) }}
+        {{ journal_card(journal, compare_ids=compare_ids) }}
     {% endfor %}
 </div>
 

@@ -118,7 +118,6 @@ def _results_context(session):
         return {
             "has_search": False,
             "history": session["history"],
-            "enrichment_enabled": session.get("enrichment_enabled", True),
             "compare_ids": session.get("compare_journal_ids", []),
         }
 
@@ -149,7 +148,6 @@ def _results_context(session):
         "total_pages": total_pages,
         "history": session["history"],
         "detected_disciplines": detected_disciplines,
-        "enrichment_enabled": session.get("enrichment_enabled", True),
         "compare_ids": session.get("compare_journal_ids", []),
     }
 
