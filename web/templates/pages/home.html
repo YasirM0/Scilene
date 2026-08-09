@@ -3,7 +3,7 @@
 {% from "components/feature_card.html" import feature_card %}
 {% from "components/index_badge.html" import index_badge with context %}
 
-{% block title %}{{ app.name }} — Find the right journal for your research{% endblock %}
+{% block title %}{{ t("home.title", request.state.locale, app_name=app.name) }}{% endblock %}
 
 {% block content %}
 

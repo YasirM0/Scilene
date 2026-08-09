@@ -17,7 +17,7 @@
 <section class="px-4 sm:px-6 py-14 sm:py-20 bg-navy-600 rounded-lg text-center">
     <img
         src="{{ url_for('static', path='img/scilene-logo.png') }}"
-        alt="Scilene logo"
+        alt="{{ t('about.logo_alt', locale) }}"
         class="block mx-auto w-24 h-24 mb-8"
     >
     <h1 class="text-sm sm:text-base font-normal text-gold-600 tracking-wide mb-4">

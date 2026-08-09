@@ -745,6 +745,19 @@ _STRINGS = {
         "ar": "التوثيق الموجّه للمستخدمين الخاص بـ {app_name} مخطط له في مرحلة مستقبلية.",
         "id": "Dokumentasi untuk pengguna {app_name} direncanakan untuk milestone mendatang.",
     },
+
+    # -- Stragglers caught by the #129 completeness audit --------------------
+    "nav.theme_toggle_aria": {
+        "en": "Switch between dark and light appearance",
+        "ar": "التبديل بين المظهر الداكن والفاتح",
+        "id": "Beralih antara tampilan gelap dan terang",
+    },
+    "home.title": {
+        "en": "{app_name} — Find the right journal for your research",
+        "ar": "{app_name} — اعثر على المجلة المناسبة لبحثك",
+        "id": "{app_name} — Temukan jurnal yang tepat untuk riset Anda",
+    },
+    "about.logo_alt": {"en": "Scilene logo", "ar": "شعار Scilene", "id": "Logo Scilene"},
 }
 
 
