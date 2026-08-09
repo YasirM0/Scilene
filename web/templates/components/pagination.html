@@ -1,4 +1,5 @@
 {% macro pagination(page, total_pages, show_weaker) %}
+{% set locale = request.state.locale %}
 {% set weaker_param = "&show_weaker=on" if show_weaker else "" %}
 <div class="flex items-center justify-between mt-4">
     <button
@@ -8,10 +9,10 @@
         hx-swap="innerHTML"
         class="px-3 py-1.5 text-sm rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-900"
     >
-        ⬅️ Previous
+        {{ t("pagination.previous", locale) }}
     </button>
 
-    <span class="text-sm text-gray-500 dark:text-gray-400">Page {{ page }} of {{ total_pages }}</span>
+    <span class="text-sm text-gray-500 dark:text-gray-400">{{ t("pagination.page_of", locale, page=page, total=total_pages) }}</span>
 
     <button
         {% if page >= total_pages %}disabled{% endif %}
@@ -20,7 +21,7 @@
         hx-swap="innerHTML"
         class="px-3 py-1.5 text-sm rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-gray-900"
     >
-        Next ➡️
+        {{ t("pagination.next", locale) }}
     </button>
 </div>
 {% endmacro %}

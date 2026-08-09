@@ -11,6 +11,7 @@ from fastapi import APIRouter, Request
 
 from services.app_info import APP_NAME
 from services.search_service import get_dashboard_stats
+from web.i18n import t
 from web.templating import templates
 
 logger = logging.getLogger(__name__)
@@ -37,14 +38,12 @@ def statistics(request: Request):
 
 @router.get("/documentation")
 def documentation_placeholder(request: Request):
+    locale = request.state.locale
     return templates.TemplateResponse(
         request=request,
         name="pages/coming_soon.html",
         context={
-            "page_title": "Documentation",
-            "page_description": (
-                f"User-facing documentation for {APP_NAME} is planned "
-                "for a future milestone."
-            ),
+            "page_title": t("documentation.title", locale),
+            "page_description": t("documentation.description", locale, app_name=APP_NAME),
         },
     )

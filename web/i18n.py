@@ -648,6 +648,103 @@ _STRINGS = {
     },
     "research_idea_result.continue_button": {"en": "Continue to Search", "ar": "المتابعة إلى البحث", "id": "Lanjutkan ke Pencarian"},
     "research_idea_result.start_over_button": {"en": "← Start over", "ar": "← البدء من جديد", "id": "← Mulai lagi"},
+
+    # -- Small shared components (#129) --------------------------------------
+    "compare_bar.selected_count": {
+        "en": "{selected}/{max} selected for comparison",
+        "ar": "تم تحديد {selected}/{max} للمقارنة",
+        "id": "{selected}/{max} dipilih untuk dibandingkan",
+    },
+    "compare_bar.compare_now": {"en": "Compare Now", "ar": "قارن الآن", "id": "Bandingkan Sekarang"},
+    "compare_bar.clear": {"en": "Clear", "ar": "مسح", "id": "Hapus"},
+
+    "pagination.previous": {"en": "⬅️ Previous", "ar": "⬅️ السابق", "id": "⬅️ Sebelumnya"},
+    "pagination.page_of": {"en": "Page {page} of {total}", "ar": "صفحة {page} من {total}", "id": "Halaman {page} dari {total}"},
+    "pagination.next": {"en": "Next ➡️", "ar": "التالي ➡️", "id": "Berikutnya ➡️"},
+
+    "search_history.summary": {"en": "🕘 Search History ({count})", "ar": "🕘 سجل البحث ({count})", "id": "🕘 Riwayat Pencarian ({count})"},
+    "search_history.helper": {
+        "en": "Kept only for this browser session — not saved anywhere.",
+        "ar": "يُحفظ فقط لجلسة المتصفح هذه — ولا يُخزَّن في أي مكان آخر.",
+        "id": "Hanya disimpan untuk sesi browser ini — tidak disimpan di mana pun.",
+    },
+    "search_history.untitled": {"en": "Untitled search", "ar": "بحث بلا عنوان", "id": "Pencarian tanpa judul"},
+    "search_history.utc": {"en": "UTC", "ar": "بالتوقيت العالمي", "id": "UTC"},
+    "search_history.results_count": {"en": "{count} results", "ar": "{count} نتيجة", "id": "{count} hasil"},
+    "search_history.rerun": {"en": "Rerun", "ar": "إعادة التشغيل", "id": "Jalankan ulang"},
+
+    "index_badge.journals_suffix": {"en": "{count} journals", "ar": "{count} مجلة", "id": "{count} jurnal"},
+
+    "coming_soon.label": {"en": "Coming soon", "ar": "قريباً", "id": "Segera hadir"},
+    "coming_soon.back_to_home": {"en": "← Back to Home", "ar": "← العودة إلى الرئيسية", "id": "← Kembali ke Beranda"},
+
+    # -- Backend-supplied warnings/errors (#129) -----------------------------
+    "warning.abstract_or_tags_required": {
+        "en": "Please provide an abstract, or at least 10 descriptive tags if you don't have one ({count} so far).",
+        "ar": "يرجى تقديم ملخص، أو 10 وسوم وصفية على الأقل إذا لم يكن لديك ملخص ({count} حتى الآن).",
+        "id": "Mohon berikan abstrak, atau setidaknya 10 tag deskriptif jika Anda tidak memilikinya ({count} sejauh ini).",
+    },
+    "warning.no_index_selected": {
+        "en": "Please select at least one journal index before searching.",
+        "ar": "يرجى اختيار فهرس مجلة واحد على الأقل قبل البحث.",
+        "id": "Mohon pilih setidaknya satu indeks jurnal sebelum mencari.",
+    },
+    "warning.no_results": {
+        "en": "No journals matched your current filters. Try a broader search, a different budget/language, or fewer indexing/quartile filters.",
+        "ar": "لم تتطابق أي مجلات مع المرشحات الحالية. جرّب بحثاً أوسع، ميزانية/لغة مختلفة، أو عدد أقل من مرشحات الفهرسة/الربعية.",
+        "id": "Tidak ada jurnal yang cocok dengan filter Anda saat ini. Coba pencarian yang lebih luas, anggaran/bahasa berbeda, atau lebih sedikit filter pengindeksan/kuartil.",
+    },
+    "warning.sls_load_error": {
+        "en": "Couldn't load this session file: {error}",
+        "ar": "تعذّر تحميل ملف الجلسة هذا: {error}",
+        "id": "Tidak dapat memuat file sesi ini: {error}",
+    },
+    "warning.sls_no_index": {
+        "en": "This session file has no journal index selected — nothing to search with.",
+        "ar": "لا يحتوي ملف الجلسة هذا على فهرس مجلة محدد — لا يوجد ما يمكن البحث به.",
+        "id": "File sesi ini tidak memiliki indeks jurnal yang dipilih — tidak ada yang bisa dicari.",
+    },
+    # Keyed by the EXACT literal message services/sls_format.py raises
+    # (that module is framework-agnostic and has no i18n of its own --
+    # see web/routers/search.py's import_sls() for the lookup-with-
+    # fallback that uses these).
+    "error.This doesn't look like a Scilene session file (.sls, or a legacy .jis).": {
+        "en": "This doesn't look like a Scilene session file (.sls, or a legacy .jis).",
+        "ar": "هذا لا يبدو ملف جلسة Scilene (.sls، أو ملف .jis قديم).",
+        "id": "Ini tidak terlihat seperti file sesi Scilene (.sls, atau .jis lama).",
+    },
+    "error.This file isn't valid JSON.": {
+        "en": "This file isn't valid JSON.",
+        "ar": "هذا الملف ليس بصيغة JSON صالحة.",
+        "id": "File ini bukan JSON yang valid.",
+    },
+    "error.This session file is missing its search data.": {
+        "en": "This session file is missing its search data.",
+        "ar": "يفتقر ملف الجلسة هذا إلى بيانات البحث الخاصة به.",
+        "id": "File sesi ini kehilangan data pencariannya.",
+    },
+    "error.This session has neither an abstract nor at least 10 tags -- nothing to search with.": {
+        "en": "This session has neither an abstract nor at least 10 tags -- nothing to search with.",
+        "ar": "لا تحتوي هذه الجلسة على ملخص ولا على 10 وسوم على الأقل — لا يوجد ما يمكن البحث به.",
+        "id": "Sesi ini tidak memiliki abstrak maupun setidaknya 10 tag — tidak ada yang bisa dicari.",
+    },
+    # Known literal AIResponse.error strings from services/ai_provider.py
+    # (framework-agnostic by design, so it never imports web/i18n.py
+    # itself -- research_idea_result.html looks up the exact English
+    # text it receives against this map and falls back to showing it
+    # verbatim if unrecognized, e.g. a real provider's own error text).
+    "ai_error.No research idea provided.": {"en": "No research idea provided.", "ar": "لم تُقدَّم أي فكرة بحثية.", "id": "Tidak ada ide riset yang diberikan."},
+    "ai_error.No abstract provided.": {"en": "No abstract provided.", "ar": "لم يُقدَّم أي ملخص.", "id": "Tidak ada abstrak yang diberikan."},
+    "ai_error.Provider response was not valid JSON.": {"en": "Provider response was not valid JSON.", "ar": "استجابة المزوّد لم تكن بصيغة JSON صالحة.", "id": "Respons penyedia bukan JSON yang valid."},
+    "ai_error.Provider response did not match the expected contract.": {"en": "Provider response did not match the expected contract.", "ar": "لم تتطابق استجابة المزوّد مع الصيغة المتوقعة.", "id": "Respons penyedia tidak sesuai dengan kontrak yang diharapkan."},
+
+    # -- Documentation placeholder page (#129) -------------------------------
+    "documentation.title": {"en": "Documentation", "ar": "التوثيق", "id": "Dokumentasi"},
+    "documentation.description": {
+        "en": "User-facing documentation for {app_name} is planned for a future milestone.",
+        "ar": "التوثيق الموجّه للمستخدمين الخاص بـ {app_name} مخطط له في مرحلة مستقبلية.",
+        "id": "Dokumentasi untuk pengguna {app_name} direncanakan untuk milestone mendatang.",
+    },
 }
 
 

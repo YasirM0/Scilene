@@ -1,18 +1,19 @@
 {% macro search_history(history) %}
+{% set locale = request.state.locale %}
 {% if history %}
 <details class="bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 group">
     <summary class="cursor-pointer list-none px-4 py-3 flex items-center justify-between">
-        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">🕘 Search History ({{ history|length }})</span>
+        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ t("search_history.summary", locale, count=history|length) }}</span>
         <span class="text-gray-400 dark:text-gray-500 transition-transform group-open:rotate-90">▶</span>
     </summary>
     <div class="px-4 pb-4 space-y-2">
-        <p class="text-xs text-gray-400 dark:text-gray-500">Kept only for this browser session — not saved anywhere.</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("search_history.helper", locale) }}</p>
         {% for entry in history %}
         <div class="flex items-center justify-between gap-3 py-2 border-t border-gray-100 dark:border-gray-700">
             <div>
-                <p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ entry.search_meta.display_label or "Untitled search" }}</p>
+                <p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ entry.search_meta.display_label or t("search_history.untitled", locale) }}</p>
                 <p class="text-xs text-gray-400 dark:text-gray-500">
-                    {{ entry.timestamp }} UTC &middot; {{ entry.search_meta.strategy_label }} &middot; {{ entry.result_count }} results
+                    {{ entry.timestamp }} {{ t("search_history.utc", locale) }} &middot; {{ entry.search_meta.strategy_label }} &middot; {{ t("search_history.results_count", locale, count=entry.result_count) }}
                 </p>
             </div>
             <button
@@ -21,7 +22,7 @@
                 hx-swap="innerHTML"
                 class="shrink-0 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
             >
-                Rerun
+                {{ t("search_history.rerun", locale) }}
             </button>
         </div>
         {% endfor %}

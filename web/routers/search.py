@@ -24,6 +24,7 @@ from services.reports import generate_pdf, generate_docx, generate_xlsx, generat
 
 from web.confirmed_tags import add_confirmed_tag, confirmed_tag_values
 from web.dependencies import get_session_state, attach_session_cookie
+from web.i18n import t
 from web.interpreter_presentation import current_suggestions_context
 from web.language_presentation import language_form_context
 from web.search_cache import cached_search
@@ -269,10 +270,7 @@ def run_search(
             **_filter_context(),
             **_results_context(session),
             **_interpreter_form_context(session),
-            "warning": (
-                "Please provide an abstract, or at least 10 descriptive tags "
-                f"if you don't have one ({len(concepts)} so far)."
-            ),
+            "warning": t("warning.abstract_or_tags_required", request.state.locale, count=len(concepts)),
         }
         return _render(request, "partials/search_results.html", context, session)
 
@@ -290,7 +288,7 @@ def run_search(
             **_filter_context(),
             **_results_context(session),
             **_interpreter_form_context(session),
-            "warning": "Please select at least one journal index before searching.",
+            "warning": t("warning.no_index_selected", request.state.locale),
         }
         return _render(request, "partials/search_results.html", context, session)
 
@@ -307,10 +305,7 @@ def run_search(
 
     context = {**_filter_context(), **_results_context(session)}
     if not results:
-        context["warning"] = (
-            "No journals matched your current filters. Try a broader search, "
-            "a different budget/language, or fewer indexing/quartile filters."
-        )
+        context["warning"] = t("warning.no_results", request.state.locale)
 
     return _render(request, "partials/search_results.html", context, session)
 
@@ -358,10 +353,7 @@ def refine_with_disciplines(
 
     context = {**_filter_context(), **_results_context(session)}
     if not results:
-        context["warning"] = (
-            "No journals matched your current filters. Try a broader search, "
-            "a different budget/language, or fewer indexing/quartile filters."
-        )
+        context["warning"] = t("warning.no_results", request.state.locale)
 
     return _render(request, "partials/search_results.html", context, session)
 
@@ -487,10 +479,18 @@ def import_sls(request: Request, file: UploadFile = File(...), session=Depends(g
     try:
         search = parse_sls_import(raw)
     except InvalidSlsFile as exc:
+        # InvalidSlsFile's message is a fixed, known English string
+        # from services/sls_format.py (framework-agnostic, no i18n of
+        # its own) -- look it up here rather than teaching that module
+        # about locales; unrecognized text (there is none today, but
+        # exceptions are still just str(exc)) falls back to itself.
+        error_key = "error." + str(exc)
+        translated = t(error_key, request.state.locale)
+        error_text = str(exc) if translated == error_key else translated
         context = {
             **_filter_context(),
             **_results_context(session),
-            "warning": f"Couldn't load this session file: {exc}",
+            "warning": t("warning.sls_load_error", request.state.locale, error=error_text),
         }
         return _render(request, "partials/search_results.html", context, session)
 
@@ -499,7 +499,7 @@ def import_sls(request: Request, file: UploadFile = File(...), session=Depends(g
         context = {
             **_filter_context(),
             **_results_context(session),
-            "warning": "This session file has no journal index selected — nothing to search with.",
+            "warning": t("warning.sls_no_index", request.state.locale),
         }
         return _render(request, "partials/search_results.html", context, session)
 

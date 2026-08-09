@@ -35,7 +35,9 @@
 {% else %}
 <div>
     <div class="px-3 py-2 rounded-md bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 text-sm text-yellow-800 dark:text-yellow-300 mb-3">
-        {{ error }}
+        {% set error_key = "ai_error." ~ error %}
+        {% set translated_error = t(error_key, locale) %}
+        {{ error if translated_error == error_key else translated_error }}
     </div>
     {% include "partials/research_idea_form.html" %}
 </div>
