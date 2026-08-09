@@ -4,42 +4,43 @@
     "not found" message) -- never an error page, per #107's "the UI
     should simply omit the enriched metadata" requirement.
 #}
+{% set locale = request.state.locale %}
 {% if enrichment %}
 <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 space-y-1 text-sm">
     <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">
-        Additional metadata via {{ enrichment.source_label }} — informational only, not part of the recommendation.
+        {{ t("online_enrichment.source_note", locale, source=enrichment.source_label) }}
     </p>
 
     {% if enrichment.publisher %}
-    <p><span class="font-medium text-gray-700 dark:text-gray-300">Publisher:</span> {{ enrichment.publisher }}</p>
+    <p><span class="font-medium text-gray-700 dark:text-gray-300">{{ t("online_enrichment.publisher", locale) }}</span> {{ enrichment.publisher }}</p>
     {% endif %}
 
     {% if enrichment.is_open_access is not none %}
-    <p><span class="font-medium text-gray-700 dark:text-gray-300">Open Access:</span> {{ "Yes" if enrichment.is_open_access else "No" }}</p>
+    <p><span class="font-medium text-gray-700 dark:text-gray-300">{{ t("online_enrichment.open_access", locale) }}</span> {{ t("online_enrichment.yes", locale) if enrichment.is_open_access else t("online_enrichment.no", locale) }}</p>
     {% endif %}
 
     {% if enrichment.apc_usd %}
-    <p><span class="font-medium text-gray-700 dark:text-gray-300">APC:</span> ~${{ "{:,.0f}".format(enrichment.apc_usd) }} USD</p>
+    <p><span class="font-medium text-gray-700 dark:text-gray-300">{{ t("online_enrichment.apc", locale) }}</span> ~${{ "{:,.0f}".format(enrichment.apc_usd) }} USD</p>
     {% endif %}
 
     {% if enrichment.topics %}
-    <p><span class="font-medium text-gray-700 dark:text-gray-300">Topics:</span> {{ enrichment.topics | join(", ") }}</p>
+    <p><span class="font-medium text-gray-700 dark:text-gray-300">{{ t("online_enrichment.topics", locale) }}</span> {{ enrichment.topics | join(", ") }}</p>
     {% endif %}
 
     {% if enrichment.works_count %}
-    <p><span class="font-medium text-gray-700 dark:text-gray-300">Indexed works:</span> {{ "{:,}".format(enrichment.works_count) }}</p>
+    <p><span class="font-medium text-gray-700 dark:text-gray-300">{{ t("online_enrichment.indexed_works", locale) }}</span> {{ "{:,}".format(enrichment.works_count) }}</p>
     {% endif %}
 
     {% if enrichment.cited_by_count %}
-    <p><span class="font-medium text-gray-700 dark:text-gray-300">Citations:</span> {{ "{:,}".format(enrichment.cited_by_count) }}</p>
+    <p><span class="font-medium text-gray-700 dark:text-gray-300">{{ t("online_enrichment.citations", locale) }}</span> {{ "{:,}".format(enrichment.cited_by_count) }}</p>
     {% endif %}
 
     {% if enrichment.homepage_url %}
-    <p><a href="{{ enrichment.homepage_url }}" target="_blank" rel="noopener noreferrer" class="text-navy-600 hover:text-horizon-600 dark:text-navy-300 dark:hover:text-horizon-500 font-medium">Journal homepage ↗</a></p>
+    <p><a href="{{ enrichment.homepage_url }}" target="_blank" rel="noopener noreferrer" class="text-navy-600 hover:text-horizon-600 dark:text-navy-300 dark:hover:text-horizon-500 font-medium">{{ t("online_enrichment.homepage_link", locale) }}</a></p>
     {% endif %}
 </div>
 {% else %}
 <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-    <p class="text-xs text-gray-400 dark:text-gray-500">No additional online metadata found for this journal.</p>
+    <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("online_enrichment.empty", locale) }}</p>
 </div>
 {% endif %}

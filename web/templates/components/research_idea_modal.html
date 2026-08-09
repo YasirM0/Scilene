@@ -7,12 +7,13 @@
     imperative JS" rule the rest of this app follows for HTMX; this
     interaction doesn't even need a round trip to open/close.
 #}
+{% set locale = request.state.locale %}
 <div id="research-idea-modal" class="modal-overlay">
-    <a href="#" aria-label="Close" class="modal-overlay-backdrop"></a>
+    <a href="#" aria-label="{{ t('research_idea_modal.close_aria', locale) }}" class="modal-overlay-backdrop"></a>
     <div class="relative bg-white dark:bg-gray-800 rounded-lg p-5 sm:p-6 max-w-md w-full border border-gray-200 dark:border-gray-700">
         <div class="flex items-start justify-between mb-4">
-            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-50">Start from a Research Idea</h3>
-            <a href="#" aria-label="Close" class="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 text-lg leading-none">✕</a>
+            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-50">{{ t("research_idea_modal.title", locale) }}</h3>
+            <a href="#" aria-label="{{ t('research_idea_modal.close_aria', locale) }}" class="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 text-lg leading-none">✕</a>
         </div>
         <div id="research-idea-body">
             {% include "partials/research_idea_form.html" %}
