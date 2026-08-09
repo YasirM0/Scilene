@@ -1,7 +1,7 @@
 """
-Portable Search Sessions -- .jis format (#91).
+Portable Search Sessions -- .sls format (#91, renamed from .jis by #136).
 
-A .jis file is a plain JSON document capturing everything needed to
+A .sls file is a plain JSON document capturing everything needed to
 genuinely RE-RUN a search on another device/session -- not a frozen
 snapshot of results. Recommendations depend on the live database, so
 "reopen" here means "reproduce," matching the principle search-history
@@ -15,25 +15,32 @@ silently dropped -- the format commits to their shape now, but nothing
 in this app writes to them yet (no note-taking UI exists to populate
 "notes"; "ai_outputs" is reserved for a future Research Idea/Interpreter
 export, neither generates anything durable enough to export today).
+
+parse_sls_import() also accepts the legacy .jis format (#136's
+required backward compatibility) -- both are the exact same JSON shape,
+identified by "format": "jis" instead of "sls", from back when this
+project was called Journal Intelligence. New exports always write
+"sls"; only import reads the old tag.
 """
 
 import json
 from datetime import datetime, timezone
 
-JIS_FORMAT_VERSION = 1
+SLS_FORMAT_VERSION = 1
+_LEGACY_FORMAT_TAGS = ("sls", "jis")
 
 
-class InvalidJisFile(Exception):
+class InvalidSlsFile(Exception):
     pass
 
 
-def build_jis_export(session, app_version):
+def build_sls_export(session, app_version):
     params = session.get("last_search_params") or {}
     search_meta = session.get("search_meta") or {}
 
     return {
-        "format": "jis",
-        "version": JIS_FORMAT_VERSION,
+        "format": "sls",
+        "version": SLS_FORMAT_VERSION,
         "app_version": app_version,
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "search": {
@@ -67,27 +74,28 @@ def build_jis_export(session, app_version):
     }
 
 
-def serialize_jis(session, app_version):
-    return json.dumps(build_jis_export(session, app_version), indent=2, ensure_ascii=False).encode("utf-8")
+def serialize_sls(session, app_version):
+    return json.dumps(build_sls_export(session, app_version), indent=2, ensure_ascii=False).encode("utf-8")
 
 
-def parse_jis_import(raw_bytes):
-    """Returns the validated `search` dict, or raises InvalidJisFile
-    with a message safe to show the user directly."""
+def parse_sls_import(raw_bytes):
+    """Returns the validated `search` dict, or raises InvalidSlsFile
+    with a message safe to show the user directly. Accepts both the
+    current .sls format and legacy .jis exports (#136)."""
     try:
         data = json.loads(raw_bytes)
     except (ValueError, UnicodeDecodeError):
-        raise InvalidJisFile("This file isn't valid JSON.")
+        raise InvalidSlsFile("This file isn't valid JSON.")
 
-    if not isinstance(data, dict) or data.get("format") != "jis":
-        raise InvalidJisFile("This doesn't look like a Scilene .jis session file.")
+    if not isinstance(data, dict) or data.get("format") not in _LEGACY_FORMAT_TAGS:
+        raise InvalidSlsFile("This doesn't look like a Scilene session file (.sls, or a legacy .jis).")
 
     search = data.get("search")
     if not isinstance(search, dict):
-        raise InvalidJisFile("This .jis file is missing its search data.")
+        raise InvalidSlsFile("This session file is missing its search data.")
 
     if not search.get("abstract") and len(search.get("confirmed_tags") or []) < 10:
-        raise InvalidJisFile(
+        raise InvalidSlsFile(
             "This session has neither an abstract nor at least 10 tags -- "
             "nothing to search with."
         )

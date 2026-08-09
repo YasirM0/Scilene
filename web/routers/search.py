@@ -18,7 +18,7 @@ from fastapi.responses import StreamingResponse, HTMLResponse
 from services import search_service
 from services.app_info import APP_VERSION
 from services.discipline_detection import detect_disciplines
-from services.jis_format import serialize_jis, parse_jis_import, InvalidJisFile
+from services.sls_format import serialize_sls, parse_sls_import, InvalidSlsFile
 from services.report_context import ReportContext, build_filters_summary
 from services.reports import generate_pdf, generate_docx, generate_xlsx, generate_markdown
 
@@ -448,11 +448,12 @@ def export_results(fmt: str, session=Depends(get_session_state)):
     if fmt == "csv":
         data = search_service.export_results_csv(results, context=_build_report_context(search_meta, results))
         media_type = "text/csv"
-    elif fmt == "jis":
-        # Portable Search Session (#91) -- unlike every other format
-        # here, this isn't a report OF the results, it's the search
-        # ITSELF (params + tags), reopenable via /search/import-jis.
-        data = serialize_jis(session, APP_VERSION)
+    elif fmt == "sls":
+        # Portable Search Session (#91, .sls since #136) -- unlike
+        # every other format here, this isn't a report OF the results,
+        # it's the search ITSELF (params + tags), reopenable via
+        # /search/import-sls.
+        data = serialize_sls(session, APP_VERSION)
         media_type = "application/json"
     elif fmt in _EXPORT_GENERATORS:
         generator, media_type = _EXPORT_GENERATORS[fmt]
@@ -468,10 +469,13 @@ def export_results(fmt: str, session=Depends(get_session_state)):
     return attach_session_cookie(response, session)
 
 
-@router.post("/import-jis")
-def import_jis(request: Request, file: UploadFile = File(...), session=Depends(get_session_state)):
+@router.post("/import-sls")
+def import_sls(request: Request, file: UploadFile = File(...), session=Depends(get_session_state)):
     """
-    Portable Search Sessions (#91) -- the counterpart to /export/jis.
+    Portable Search Sessions (#91) -- the counterpart to /export/sls.
+    Also accepts legacy .jis files (#136's backward-compatibility
+    requirement) -- parse_sls_import() doesn't care which extension
+    the upload had, only the JSON "format" tag inside it.
     Always genuinely RE-RUNS the search against the live database
     (via _execute_search, the exact function a manual search calls)
     rather than replaying the file's results_snapshot -- a session
@@ -481,12 +485,12 @@ def import_jis(request: Request, file: UploadFile = File(...), session=Depends(g
     raw = file.file.read()
 
     try:
-        search = parse_jis_import(raw)
-    except InvalidJisFile as exc:
+        search = parse_sls_import(raw)
+    except InvalidSlsFile as exc:
         context = {
             **_filter_context(),
             **_results_context(session),
-            "warning": f"Couldn't load this .jis file: {exc}",
+            "warning": f"Couldn't load this session file: {exc}",
         }
         return _render(request, "partials/search_results.html", context, session)
 
@@ -495,7 +499,7 @@ def import_jis(request: Request, file: UploadFile = File(...), session=Depends(g
         context = {
             **_filter_context(),
             **_results_context(session),
-            "warning": "This .jis file has no journal index selected — nothing to search with.",
+            "warning": "This session file has no journal index selected — nothing to search with.",
         }
         return _render(request, "partials/search_results.html", context, session)
 

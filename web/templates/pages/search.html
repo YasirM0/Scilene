@@ -12,16 +12,17 @@
 <details class="group mb-6">
     <summary class="cursor-pointer text-sm font-medium text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 list-none flex items-center gap-1">
         <span class="transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
-        📂 Load a saved session (.jis)
+        📂 Load a saved session (.sls)
     </summary>
     <form
-        hx-post="/search/import-jis"
+        hx-post="/search/import-sls"
         hx-target="#results-panel"
         hx-swap="innerHTML"
         hx-encoding="multipart/form-data"
         class="mt-2 flex flex-wrap items-center gap-2"
     >
-        <input type="file" name="file" accept=".jis,application/json" required
+        {# #136: still accepts legacy .jis exports, not just the current .sls #}
+        <input type="file" name="file" accept=".sls,.jis,application/json" required
             class="text-sm text-gray-600 dark:text-gray-300">
         <button type="submit"
             class="px-3 py-1.5 text-sm font-medium rounded-md bg-navy-600 text-white hover:bg-navy-700"
