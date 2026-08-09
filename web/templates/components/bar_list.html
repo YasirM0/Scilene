@@ -1,0 +1,28 @@
+{% macro bar_list(title, data, icon="") %}
+{#
+    #60 -- plain CSS bars (width set inline, proportional to the
+    largest value in this list), no charting library/JS, consistent
+    with the rest of this app's no-JS rule.
+#}
+<div class="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">{{ icon }} {{ title }}</h3>
+    {% if data %}
+    {% set max_value = data.values() | max %}
+    <div class="space-y-2">
+        {% for label, count in data.items() %}
+        <div>
+            <div class="flex items-center justify-between gap-3 text-xs text-gray-600 dark:text-gray-300 mb-0.5">
+                <span class="truncate">{{ label }}</span>
+                <span class="text-gray-400 dark:text-gray-500 shrink-0">{{ "{:,}".format(count) }}</span>
+            </div>
+            <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div class="h-full bg-navy-600 dark:bg-navy-300 rounded-full" style="width: {{ (count / max_value * 100) | round(1) }}%"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-xs text-gray-400 dark:text-gray-500">No data available.</p>
+    {% endif %}
+</div>
+{% endmacro %}

@@ -47,6 +47,7 @@ templates.env.globals["confidence_star_colors"] = CONFIDENCE_STAR_COLORS
 templates.env.globals["nav_links"] = [
     {"label": "Home", "href": "/"},
     {"label": "Submission Search", "href": "/search"},
+    {"label": "Statistics", "href": "/statistics"},
     {"label": "About", "href": "/about"},
     {"label": "Documentation", "href": "/documentation"},
     {"label": "Settings", "href": "/settings"},

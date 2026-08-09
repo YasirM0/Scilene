@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "components/stat_card.html" import stat_card %}
+{% from "components/bar_list.html" import bar_list %}
+
+{% block title %}Statistics — {{ app.name }}{% endblock %}
+
+{% block content %}
+
+<h1 class="text-2xl font-bold text-navy-600 dark:text-navy-300 mb-1">📊 Statistics Dashboard</h1>
+<p class="text-gray-500 dark:text-gray-400 mb-6">
+    A snapshot of the journal database and recommendation engine's coverage.
+</p>
+
+{% if not stats %}
+<div class="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
+    Statistics are unavailable right now — the database couldn't be reached.
+</div>
+{% else %}
+
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+    {{ stat_card("{:,}".format(stats.total_journals), "Total Journals") }}
+    {{ stat_card("{:,}".format(stats.by_source.get("DOAJ", 0)), "DOAJ") }}
+    {{ stat_card("{:,}".format(stats.by_source.get("Scopus", 0)), "Scopus") }}
+    {{ stat_card("{:,}".format(stats.by_source.get("SINTA", 0)), "SINTA") }}
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {{ bar_list("Indexing Sources", stats.by_source, "📚") }}
+    {{ bar_list("Metadata Enrichment", stats.by_enrichment, "🌐") }}
+    {{ bar_list("Top Countries", stats.by_country, "🌍") }}
+    {{ bar_list("Top Publishers", stats.by_publisher, "🏢") }}
+    {{ bar_list("Top Subject Areas", stats.by_subject, "🔖") }}
+    {{ bar_list("Publication Type", stats.by_publication_type, "📄") }}
+    {{ bar_list("Scopus / WoS Quartile", stats.by_quartile, "🏆") }}
+    {{ bar_list("SINTA Accreditation", stats.by_sinta_accreditation, "🇮🇩") }}
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+    {{ bar_list("Open Access Cost", stats.free_vs_paid, "💰") }}
+</div>
+
+<p class="text-xs text-gray-400 dark:text-gray-500 mt-6">
+    "Top" lists are capped at the 10 largest categories. Publication Type
+    only reflects journals matched to the Elsevier Source List (#128) —
+    unmatched journals aren't counted here as a guess either way.
+</p>
+
+{% endif %}
+
+{% endblock %}

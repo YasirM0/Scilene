@@ -15,7 +15,18 @@ interfaces.
 
 from services.recommender import JournalRecommender, STRATEGIES, CONFIDENCE_LEVELS
 from services.export import export_to_csv
-from services.repository import count_journals, count_by_source, count_by_enrichment_provider
+from services.repository import (
+    count_journals,
+    count_by_source,
+    count_by_enrichment_provider,
+    count_by_country,
+    count_by_publisher,
+    count_by_subject,
+    count_by_quartile,
+    count_by_sinta_accreditation,
+    count_by_publication_type,
+    count_free_vs_paid,
+)
 
 
 def search_journals(
@@ -73,4 +84,26 @@ def get_database_stats():
         "total_journals": count_journals(),
         "by_source": count_by_source(),
         "by_enrichment": count_by_enrichment_provider(),
+    }
+
+
+def get_dashboard_stats():
+    """
+    The fuller aggregate set for the Statistics Dashboard (#60) --
+    kept separate from get_database_stats() above (used by the
+    lightweight homepage) since count_by_subject() scans every
+    journal's subject text and isn't worth paying on every homepage
+    load for a page that doesn't show it.
+    """
+    return {
+        "total_journals": count_journals(),
+        "by_source": count_by_source(),
+        "by_enrichment": count_by_enrichment_provider(),
+        "by_country": count_by_country(),
+        "by_publisher": count_by_publisher(),
+        "by_subject": count_by_subject(),
+        "by_quartile": count_by_quartile(),
+        "by_sinta_accreditation": count_by_sinta_accreditation(),
+        "by_publication_type": count_by_publication_type(),
+        "free_vs_paid": count_free_vs_paid(),
     }

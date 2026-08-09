@@ -1,11 +1,13 @@
 import json
 import sqlite3
+from collections import Counter
 from pathlib import Path
 from dataclasses import asdict
 
 import pandas as pd
 
 from models.journal import Journal
+from utils.subjects import extract_subject_tags
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 DB_PATH = DATA_DIR / "journal_intelligence.db"
@@ -513,6 +515,143 @@ def count_by_enrichment_provider():
 
     conn.close()
 
+    return dict(rows)
+
+
+def count_by_country(top_n=10):
+    """{country: count}, most journals first (#60 Statistics Dashboard).
+    Excludes NULL/blank -- not every journal has a recorded country."""
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT country, COUNT(*) AS n
+        FROM journals
+        WHERE country IS NOT NULL AND TRIM(country) != ''
+        GROUP BY country
+        ORDER BY n DESC
+        LIMIT ?
+        """,
+        (top_n,),
+    ).fetchall()
+    conn.close()
+    return dict(rows)
+
+
+def count_by_subject(top_n=10):
+    """
+    {subject tag: journal count}, most-used first (#60). Same
+    extraction as services/field_detection.py's vocabulary (reusing
+    utils/subjects.py, not a separate taxonomy) but computed
+    independently here rather than importing that module's private
+    cache -- repository.py is the lower layer, field_detection.py
+    already depends on it, not the other way around.
+    """
+    conn = get_connection()
+    rows = conn.execute("SELECT subjects FROM journals WHERE subjects IS NOT NULL").fetchall()
+    conn.close()
+
+    counts = Counter()
+    for (subjects,) in rows:
+        for tag in extract_subject_tags(subjects):
+            counts[tag] += 1
+
+    return dict(counts.most_common(top_n))
+
+
+def count_by_publisher(top_n=10):
+    """{publisher: count}, most journals first (#60)."""
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT publisher, COUNT(*) AS n
+        FROM journals
+        WHERE publisher IS NOT NULL AND TRIM(publisher) != ''
+        GROUP BY publisher
+        ORDER BY n DESC
+        LIMIT ?
+        """,
+        (top_n,),
+    ).fetchall()
+    conn.close()
+    return dict(rows)
+
+
+def count_by_quartile():
+    """{quartile: count} across confirmed Scopus/WoS sources (#60).
+    Excludes rows with no real quartile -- NULL (Scopus-indexed per
+    Elsevier but not yet ranked by SCImago, see importers/elsevier.py)
+    and SCImago's own literal "-" (present in source data, meaning the
+    same "not ranked" thing NULL does here, not a fourth real value)."""
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT quartile, COUNT(DISTINCT journal_id)
+        FROM journal_sources
+        WHERE quartile IS NOT NULL AND quartile != '-'
+        GROUP BY quartile
+        ORDER BY quartile
+        """
+    ).fetchall()
+    conn.close()
+    return dict(rows)
+
+
+def count_by_sinta_accreditation():
+    """{accreditation: count} across confirmed SINTA sources (#60)."""
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT accreditation, COUNT(DISTINCT journal_id)
+        FROM journal_sources
+        WHERE accreditation IS NOT NULL
+        GROUP BY accreditation
+        ORDER BY accreditation
+        """
+    ).fetchall()
+    conn.close()
+    return dict(rows)
+
+
+def count_by_publication_type():
+    """{publication_type: count} from Elsevier's Source Type column
+    (#128) -- NULL (Elsevier hasn't matched this journal) is excluded
+    here, not resolved to a display default; the dashboard shows it as
+    its own honest "Unmatched / unknown" slice rather than inflating
+    "Journal" with a guess -- see utils/publication_types.py for where
+    that display-time default IS applied (journal cards, not stats)."""
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT publication_type, COUNT(*) AS n
+        FROM journals
+        WHERE publication_type IS NOT NULL
+        GROUP BY publication_type
+        ORDER BY n DESC
+        """
+    ).fetchall()
+    conn.close()
+    return dict(rows)
+
+
+def count_free_vs_paid():
+    """{"Free": n, "Paid": n, "Unconfirmed": n} (#60) -- apc is a
+    DOAJ-only field ("Yes"/"No"/blank), so a journal never tagged by
+    DOAJ has no confirmed APC status either way."""
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT
+            CASE
+                WHEN LOWER(apc) = 'no' THEN 'Free'
+                WHEN LOWER(apc) = 'yes' THEN 'Paid'
+                ELSE 'Unconfirmed'
+            END AS status,
+            COUNT(*) AS n
+        FROM journals
+        GROUP BY status
+        """
+    ).fetchall()
+    conn.close()
     return dict(rows)
 
 
