@@ -1,5 +1,5 @@
 {% from "components/pagination.html" import pagination %}
-{% from "components/export_panel.html" import export_panel %}
+{% from "components/export_panel.html" import export_panel with context %}
 {% from "components/search_history.html" import search_history %}
 {% from "components/journal_card.html" import journal_card with context %}
 
@@ -117,9 +117,9 @@
     also visibly clears the confirmed-tags/interpreter panel, which
     live in the form above #results-panel, not in this fragment.
 #}
-{% from "components/confirmed_tags.html" import confirmed_tags %}
+{% from "components/confirmed_tags.html" import confirmed_tags with context %}
 {{ confirmed_tags([], oob=True) }}
 <div id="interpreter-panel" hx-swap-oob="true"></div>
-{% from "components/language_filter_card.html" import language_filter_card %}
+{% from "components/language_filter_card.html" import language_filter_card with context %}
 {{ language_filter_card(language_options, [], none, false, oob=True) }}
 {% endif %}

@@ -7,6 +7,7 @@
     hand-written JS.
 #}
 
+{% set locale = request.state.locale %}
 {% if state == "too_short" %}
 {#
     #137 -- rejects extremely short abstracts before suggest_concepts()
@@ -16,7 +17,7 @@
     genuinely first-time abstract.
 #}
 <div class="px-4 py-3 rounded-md bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 text-sm text-yellow-800 dark:text-yellow-300">
-    {{ t("validation.abstract_too_short", request.state.locale, min_words=5) }}
+    {{ t("validation.abstract_too_short", locale, min_words=5) }}
 </div>
 
 {% elif state == "analyzing" %}
@@ -26,14 +27,14 @@
      hx-target="#interpreter-panel"
      hx-swap="innerHTML"
 >
-    <p class="font-medium mb-1">Analyzing your abstract...</p>
-    <p>✓ Field of Study identified</p>
-    <p>✓ Key Research Focus identified</p>
+    <p class="font-medium mb-1">{{ t("interpreter.analyzing", locale) }}</p>
+    <p>{{ t("interpreter.field_identified", locale) }}</p>
+    <p>{{ t("interpreter.focus_identified", locale) }}</p>
 </div>
 
 {% elif state == "changed_notice" %}
 <div class="px-4 py-3 rounded-md bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 text-sm text-yellow-800 dark:text-yellow-300">
-    <p class="mb-2">Your abstract has changed.</p>
+    <p class="mb-2">{{ t("interpreter.changed_notice", locale) }}</p>
     <div class="flex gap-3">
         <button type="button"
             hx-post="/search/interpret/refresh"
@@ -41,20 +42,20 @@
             hx-target="#interpreter-panel"
             hx-swap="innerHTML"
             class="font-medium hover:text-yellow-900 dark:hover:text-yellow-100"
-        >↻ Refresh suggested tags</button>
+        >{{ t("interpreter.refresh_button", locale) }}</button>
         <button type="button"
             hx-post="/search/interpret/keep"
             hx-include="[name=abstract]"
             hx-target="#interpreter-panel"
             hx-swap="innerHTML"
             class="font-medium hover:text-yellow-900 dark:hover:text-yellow-100"
-        >Keep current tags</button>
+        >{{ t("interpreter.keep_button", locale) }}</button>
     </div>
 </div>
 
 {% elif state == "suggestions" and suggestions %}
 <div>
-    <p class="text-sm font-medium text-navy-600 dark:text-navy-300 mb-2">Suggested by Scilene</p>
+    <p class="text-sm font-medium text-navy-600 dark:text-navy-300 mb-2">{{ t("interpreter.suggested_by", locale) }}</p>
     {#
         #138 -- flex-wrap instead of a vertical stack, so both
         suggestions (Field of Study, Key Research Focus) sit side by
@@ -69,6 +70,7 @@
             "blue": "bg-blue-50 dark:bg-blue-900 text-blue-800 dark:text-blue-200",
             "gold": "bg-gold-50 dark:bg-gold-700 text-gold-700 dark:text-gold-50",
         } %}
+        {% set tag_label = t("interpreter.category." ~ tag.category, locale) %}
         {% if editing_category == tag.category %}
         {#
             #110 "✏ Edit" -- inline text input replacing this one row's
@@ -83,45 +85,45 @@
             hx-swap="innerHTML"
             class="flex items-center gap-2 px-3 py-2 rounded-md border border-navy-300 dark:border-navy-600 w-full"
         >
-            <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ tag.label }}</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ tag_label }}</span>
             <input type="text" name="value" value="{{ tag.value }}" autofocus
                 class="flex-1 min-w-0 text-sm px-2 py-1 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
             <button type="submit"
                 class="text-xs font-medium text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 shrink-0"
-            >Save</button>
+            >{{ t("interpreter.save", locale) }}</button>
             <button type="button"
                 hx-post="/search/interpret/edit-cancel"
                 hx-target="#interpreter-panel"
                 hx-swap="innerHTML"
                 class="text-xs font-medium text-gray-400 dark:text-gray-500 hover:text-red-600 shrink-0"
-            >Cancel</button>
+            >{{ t("interpreter.cancel", locale) }}</button>
         </form>
         {% else %}
         <div class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-gray-200 dark:border-gray-700">
             <span class="px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap {{ colors.get(tag.color, 'bg-gray-100 text-gray-600') }}">
                 {{ tag.value }}
             </span>
-            <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{{ tag.label }}</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{{ tag_label }}</span>
             <div class="flex items-center gap-2 text-xs font-medium shrink-0">
                 <button type="button"
                     hx-post="/search/interpret/accept/{{ tag.category }}"
                     hx-target="#interpreter-panel"
                     hx-swap="innerHTML"
-                    aria-label="Accept {{ tag.value }}"
+                    aria-label="{{ t('interpreter.accept_aria', locale, value=tag.value) }}"
                     class="text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500"
                 >✓</button>
                 <button type="button"
                     hx-post="/search/interpret/suggest-another/{{ tag.category }}"
                     hx-target="#interpreter-panel"
                     hx-swap="innerHTML"
-                    aria-label="Suggest another for {{ tag.label }}"
+                    aria-label="{{ t('interpreter.suggest_another_aria', locale, label=tag_label) }}"
                     class="text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300"
                 >↻</button>
                 <button type="button"
                     hx-post="/search/interpret/edit-start/{{ tag.category }}"
                     hx-target="#interpreter-panel"
                     hx-swap="innerHTML"
-                    aria-label="Edit {{ tag.label }}"
+                    aria-label="{{ t('interpreter.edit_aria', locale, label=tag_label) }}"
                     class="text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300"
                 >✏</button>
                 {% if tag.cycled %}
@@ -129,7 +131,7 @@
                     hx-post="/search/interpret/remove/{{ tag.category }}"
                     hx-target="#interpreter-panel"
                     hx-swap="innerHTML"
-                    aria-label="Remove {{ tag.label }} suggestion"
+                    aria-label="{{ t('interpreter.remove_aria', locale, label=tag_label) }}"
                     class="text-gray-400 dark:text-gray-500 hover:text-red-600"
                 >&times;</button>
                 {% endif %}
@@ -148,7 +150,7 @@
     one response even though #interpreter-panel is this response's
     primary target, not #confirmed-tags.
 #}
-{% from "components/confirmed_tags.html" import confirmed_tags %}
+{% from "components/confirmed_tags.html" import confirmed_tags with context %}
 {{ confirmed_tags(confirmed_tags_oob, oob=True) }}
 {% endif %}
 
@@ -160,7 +162,7 @@
     language from the SAME abstract-blur request that updates
     suggestions, without a second competing trigger on the textarea.
 #}
-{% from "components/language_filter_card.html" import language_filter_card %}
+{% from "components/language_filter_card.html" import language_filter_card with context %}
 {{ language_filter_card(
     language_card_oob.language_options,
     language_card_oob.selected_languages,

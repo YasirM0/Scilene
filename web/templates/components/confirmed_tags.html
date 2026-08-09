@@ -1,4 +1,5 @@
 {% macro confirmed_tags(tags, oob=False) %}
+{% set locale = request.state.locale %}
 {#
     Once a tag is here (accepted suggestion or manually added), it's
     treated identically for SEARCH purposes regardless of where it
@@ -13,20 +14,20 @@
 <div id="confirmed-tags" {% if oob %}hx-swap-oob="true"{% endif %} class="flex flex-wrap gap-2">
     {% for tag in tags %}
     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-        <span class="px-1 rounded text-[10px] font-semibold tracking-wide {% if tag.origin == 'user' %}bg-gold-50 text-gold-700 dark:bg-gold-700 dark:text-gold-50{% else %}bg-navy-50 text-navy-600 dark:bg-navy-700 dark:text-navy-50{% endif %}">{{ "USER" if tag.origin == "user" else "AI" }}</span>
+        <span class="px-1 rounded text-[10px] font-semibold tracking-wide {% if tag.origin == 'user' %}bg-gold-50 text-gold-700 dark:bg-gold-700 dark:text-gold-50{% else %}bg-navy-50 text-navy-600 dark:bg-navy-700 dark:text-navy-50{% endif %}">{{ t("confirmed_tags.badge_user", locale) if tag.origin == "user" else t("confirmed_tags.badge_ai", locale) }}</span>
         {{ tag.value }}
         <button
             type="button"
             hx-post="/search/tags/remove/{{ loop.index0 }}"
             hx-target="#confirmed-tags"
             hx-swap="outerHTML"
-            aria-label="Remove {{ tag.value }}"
+            aria-label="{{ t('confirmed_tags.remove_aria', locale, value=tag.value) }}"
             class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-100"
         >&times;</button>
     </span>
     {% endfor %}
     {% if not tags %}
-    <p class="text-xs text-gray-400 dark:text-gray-500">No concepts confirmed yet — accept a suggestion below or add your own tags.</p>
+    <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("confirmed_tags.empty", locale) }}</p>
     {% endif %}
 </div>
 {% endmacro %}

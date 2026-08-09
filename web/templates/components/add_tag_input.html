@@ -8,7 +8,7 @@
     server just sends back a fresh, empty copy of the same input
     rather than a script resetting the old one.
 #}
-<input type="text" id="add-tag-input" name="value" placeholder="Add a tag..."
+<input type="text" id="add-tag-input" name="value" placeholder="{{ t('add_tag.placeholder', request.state.locale) }}"
     {% if oob %}hx-swap-oob="true"{% endif %}
     hx-post="/search/tags/add"
     hx-trigger="keyup[key=='Enter']"

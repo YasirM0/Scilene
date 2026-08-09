@@ -1,4 +1,4 @@
-{% from "components/confirmed_tags.html" import confirmed_tags %}
+{% from "components/confirmed_tags.html" import confirmed_tags with context %}
 {{ confirmed_tags(tags, oob=False) }}
-{% from "components/add_tag_input.html" import add_tag_input %}
+{% from "components/add_tag_input.html" import add_tag_input with context %}
 {{ add_tag_input(oob=True) }}

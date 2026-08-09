@@ -505,6 +505,54 @@ _STRINGS = {
         "ar": "✓ تم اكتشاف {language} من مخطوطتك. اختر لغات مجلات إضافية لتوسيع نطاق بحثك.",
         "id": "✓ Terdeteksi {language} dari naskah Anda. Pilih bahasa jurnal tambahan untuk memperluas pencarian Anda.",
     },
+
+    # -- Research Interpreter panel (#129) ---------------------------------
+    "interpreter.analyzing": {"en": "Analyzing your abstract...", "ar": "جارٍ تحليل ملخصك...", "id": "Menganalisis abstrak Anda..."},
+    "interpreter.field_identified": {"en": "✓ Field of Study identified", "ar": "✓ تم تحديد مجال الدراسة", "id": "✓ Bidang studi teridentifikasi"},
+    "interpreter.focus_identified": {"en": "✓ Key Research Focus identified", "ar": "✓ تم تحديد التركيز البحثي الرئيسي", "id": "✓ Fokus riset utama teridentifikasi"},
+    "interpreter.changed_notice": {"en": "Your abstract has changed.", "ar": "لقد تغيّر ملخصك.", "id": "Abstrak Anda telah berubah."},
+    "interpreter.refresh_button": {"en": "↻ Refresh suggested tags", "ar": "↻ تحديث الوسوم المقترحة", "id": "↻ Segarkan tag yang disarankan"},
+    "interpreter.keep_button": {"en": "Keep current tags", "ar": "الاحتفاظ بالوسوم الحالية", "id": "Pertahankan tag saat ini"},
+    "interpreter.suggested_by": {"en": "Suggested by Scilene", "ar": "اقتراح من Scilene", "id": "Disarankan oleh Scilene"},
+    "interpreter.save": {"en": "Save", "ar": "حفظ", "id": "Simpan"},
+    "interpreter.cancel": {"en": "Cancel", "ar": "إلغاء", "id": "Batal"},
+    "interpreter.accept_aria": {"en": "Accept {value}", "ar": "قبول {value}", "id": "Terima {value}"},
+    "interpreter.suggest_another_aria": {"en": "Suggest another for {label}", "ar": "اقترح بديلاً لـ {label}", "id": "Sarankan yang lain untuk {label}"},
+    "interpreter.edit_aria": {"en": "Edit {label}", "ar": "تعديل {label}", "id": "Ubah {label}"},
+    "interpreter.remove_aria": {"en": "Remove {label} suggestion", "ar": "إزالة اقتراح {label}", "id": "Hapus saran {label}"},
+    "interpreter.category.field_of_study": {"en": "Field of Study", "ar": "مجال الدراسة", "id": "Bidang Studi"},
+    "interpreter.category.key_focus": {"en": "Key Research Focus", "ar": "التركيز البحثي الرئيسي", "id": "Fokus Riset Utama"},
+
+    # -- Confirmed tags (#129) ---------------------------------------------
+    "confirmed_tags.badge_user": {"en": "USER", "ar": "المستخدم", "id": "PENGGUNA"},
+    "confirmed_tags.badge_ai": {"en": "AI", "ar": "ذكاء اصطناعي", "id": "AI"},
+    "confirmed_tags.remove_aria": {"en": "Remove {value}", "ar": "إزالة {value}", "id": "Hapus {value}"},
+    "confirmed_tags.empty": {
+        "en": "No concepts confirmed yet — accept a suggestion below or add your own tags.",
+        "ar": "لم يتم تأكيد أي مفاهيم بعد — اقبل اقتراحاً أدناه أو أضف وسومك الخاصة.",
+        "id": "Belum ada konsep yang dikonfirmasi — terima saran di bawah atau tambahkan tag Anda sendiri.",
+    },
+    "add_tag.placeholder": {"en": "Add a tag...", "ar": "أضف وسماً...", "id": "Tambahkan tag..."},
+
+    # -- Export panel (#129) -------------------------------------------------
+    "export.heading": {"en": "Export Results", "ar": "تصدير النتائج", "id": "Ekspor Hasil"},
+    "export.helper": {
+        "en": "Markdown is the best choice for pasting into an AI assistant like ChatGPT or Claude.",
+        "ar": "صيغة Markdown هي الأفضل للصق في مساعد ذكاء اصطناعي مثل ChatGPT أو Claude.",
+        "id": "Markdown adalah pilihan terbaik untuk ditempel ke asisten AI seperti ChatGPT atau Claude.",
+    },
+    "export.pdf": {"en": "PDF", "ar": "PDF", "id": "PDF"},
+    "export.docx": {"en": "DOCX", "ar": "DOCX", "id": "DOCX"},
+    "export.markdown": {"en": "Markdown", "ar": "Markdown", "id": "Markdown"},
+    "export.more": {"en": "More", "ar": "المزيد", "id": "Lainnya"},
+    "export.xlsx": {"en": "XLSX", "ar": "XLSX", "id": "XLSX"},
+    "export.csv": {"en": "CSV", "ar": "CSV", "id": "CSV"},
+    "export.save_session": {"en": "Save Session (.sls)", "ar": "حفظ الجلسة (.sls)", "id": "Simpan Sesi (.sls)"},
+    "export.save_session_title": {
+        "en": "Portable Search Session — reopen on another device via \"Load a saved session\"",
+        "ar": "جلسة بحث محمولة — أعد فتحها على جهاز آخر عبر \"تحميل جلسة محفوظة\"",
+        "id": "Sesi Pencarian Portabel — buka kembali di perangkat lain melalui \"Muat sesi tersimpan\"",
+    },
 }
 
 
