@@ -19,6 +19,8 @@ runs behind multiple workers.
 import time
 import uuid
 
+from web.i18n import DEFAULT_LOCALE
+
 _SESSIONS: dict[str, dict] = {}
 _SESSION_TTL_SECONDS = 60 * 60 * 4  # 4 hours of inactivity
 
@@ -97,6 +99,10 @@ def get_session(session_id: str) -> dict:
             # #56 -- journal ids currently selected for side-by-side
             # comparison, capped at MAX_COMPARE (web/routers/compare.py).
             "compare_journal_ids": [],
+
+            # #84 -- UI language (see web/i18n.py for the honest scope
+            # boundary: nav/footer/home only, not every page yet).
+            "locale": DEFAULT_LOCALE,
         }
 
     _SESSIONS[session_id]["_last_access"] = time.time()

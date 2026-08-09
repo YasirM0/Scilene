@@ -236,8 +236,41 @@ The interface prioritizes clarity, transparency, and usability over feature rich
 
 ---
 
-**Document Version:** 0.1
+## Multilingual UI (#84)
 
-**Last Updated:** July 2026
+Runtime language switching between English, Arabic (RTL), and
+Indonesian — a session preference (`web/i18n.py`, like the show-weaker
+toggle or dark mode), not a URL prefix, so every route/URL stays
+identical regardless of locale.
 
-**Status:** Approved
+**What's translated:** navigation, footer, and the homepage — every
+string a visitor sees before choosing what to do. Arabic sets
+`dir="rtl"` on `<html>`, giving translated text real browser-native
+right-to-left flow.
+
+**What's not translated yet:** Submission Search, About, Documentation,
+Settings, Statistics, and Compare all still render in English
+regardless of the chosen locale — this is a deliberate first slice
+(~150 further strings, translated accurately, is real ongoing work),
+not an oversight. `<html lang>`/`dir` are still set correctly on every
+page even where content isn't translated.
+
+**What's deliberately never translated:** journal metadata (title,
+publisher, subjects, ...) — it's factual source data imported verbatim
+from DOAJ/Scopus/SINTA; translating it would misrepresent what a
+journal actually says about itself.
+
+**RTL scope:** only the pages above get real right-to-left content
+flow. This pass does not re-audit every LTR-coded spacing utility
+(`ml-*`, `mr-*`, `text-left`, ...) across the rest of the UI into
+logical-property equivalents — that's real, separate work belonging to
+full translation coverage of each page, not this first pass.
+
+---
+
+**Document Version:** 0.2
+
+**Last Updated:** August 2026
+
+**Status:** Approved — Multilingual UI is a partial, honest slice (see
+above), not full coverage.

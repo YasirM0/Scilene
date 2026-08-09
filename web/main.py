@@ -23,12 +23,18 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 
 from services.app_info import APP_NAME, APP_VERSION
 from web.config import get_settings
-from web.routers import home, pages, search, interpreter, enrichment, settings as settings_router, research_idea, compare
+from web.dependencies import SESSION_COOKIE_NAME
+from web.i18n import DEFAULT_LOCALE
+from web.routers import (
+    home, pages, search, interpreter, enrichment, settings as settings_router,
+    research_idea, compare, locale as locale_router,
+)
+from web.session_store import get_session
 
 settings = get_settings()
 
@@ -37,6 +43,23 @@ app = FastAPI(
     version=APP_VERSION,
     debug=settings.debug,
 )
+
+
+@app.middleware("http")
+async def resolve_locale(request: Request, call_next):
+    """
+    Makes request.state.locale available to every template (Starlette
+    always injects `request` into Jinja2Templates' context, so this is
+    the one place a locale resolves without threading it through every
+    route's own context dict -- see web/i18n.py). Reads an EXISTING
+    session's preference if the cookie is present; never creates a new
+    session just to check a locale a brand-new visitor hasn't set yet
+    (that would give every anonymous pageview a side effect).
+    """
+    session_id = request.cookies.get(SESSION_COOKIE_NAME)
+    request.state.locale = get_session(session_id).get("locale", DEFAULT_LOCALE) if session_id else DEFAULT_LOCALE
+    return await call_next(request)
+
 
 app.mount(
     "/static",
@@ -52,3 +75,4 @@ app.include_router(enrichment.router)
 app.include_router(settings_router.router)
 app.include_router(research_idea.router)
 app.include_router(compare.router)
+app.include_router(locale_router.router)

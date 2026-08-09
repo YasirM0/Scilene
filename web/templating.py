@@ -17,6 +17,7 @@ from utils.indexing import format_source_chip, format_index_summary, format_enri
 from utils.subjects import format_subjects
 from utils.aliases import format_alias_line
 from utils.publication_types import format_publication_type_badge
+from web.i18n import t, SUPPORTED_LOCALES
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
@@ -37,6 +38,8 @@ templates.env.globals["format_enrichment_badges"] = format_enrichment_badges
 templates.env.globals["format_subjects"] = format_subjects
 templates.env.globals["format_alias_line"] = format_alias_line
 templates.env.globals["format_publication_type_badge"] = format_publication_type_badge
+templates.env.globals["t"] = t
+templates.env.globals["supported_locales"] = SUPPORTED_LOCALES
 templates.env.globals["confidence_colors"] = CONFIDENCE_COLORS
 templates.env.globals["confidence_stars"] = CONFIDENCE_STARS
 templates.env.globals["confidence_star_colors"] = CONFIDENCE_STAR_COLORS
@@ -45,10 +48,10 @@ templates.env.globals["confidence_star_colors"] = CONFIDENCE_STAR_COLORS
 # stays in sync automatically — a new page just needs an entry added
 # to this list, not an edit to every template that renders navigation.
 templates.env.globals["nav_links"] = [
-    {"label": "Home", "href": "/"},
-    {"label": "Submission Search", "href": "/search"},
-    {"label": "Statistics", "href": "/statistics"},
-    {"label": "About", "href": "/about"},
-    {"label": "Documentation", "href": "/documentation"},
-    {"label": "Settings", "href": "/settings"},
+    {"key": "nav.home", "href": "/"},
+    {"key": "nav.search", "href": "/search"},
+    {"key": "nav.statistics", "href": "/statistics"},
+    {"key": "nav.about", "href": "/about"},
+    {"key": "nav.documentation", "href": "/documentation"},
+    {"key": "nav.settings", "href": "/settings"},
 ]

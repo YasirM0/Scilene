@@ -24,7 +24,7 @@
                             text-horizon-50 hover:text-white hover:bg-navy-700
                         {% endif %}"
                 >
-                    {{ link.label }}
+                    {{ t(link.key, request.state.locale) }}
                 </a>
                 {% endfor %}
 
@@ -39,17 +39,42 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                 </a>
-
-                <button
-                    id="theme-toggle"
-                    type="button"
-                    aria-label="Switch between dark and light appearance"
-                    class="px-2 py-2 rounded-md text-sm text-horizon-50 hover:text-white hover:bg-navy-700 transition-colors shrink-0"
-                >
-                    <span class="dark:hidden" aria-hidden="true">☀️</span>
-                    <span class="hidden dark:inline" aria-hidden="true">🌙</span>
-                </button>
             </div>
+
+            {#
+                #84 -- outside the scrollable nav-links strip on
+                purpose: that div's overflow-x-auto implicitly clips
+                overflow-y too, which would cut off this dropdown.
+                Native <details>, no JS; each language is a plain form
+                POST (web/routers/locale.py) -- switching touches
+                strings across the whole page, so a full reload is
+                honest, not a partial HTMX swap.
+            #}
+            <details class="relative shrink-0">
+                <summary
+                    class="cursor-pointer list-none px-2 py-2 rounded-md text-sm text-horizon-50 hover:text-white hover:bg-navy-700 transition-colors"
+                    aria-label="{{ t('nav.language', request.state.locale) }}"
+                >🌐</summary>
+                <div class="absolute right-0 mt-1 py-1 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-lg min-w-[8rem] z-20">
+                    {% for code, meta in supported_locales.items() %}
+                    <form method="post" action="/locale/{{ code }}">
+                        <button type="submit"
+                            class="w-full text-left px-3 py-1.5 text-sm whitespace-nowrap {% if request.state.locale == code %}font-semibold text-navy-600 dark:text-navy-300{% else %}text-gray-600 dark:text-gray-300{% endif %} hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >{{ meta.label }}</button>
+                    </form>
+                    {% endfor %}
+                </div>
+            </details>
+
+            <button
+                id="theme-toggle"
+                type="button"
+                aria-label="Switch between dark and light appearance"
+                class="px-2 py-2 rounded-md text-sm text-horizon-50 hover:text-white hover:bg-navy-700 transition-colors shrink-0"
+            >
+                <span class="dark:hidden" aria-hidden="true">☀️</span>
+                <span class="hidden dark:inline" aria-hidden="true">🌙</span>
+            </button>
 
         </div>
     </div>

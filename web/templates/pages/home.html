@@ -7,25 +7,21 @@
 
 {% block content %}
 
+{% set locale = request.state.locale %}
 <section class="text-center py-14 sm:py-20">
     <p class="text-sm font-medium text-navy-600 dark:text-navy-300 mb-3">
-        Research Assistant for Journal Selection
+        {{ t('home.tagline', locale) }}
     </p>
     <h1 class="text-3xl sm:text-5xl font-bold text-navy-600 dark:text-navy-300 tracking-tight mb-5 leading-tight">
-        Find the right journal<br class="hidden sm:block"> for your manuscript
+        {{ t('home.hero_title_line1', locale) }}<br class="hidden sm:block"> {{ t('home.hero_title_line2', locale) }}
     </h1>
     {% if stats %}
     <p class="text-gray-500 dark:text-gray-400 max-w-xl mx-auto mb-8">
-        {{ app.name }} matches your manuscript's title, abstract, and keywords
-        against {{ "{:,}".format(stats.total_journals) }} journals across DOAJ, Scopus,
-        Web of Science, and SINTA &mdash; with a plain-language explanation for every
-        recommendation.
+        {{ t('home.hero_description_with_stats', locale, app_name=app.name, count="{:,}".format(stats.total_journals)) }}
     </p>
     {% else %}
     <p class="text-gray-500 dark:text-gray-400 max-w-xl mx-auto mb-8">
-        {{ app.name }} matches your manuscript against journals from DOAJ, Scopus,
-        Web of Science, and SINTA &mdash; with a plain-language explanation for every
-        recommendation.
+        {{ t('home.hero_description_no_stats', locale, app_name=app.name) }}
     </p>
     {% endif %}
 
@@ -39,13 +35,13 @@
             href="/search"
             class="inline-block px-6 py-3 rounded-lg bg-navy-600 text-white font-medium hover:bg-navy-700 transition-colors"
         >
-            I have a manuscript
+            {{ t('home.cta_manuscript', locale) }}
         </a>
         <a
             href="#research-idea-modal"
             class="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-navy-600 dark:border-navy-300 text-navy-600 dark:text-navy-300 font-medium hover:bg-navy-50 dark:hover:bg-gray-800 transition-colors"
         >
-            I have a research idea
+            {{ t('home.cta_idea', locale) }}
         </a>
     </div>
 </section>
@@ -54,37 +50,34 @@
 
 <section class="py-10 border-t border-gray-200 dark:border-gray-700">
     <h2 class="text-center text-sm font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-6">
-        Journal Database
+        {{ t('home.section_journal_database', locale) }}
     </h2>
     {% if stats %}
     <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
-        {{ stat_card("{:,}".format(stats.total_journals), "Total Journals") }}
+        {{ stat_card("{:,}".format(stats.total_journals), t('home.stat_total_journals', locale)) }}
         {{ stat_card("{:,}".format(stats.by_source.get("DOAJ", 0)), "DOAJ") }}
         {{ stat_card(
             "{:,}".format(stats.by_source.get("Scopus", 0)), "Scopus",
-            sublabel="{:,} also indexed in Web of Science".format(stats.by_source.get("Web of Science", 0))
+            sublabel=t('home.sublabel_wos', locale, count="{:,}".format(stats.by_source.get("Web of Science", 0)))
         ) }}
         {{ stat_card("{:,}".format(stats.by_source.get("Web of Science", 0)), "Web of Science") }}
         {{ stat_card(
             "{:,}".format(stats.by_source.get("SINTA", 0)), "SINTA",
-            sublabel="{:,} also indexed in Garuda".format(stats.by_enrichment.get("garuda", 0))
+            sublabel=t('home.sublabel_garuda', locale, count="{:,}".format(stats.by_enrichment.get("garuda", 0)))
         ) }}
     </div>
     {% else %}
-    <p class="text-center text-sm text-gray-400 dark:text-gray-500">Could not reach the database &mdash; see server logs.</p>
+    <p class="text-center text-sm text-gray-400 dark:text-gray-500">{{ t('home.no_database', locale) }}</p>
     {% endif %}
 </section>
 
 {% if stats %}
 <section class="py-10 border-t border-gray-200 dark:border-gray-700">
     <h2 class="text-center text-sm font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">
-        Supported Indexes &amp; Coverage
+        {{ t('home.section_coverage', locale) }}
     </h2>
     <p class="text-center text-xs text-gray-400 dark:text-gray-500 max-w-xl mx-auto mb-6">
-        Some journals are indexed in multiple databases — for example,
-        every Web of Science journal here is also Scopus-indexed
-        (Web of Science is tracked as a tag on Scopus journals, not a
-        separate catalog). The counts below are not additive.
+        {{ t('home.coverage_description', locale) }}
     </p>
     {#
         DOAJ/Scopus/WoS/SINTA are confirmed indexing sources (filterable
@@ -121,21 +114,21 @@
 
 <section class="py-10 border-t border-gray-200 dark:border-gray-700">
     <h2 class="text-center text-sm font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-6">
-        What It Does
+        {{ t('home.section_what_it_does', locale) }}
     </h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {{ feature_card("🎯", "Transparent Matching", "Every recommendation includes a plain-language explanation of why that journal fits — never a black-box score.") }}
-        {{ feature_card("🏆", "Prestige-Aware", "Sort by Scopus / Web of Science quartile and SJR, not just topical match.") }}
-        {{ feature_card("💰", "Budget-Aware", "Filter by APC, including free/no-fee journals — no guessed currency conversions.") }}
-        {{ feature_card("🌐", "Multi-Index Coverage", "DOAJ, Scopus, Web of Science, and SINTA in one search, deduplicated into a single database.") }}
-        {{ feature_card("📤", "Flexible Export", "Save results as PDF, DOCX, XLSX, Markdown, or CSV — including a format made for pasting into an AI assistant.") }}
-        {{ feature_card("⚡", "Fast, Local Search", "Every search runs against a local, indexed database — no external API calls or rate limits.") }}
+        {{ feature_card("🎯", t('home.feature.transparent.title', locale), t('home.feature.transparent.body', locale)) }}
+        {{ feature_card("🏆", t('home.feature.prestige.title', locale), t('home.feature.prestige.body', locale)) }}
+        {{ feature_card("💰", t('home.feature.budget.title', locale), t('home.feature.budget.body', locale)) }}
+        {{ feature_card("🌐", t('home.feature.multiindex.title', locale), t('home.feature.multiindex.body', locale)) }}
+        {{ feature_card("📤", t('home.feature.export.title', locale), t('home.feature.export.body', locale)) }}
+        {{ feature_card("⚡", t('home.feature.fast.title', locale), t('home.feature.fast.body', locale)) }}
     </div>
 </section>
 
 <div class="text-center py-6 border-t border-gray-200 dark:border-gray-700">
     <p class="text-xs text-gray-400 dark:text-gray-500">
-        🔒 Privacy-first &middot; No account required &middot; Built for researchers
+        {{ t('home.footer_line', locale) }}
     </p>
 </div>
 
