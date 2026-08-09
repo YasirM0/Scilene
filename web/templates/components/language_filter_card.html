@@ -1,4 +1,5 @@
 {% macro language_filter_card(language_options, selected_languages, detected_language, language_touched, oob=False) %}
+{% set locale = request.state.locale %}
 {#
     Multi-select (#89) -- was a single-select Any/English/Indonesian
     dropdown before. The wrapping div's hx-trigger="change" catches
@@ -17,7 +18,7 @@
     hint -- a plain multi-select doesn't need).
 #}
 <div id="language-filter-card" {% if oob %}hx-swap-oob="true"{% endif %} class="bg-gray-50 dark:bg-gray-900 rounded-md p-3">
-    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Journal Languages</p>
+    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t("language_filter.label", locale) }}</p>
 
     {% if selected_languages %}
     <div class="flex flex-wrap gap-1.5 mb-2">
@@ -25,7 +26,7 @@
         {% if option in selected_languages %}
         <label for="languages-{{ loop.index }}"
             class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-navy-50 dark:bg-navy-700 text-navy-700 dark:text-navy-50 cursor-pointer hover:bg-navy-300 dark:hover:bg-navy-600"
-        >{{ option }} <span aria-hidden="true">&times;</span></label>
+        >{{ t("filter_option." ~ option, locale) }} <span aria-hidden="true">&times;</span></label>
         {% endif %}
         {% endfor %}
     </div>
@@ -34,14 +35,14 @@
     <details class="group">
         <summary class="cursor-pointer list-none flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300">
             <span class="transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
-            {{ selected_languages | length }}/{{ language_options | length }} selected
+            {{ t("multi_select.selected_count", locale, selected=selected_languages|length, total=language_options|length) }}
         </summary>
         <div hx-post="/search/language-filter/touch" hx-trigger="change" hx-target="#language-hint" hx-swap="innerHTML" class="mt-2 space-y-1">
             {% for option in language_options %}
             <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                 <input type="checkbox" id="languages-{{ loop.index }}" name="languages" value="{{ option }}" {% if option in selected_languages %}checked{% endif %}
                     class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
-                {{ option }}
+                {{ t("filter_option." ~ option, locale) }}
             </label>
             {% endfor %}
         </div>
@@ -49,7 +50,7 @@
 
     <div id="language-hint" class="mt-1">
         {% if detected_language and not language_touched %}
-        <p class="text-xs text-navy-600 dark:text-navy-300">✓ Detected {{ detected_language }} from your manuscript. Select additional journal languages to broaden your search.</p>
+        <p class="text-xs text-navy-600 dark:text-navy-300">{{ t("language_filter.detected_hint", locale, language=t("filter_option." ~ detected_language, locale)) }}</p>
         {% endif %}
     </div>
 </div>

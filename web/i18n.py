@@ -417,6 +417,94 @@ _STRINGS = {
         "id": 'Daftar "teratas" dibatasi pada 10 kategori terbesar. Jenis Publikasi hanya mencerminkan jurnal yang cocok dengan Elsevier Source List (#128) — jurnal yang tidak cocok tidak dihitung di sini sebagai tebakan ke arah mana pun.',
     },
     "bar_list.no_data": {"en": "No data available.", "ar": "لا توجد بيانات متاحة.", "id": "Tidak ada data yang tersedia."},
+
+    # -- Submission Search page (#129) -----------------------------------
+    "search.title": {"en": "Submission Search", "ar": "بحث الإرسال", "id": "Pencarian Naskah"},
+    "search.heading": {"en": "Journal Search", "ar": "بحث المجلات", "id": "Pencarian Jurnal"},
+    "search.subtitle": {
+        "en": "Enter your manuscript information to discover journals that best match your research.",
+        "ar": "أدخل معلومات مخطوطتك لاكتشاف المجلات الأنسب لبحثك.",
+        "id": "Masukkan informasi naskah Anda untuk menemukan jurnal yang paling sesuai dengan penelitian Anda.",
+    },
+    "search.load_session_summary": {"en": "Load a saved session (.sls)", "ar": "تحميل جلسة محفوظة (.sls)", "id": "Muat sesi tersimpan (.sls)"},
+    "search.load_session_button": {"en": "Load session", "ar": "تحميل الجلسة", "id": "Muat sesi"},
+    "search.load_session_helper": {
+        "en": "Re-runs the saved search live against the current database — recommendations are always regenerated, never replayed from the file.",
+        "ar": "يعيد تشغيل البحث المحفوظ مباشرة على قاعدة البيانات الحالية — تُعاد التوصيات دائماً من جديد، ولا تُستعاد من الملف كما هي.",
+        "id": "Menjalankan ulang pencarian tersimpan secara langsung terhadap basis data saat ini — rekomendasi selalu dibuat ulang, tidak pernah diputar ulang dari file.",
+    },
+    "search.find_button": {"en": "Find Best Matching Journals", "ar": "ابحث عن أفضل المجلات المطابقة", "id": "Temukan Jurnal yang Paling Cocok"},
+
+    # -- Search form (#129) -----------------------------------------------
+    "search_form.heading": {"en": "Describe Your Research", "ar": "صف بحثك", "id": "Jelaskan Riset Anda"},
+    "search_form.abstract_label": {"en": "Abstract", "ar": "الملخص", "id": "Abstrak"},
+    "search_form.abstract_placeholder": {
+        "en": "Paste your manuscript abstract here...",
+        "ar": "الصق ملخص مخطوطتك هنا...",
+        "id": "Tempel abstrak naskah Anda di sini...",
+    },
+    "search_form.abstract_helper": {
+        "en": "Scilene will suggest a field of study and a key research focus from your abstract.",
+        "ar": "سيقترح Scilene مجال دراسة وتركيزاً بحثياً رئيسياً بناءً على ملخصك.",
+        "id": "Scilene akan menyarankan bidang studi dan fokus riset utama dari abstrak Anda.",
+    },
+    "search_form.fallback_summary": {
+        "en": "Don't have an abstract? Add at least 10 descriptive tags instead",
+        "ar": "ليس لديك ملخص؟ أضف بدلاً منه 10 وسوم وصفية على الأقل",
+        "id": "Tidak punya abstrak? Tambahkan setidaknya 10 tag deskriptif sebagai gantinya",
+    },
+    "search_form.fallback_placeholder": {
+        "en": "digital governance, e-government, Indonesia, public administration, ...",
+        "ar": "الحوكمة الرقمية، الحكومة الإلكترونية، إندونيسيا، الإدارة العامة، ...",
+        "id": "tata kelola digital, e-government, Indonesia, administrasi publik, ...",
+    },
+    "search_form.fallback_helper": {
+        "en": "Separate tags with commas or semicolons — at least 10 if you're not providing an abstract.",
+        "ar": "افصل الوسوم بفواصل أو فواصل منقوطة — 10 على الأقل إذا لم تقدّم ملخصاً.",
+        "id": "Pisahkan tag dengan koma atau titik koma — minimal 10 jika Anda tidak menyertakan abstrak.",
+    },
+    "search_form.concepts_label": {"en": "Search Concepts", "ar": "مفاهيم البحث", "id": "Konsep Pencarian"},
+
+    # -- Filter panel (#129) ------------------------------------------------
+    "filter.summary": {"en": "Publication Preferences", "ar": "تفضيلات النشر", "id": "Preferensi Publikasi"},
+    "filter.search_settings": {"en": "Search Settings", "ar": "إعدادات البحث", "id": "Pengaturan Pencarian"},
+    "filter.strategy_label": {"en": "Recommendation Strategy", "ar": "استراتيجية التوصية", "id": "Strategi Rekomendasi"},
+    "filter.budget_label": {"en": "Publication Budget", "ar": "ميزانية النشر", "id": "Anggaran Publikasi"},
+    "filter.review_time_label": {"en": "Maximum Review Time", "ar": "الحد الأقصى لمدة المراجعة", "id": "Waktu Tinjauan Maksimum"},
+    "filter.group_label": {"en": "Filter by Index, Quality & Language", "ar": "التصفية حسب الفهرس والجودة واللغة", "id": "Saring berdasarkan Indeks, Kualitas & Bahasa"},
+    "filter.preferred_indexing": {"en": "Preferred Indexing", "ar": "الفهرسة المفضلة", "id": "Pengindeksan Pilihan"},
+    "filter.quartile": {"en": "Scopus / WoS Quartile", "ar": "ربعية Scopus / WoS", "id": "Kuartil Scopus / WoS"},
+    "filter.sinta_level": {"en": "SINTA Level", "ar": "مستوى SINTA", "id": "Tingkat SINTA"},
+
+    # Canonical option display text -- keyed by the exact English string
+    # (also the literal form value/dict key used on the Python side, e.g.
+    # web/search_presentation.py's STRATEGY_LABELS/BUDGET_OPTIONS/
+    # REVIEW_TIME_BANDS) so translating the label never touches the
+    # value the backend actually matches against.
+    "filter_option.⚖️ Balanced (Recommended)": {"en": "⚖️ Balanced (Recommended)", "ar": "⚖️ متوازن (موصى به)", "id": "⚖️ Seimbang (Direkomendasikan)"},
+    "filter_option.💰 Lowest APC": {"en": "💰 Lowest APC", "ar": "💰 أقل رسوم نشر", "id": "💰 APC Terendah"},
+    "filter_option.🏆 Highest Prestige": {"en": "🏆 Highest Prestige", "ar": "🏆 أعلى مكانة علمية", "id": "🏆 Prestise Tertinggi"},
+    "filter_option.Any": {"en": "Any", "ar": "أي", "id": "Semua"},
+    "filter_option.Free (No APC)": {"en": "Free (No APC)", "ar": "مجانية (بلا رسوم نشر)", "id": "Gratis (Tanpa APC)"},
+    "filter_option.Low APC (< $100)": {"en": "Low APC (< $100)", "ar": "رسوم نشر منخفضة (أقل من 100$)", "id": "APC Rendah (< $100)"},
+    "filter_option.Medium APC ($100–300)": {"en": "Medium APC ($100–300)", "ar": "رسوم نشر متوسطة (100–300$)", "id": "APC Sedang ($100–300)"},
+    "filter_option.High APC (> $300)": {"en": "High APC (> $300)", "ar": "رسوم نشر مرتفعة (أكثر من 300$)", "id": "APC Tinggi (> $300)"},
+    "filter_option.Up to 8 weeks": {"en": "Up to 8 weeks", "ar": "حتى 8 أسابيع", "id": "Hingga 8 minggu"},
+    "filter_option.Up to 12 weeks": {"en": "Up to 12 weeks", "ar": "حتى 12 أسبوعاً", "id": "Hingga 12 minggu"},
+    "filter_option.Up to 20 weeks": {"en": "Up to 20 weeks", "ar": "حتى 20 أسبوعاً", "id": "Hingga 20 minggu"},
+    "filter_option.Up to 30 weeks": {"en": "Up to 30 weeks", "ar": "حتى 30 أسبوعاً", "id": "Hingga 30 minggu"},
+    "filter_option.English": {"en": "English", "ar": "الإنجليزية", "id": "Inggris"},
+    "filter_option.Arabic": {"en": "Arabic", "ar": "العربية", "id": "Arab"},
+    "filter_option.Indonesian": {"en": "Indonesian", "ar": "الإندونيسية", "id": "Indonesia"},
+
+    "multi_select.selected_count": {"en": "{selected}/{total} selected", "ar": "{selected}/{total} محدد", "id": "{selected}/{total} dipilih"},
+
+    "language_filter.label": {"en": "Journal Languages", "ar": "لغات المجلة", "id": "Bahasa Jurnal"},
+    "language_filter.detected_hint": {
+        "en": "✓ Detected {language} from your manuscript. Select additional journal languages to broaden your search.",
+        "ar": "✓ تم اكتشاف {language} من مخطوطتك. اختر لغات مجلات إضافية لتوسيع نطاق بحثك.",
+        "id": "✓ Terdeteksi {language} dari naskah Anda. Pilih bahasa jurnal tambahan untuk memperluas pencarian Anda.",
+    },
 }
 
 

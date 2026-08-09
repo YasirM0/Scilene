@@ -1,4 +1,5 @@
 {% macro multi_select_filter(name, label, options, selected=[]) %}
+{% set locale = request.state.locale %}
 {#
     #135 -- compact multi-select: a closed-by-default dropdown (native
     <details>, no JS) instead of a checkbox panel always taking up
@@ -30,7 +31,7 @@
     <details class="group">
         <summary class="cursor-pointer list-none flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300">
             <span class="transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
-            {{ selected | length }}/{{ options | length }} selected
+            {{ t("multi_select.selected_count", locale, selected=selected|length, total=options|length) }}
         </summary>
         <div class="mt-2 space-y-1 max-h-28 overflow-y-auto pr-2">
             {% for option in options %}

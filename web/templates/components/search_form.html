@@ -1,12 +1,13 @@
+{% set locale = request.state.locale %}
 <div>
-    <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100 mb-3">📄 Describe Your Research</h2>
+    <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100 mb-3">📄 {{ t("search_form.heading", locale) }}</h2>
 
     <div class="space-y-4">
         <div>
-            <label for="abstract" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Abstract</label>
+            <label for="abstract" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t("search_form.abstract_label", locale) }}</label>
             <textarea
                 id="abstract" name="abstract" rows="6"
-                placeholder="Paste your manuscript abstract here..."
+                placeholder="{{ t('search_form.abstract_placeholder', locale) }}"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500"
                 hx-post="/search/interpret"
                 hx-trigger="blur changed, keyup changed delay:1500ms"
@@ -15,7 +16,7 @@
                 hx-include="this"
             ></textarea>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                Scilene will suggest a field of study and a key research focus from your abstract.
+                {{ t("search_form.abstract_helper", locale) }}
             </p>
         </div>
 
@@ -26,25 +27,25 @@
         <details class="group">
             <summary class="cursor-pointer text-sm font-medium text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 list-none flex items-center gap-1">
                 <span class="transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
-                Don't have an abstract? Add at least 10 descriptive tags instead
+                {{ t("search_form.fallback_summary", locale) }}
             </summary>
             <div class="mt-2">
                 <textarea
                     id="fallback_tags" name="fallback_tags" rows="3"
-                    placeholder="digital governance, e-government, Indonesia, public administration, ..."
+                    placeholder="{{ t('search_form.fallback_placeholder', locale) }}"
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500"
                 ></textarea>
                 <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                    Separate tags with commas or semicolons — at least 10 if you're not providing an abstract.
+                    {{ t("search_form.fallback_helper", locale) }}
                 </p>
             </div>
         </details>
 
         <div>
-            <p class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search Concepts</p>
-            {% from "components/confirmed_tags.html" import confirmed_tags as confirmed_tags_chips %}
+            <p class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t("search_form.concepts_label", locale) }}</p>
+            {% from "components/confirmed_tags.html" import confirmed_tags as confirmed_tags_chips with context %}
             {{ confirmed_tags_chips(confirmed_tags) }}
-            {% from "components/add_tag_input.html" import add_tag_input %}
+            {% from "components/add_tag_input.html" import add_tag_input with context %}
             <div class="mt-2">{{ add_tag_input() }}</div>
         </div>
     </div>

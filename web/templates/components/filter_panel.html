@@ -9,43 +9,44 @@
     open space -- addresses the issue's "weak visual separation" and
     "large unused horizontal space" complaints directly.
 #}
+{% set locale = request.state.locale %}
 <details class="bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 group" open>
     <summary class="cursor-pointer list-none px-4 sm:px-6 py-4 flex items-center justify-between">
-        <span class="text-base font-semibold text-gray-800 dark:text-gray-100">⚙️ Publication Preferences</span>
+        <span class="text-base font-semibold text-gray-800 dark:text-gray-100">⚙️ {{ t("filter.summary", locale) }}</span>
         <span class="text-gray-400 dark:text-gray-500 transition-transform group-open:rotate-90">▶</span>
     </summary>
 
     <div class="px-4 sm:px-6 pb-6 space-y-6 border-t border-gray-100 dark:border-gray-700 pt-5">
 
         <div>
-            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Search Settings</p>
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">{{ t("filter.search_settings", locale) }}</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                    <label for="strategy_label" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recommendation Strategy</label>
+                    <label for="strategy_label" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t("filter.strategy_label", locale) }}</label>
                     <select id="strategy_label" name="strategy_label"
                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
                         {% for label in strategy_labels %}
-                        <option value="{{ label }}">{{ label }}</option>
+                        <option value="{{ label }}">{{ t("filter_option." ~ label, locale) }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
                 <div>
-                    <label for="budget_choice" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Publication Budget</label>
+                    <label for="budget_choice" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t("filter.budget_label", locale) }}</label>
                     <select id="budget_choice" name="budget_choice"
                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
                         {% for option in budget_options %}
-                        <option value="{{ option }}">{{ option }}</option>
+                        <option value="{{ option }}">{{ t("filter_option." ~ option, locale) }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
                 <div>
-                    <label for="review_time_choice" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Maximum Review Time</label>
+                    <label for="review_time_choice" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t("filter.review_time_label", locale) }}</label>
                     <select id="review_time_choice" name="review_time_choice"
                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
                         {% for option in review_time_options %}
-                        <option value="{{ option }}">{{ option }}</option>
+                        <option value="{{ option }}">{{ t("filter_option." ~ option, locale) }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -53,7 +54,7 @@
         </div>
 
         <div>
-            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Filter by Index, Quality &amp; Language</p>
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">{{ t("filter.group_label", locale) }}</p>
             {#
                 #135 -- compact multi-select dropdowns + removable
                 chips instead of four always-open checkbox panels
@@ -63,12 +64,12 @@
                 multi-select doesn't need.
             #}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {% from "components/multi_select_filter.html" import multi_select_filter %}
-                {{ multi_select_filter("indexing", "Preferred Indexing", indexing_options, selected=["DOAJ"]) }}
-                {{ multi_select_filter("quartiles", "Scopus / WoS Quartile", quartile_options) }}
-                {{ multi_select_filter("sinta_levels", "SINTA Level", sinta_level_options) }}
+                {% from "components/multi_select_filter.html" import multi_select_filter with context %}
+                {{ multi_select_filter("indexing", t("filter.preferred_indexing", locale), indexing_options, selected=["DOAJ"]) }}
+                {{ multi_select_filter("quartiles", t("filter.quartile", locale), quartile_options) }}
+                {{ multi_select_filter("sinta_levels", t("filter.sinta_level", locale), sinta_level_options) }}
 
-                {% from "components/language_filter_card.html" import language_filter_card %}
+                {% from "components/language_filter_card.html" import language_filter_card with context %}
                 {{ language_filter_card(language_options, selected_languages, detected_language, language_touched) }}
             </div>
         </div>
