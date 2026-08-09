@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% from "components/accordion_card.html" import accordion_card %}
 
-{% block title %}About — {{ app.name }}{% endblock %}
+{% block title %}{{ t("about.title", request.state.locale) }} — {{ app.name }}{% endblock %}
 
 {% block content %}
+
+{% set locale = request.state.locale %}
 
 {#
     Tagline is deliberately NOT the dominant visual element here -- the
@@ -19,129 +21,65 @@
         class="block mx-auto w-24 h-24 mb-8"
     >
     <h1 class="text-sm sm:text-base font-normal text-gold-600 tracking-wide mb-4">
-        Navigate Scholarly Publishing with Confidence
+        {{ t("about.hero_title", locale) }}
     </h1>
     <p class="text-horizon-50 max-w-xl mx-auto text-sm">
-        Scilene helps researchers find the right academic journals through
-        transparent, explainable recommendations — and understand the
-        thinking behind every one of them.
+        {{ t("about.hero_description", locale) }}
     </p>
 </section>
 
 <section class="py-10 space-y-4">
 
-    {% call accordion_card("What is Scilene?", "about", "🧭") %}
-    <p>
-        Scilene is an open-source platform that helps researchers discover
-        the right academic journals for their work — and understand why
-        each one is recommended. Every match is backed by a transparent,
-        plain-language explanation rather than an opaque score.
-    </p>
-    <p>
-        Long term, Scilene is growing beyond journal discovery into a
-        broader research intelligence platform: a tool that helps
-        researchers understand, interpret, and navigate the scholarly
-        landscape, not just search it.
-    </p>
+    {% call accordion_card(t("about.section.what_is.title", locale), "about", "🧭") %}
+    <p>{{ t("about.section.what_is.body1", locale) }}</p>
+    <p>{{ t("about.section.what_is.body2", locale) }}</p>
     {% endcall %}
 
-    {% call accordion_card("Why was Scilene created?", "about", "💡") %}
-    <p>
-        Many existing journal finders return a ranked list without
-        explaining their reasoning — relying on paid services or
-        prestige-based scoring instead. Scilene was created as a
-        transparent alternative: recommendations grounded in verifiable,
-        publicly available scholarly metadata, with every match paired
-        with a plain-language explanation of why it's there.
-    </p>
+    {% call accordion_card(t("about.section.why_created.title", locale), "about", "💡") %}
+    <p>{{ t("about.section.why_created.body", locale) }}</p>
     {% endcall %}
 
-    {% call accordion_card('Why the name "Scilene"?', "about", "🌙") %}
-    <p>
-        Scilene combines <strong>Sci</strong>, for science, with
-        <strong>Selene</strong>, the Greek personification of the moon.
-    </p>
-    <p>
-        The moon has long served as a natural guide for navigation and
-        exploration. In the same way, Scilene aims to guide researchers
-        through an increasingly complex scholarly landscape toward the
-        right journals, literature, and decisions — guidance through
-        science, rather than just a search over it.
-    </p>
+    {% call accordion_card(t("about.section.name.title", locale), "about", "🌙") %}
+    <p>{{ t("about.section.name.body1", locale, sci="<strong>Sci</strong>", selene="<strong>Selene</strong>") | safe }}</p>
+    <p>{{ t("about.section.name.body2", locale) }}</p>
     {% endcall %}
 
-    {% call accordion_card("What does the logo represent?", "about", "🎨") %}
-    <p>
-        The mark is the letter "S," traced by a subtle, abstract crescent
-        meant to suggest an orbit or research journey — only a very quiet
-        nod to Selene, not a literal moon. Above it, a small gold star
-        stands in for a guiding star: discovery, direction, and
-        confidence.
-    </p>
+    {% call accordion_card(t("about.section.logo.title", locale), "about", "🎨") %}
+    <p>{{ t("about.section.logo.body", locale) }}</p>
     <div class="grid grid-cols-2 gap-3">
         <div class="rounded-md overflow-hidden border border-gray-200 dark:border-gray-700">
             <div class="h-16 bg-navy-600"></div>
-            <p class="px-3 py-2 text-xs text-gray-600 dark:text-gray-300">Navy — night sky, trust, academic credibility</p>
+            <p class="px-3 py-2 text-xs text-gray-600 dark:text-gray-300">{{ t("about.color.navy", locale) }}</p>
         </div>
         <div class="rounded-md overflow-hidden border border-gray-200 dark:border-gray-700">
             <div class="h-16 bg-gold-600"></div>
-            <p class="px-3 py-2 text-xs text-gray-600 dark:text-gray-300">Gold — discovery, insight, progress</p>
+            <p class="px-3 py-2 text-xs text-gray-600 dark:text-gray-300">{{ t("about.color.gold", locale) }}</p>
         </div>
     </div>
     {% endcall %}
 
-    {% call accordion_card("Why offline-first?", "about", "🔒") %}
-    <p>
-        Scilene's core recommendation engine is designed to work without
-        depending on external APIs or an internet connection. Optional
-        AI-assisted features may be added later, but they will never
-        become mandatory for getting a recommendation.
-    </p>
+    {% call accordion_card(t("about.section.offline.title", locale), "about", "🔒") %}
+    <p>{{ t("about.section.offline.body", locale) }}</p>
     <div class="bg-navy-50 dark:bg-gray-900 rounded-md px-4 py-3 text-sm text-navy-700 dark:text-navy-300">
-        In practice: the same search returns the same results whether
-        you're at a conference with no signal or at your desk — no
-        service outage ever blocks a recommendation.
+        {{ t("about.section.offline.callout", locale) }}
     </div>
     {% endcall %}
 
-    {% call accordion_card("Why is AI optional?", "about", "🤖") %}
-    <p>
-        Scilene's recommendations come from a deterministic, explainable
-        ranking engine, not a black box. Where AI is introduced, it's
-        meant to enrich and assist that process, never to replace it.
-    </p>
+    {% call accordion_card(t("about.section.ai_optional.title", locale), "about", "🤖") %}
+    <p>{{ t("about.section.ai_optional.body", locale) }}</p>
     <div class="bg-navy-50 dark:bg-gray-900 rounded-md px-4 py-3 text-sm text-navy-700 dark:text-navy-300">
-        In practice: turning AI features off never changes which
-        journals get recommended — only how much help you get finding
-        the right words to search with.
+        {{ t("about.section.ai_optional.callout", locale) }}
     </div>
     {% endcall %}
 
-    {% call accordion_card("Why open source?", "about", "🌍") %}
-    <p>
-        Scilene is developed in the open so that anyone can inspect how
-        recommendations are produced, suggest improvements, or contribute
-        new features.
-    </p>
-    <p>
-        Transparency in code is the same principle as transparency in
-        recommendations — nothing about how Scilene works should be
-        hidden from the researchers who rely on it.
-    </p>
+    {% call accordion_card(t("about.section.open_source.title", locale), "about", "🌍") %}
+    <p>{{ t("about.section.open_source.body1", locale) }}</p>
+    <p>{{ t("about.section.open_source.body2", locale) }}</p>
     {% endcall %}
 
-    {% call accordion_card("Our vision", "about", "🚀") %}
-    <p>
-        Scilene aims to become a trusted, open-source reference tool for
-        journal selection — and, over time, a broader research
-        intelligence platform that helps researchers navigate scholarly
-        publishing with confidence.
-    </p>
-    <p>
-        Every new feature is measured against the same question:
-        does this make Scilene more transparent, more understandable, or
-        more useful to a researcher deciding where to submit their work?
-    </p>
+    {% call accordion_card(t("about.section.vision.title", locale), "about", "🚀") %}
+    <p>{{ t("about.section.vision.body1", locale) }}</p>
+    <p>{{ t("about.section.vision.body2", locale) }}</p>
     {% endcall %}
 
 </section>

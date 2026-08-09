@@ -1,4 +1,5 @@
 {% macro journal_card(journal, compare_ids=[]) %}
+{% set locale = request.state.locale %}
 <div class="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
 
     <div class="flex items-start justify-between gap-3">
@@ -37,7 +38,7 @@
         Coverage is only meaningful for an inactive journal (#98) -- an
         active journal's coverage is just "ongoing", not information.
     #}
-    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Scopus coverage: {{ scopus_detail.coverage }}</p>
+    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ t("journal_card.scopus_coverage", locale, coverage=scopus_detail.coverage) }}</p>
     {% endif %}
 
     {% if scopus_detail and scopus_detail.added_to_list %}
@@ -46,7 +47,7 @@
         relative one ("Recently indexed") -- #98 calls out relative
         wording by name as something that goes stale.
     #}
-    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Indexed in Scopus since {{ scopus_detail.added_to_list }}</p>
+    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ t("journal_card.indexed_since", locale, date=scopus_detail.added_to_list) }}</p>
     {% endif %}
 
     {% set enrichment_badges = format_enrichment_badges(journal.enrichment) %}
@@ -58,7 +59,7 @@
         should never look like they carry the same weight.
     #}
     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-        Also listed in: {{ enrichment_badges | join(", ") }}
+        {{ t("journal_card.also_listed_in", locale, badges=enrichment_badges | join(", ")) }}
     </p>
     {% endif %}
 
@@ -68,19 +69,19 @@
 
     <div class="grid grid-cols-3 gap-3 mt-3 text-sm">
         <div>
-            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">Country</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t("journal_card.country", locale) }}</p>
             <p class="text-gray-800 dark:text-gray-200">{{ journal.country or "—" }}</p>
         </div>
         <div>
-            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">Language</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t("journal_card.language", locale) }}</p>
             <p class="text-gray-800 dark:text-gray-200">{{ journal.languages or "—" }}</p>
         </div>
         <div>
-            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">APC</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t("journal_card.apc", locale) }}</p>
             <p class="text-gray-800 dark:text-gray-200">
-                {% if journal.is_free %}Free
+                {% if journal.is_free %}{{ t("journal_card.free", locale) }}
                 {% elif journal.apc_amount is not none %}~${{ "%.0f"|format(journal.apc_amount) }}
-                {% else %}Paid (unconfirmed)
+                {% else %}{{ t("journal_card.paid_unconfirmed", locale) }}
                 {% endif %}
             </p>
         </div>
@@ -103,42 +104,42 @@
             {% if journal.id not in compare_ids and compare_ids | length >= 4 %}disabled{% endif %}
             class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500 disabled:cursor-not-allowed disabled:opacity-40"
         >
-        Compare
+        {{ t("journal_card.compare", locale) }}
     </label>
 
     <details class="mt-3 group">
         <summary class="cursor-pointer text-sm font-medium text-navy-600 hover:text-horizon-600 dark:text-navy-300 dark:hover:text-horizon-500 list-none flex items-center gap-1">
             <span class="transition-transform group-open:rotate-90">▶</span>
-            Show more
+            {{ t("journal_card.show_more", locale) }}
         </summary>
 
         <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 space-y-2 text-sm">
-            <p><span class="font-medium text-gray-700 dark:text-gray-300">Publisher:</span> {{ journal.publisher or "Not listed" }}</p>
+            <p><span class="font-medium text-gray-700 dark:text-gray-300">{{ t("journal_card.publisher", locale) }}</span> {{ journal.publisher or t("journal_card.not_listed", locale) }}</p>
 
             {% set subject_tags = format_subjects(journal.subjects) %}
             {% if subject_tags %}
-            <p><span class="font-medium text-gray-700 dark:text-gray-300">Subjects:</span> {{ subject_tags }}</p>
+            <p><span class="font-medium text-gray-700 dark:text-gray-300">{{ t("journal_card.subjects", locale) }}</span> {{ subject_tags }}</p>
             {% endif %}
 
             {% if journal.review_weeks is not none %}
-            <p><span class="font-medium text-gray-700 dark:text-gray-300">Typical review time:</span> ~{{ journal.review_weeks }} weeks</p>
+            <p><span class="font-medium text-gray-700 dark:text-gray-300">{{ t("journal_card.review_time", locale) }}</span> ~{{ journal.review_weeks }} {{ t("journal_card.weeks", locale) }}</p>
             {% endif %}
 
             {% if journal.issn_print or journal.issn_online or journal.license %}
             <p class="text-xs text-gray-400 dark:text-gray-500">
                 {% if journal.issn_print or journal.issn_online %}
-                    ISSN: {{ journal.issn_print or "—" }} (print) / {{ journal.issn_online or "—" }} (online)
+                    {{ t("journal_card.issn", locale, print=journal.issn_print or "—", online=journal.issn_online or "—") }}
                 {% endif %}
-                {% if journal.license %} &middot; License: {{ journal.license }}{% endif %}
+                {% if journal.license %} &middot; {{ t("journal_card.license", locale, license=journal.license) }}{% endif %}
             </p>
             {% endif %}
 
             <div class="flex gap-4 pt-1">
                 {% if journal.website %}
-                <a href="{{ journal.website }}" target="_blank" rel="noopener noreferrer" class="text-navy-600 hover:text-horizon-600 dark:text-navy-300 dark:hover:text-horizon-500 font-medium">Visit Journal ↗</a>
+                <a href="{{ journal.website }}" target="_blank" rel="noopener noreferrer" class="text-navy-600 hover:text-horizon-600 dark:text-navy-300 dark:hover:text-horizon-500 font-medium">{{ t("journal_card.visit_journal", locale) }}</a>
                 {% endif %}
                 {% if journal.doaj_url %}
-                <a href="{{ journal.doaj_url }}" target="_blank" rel="noopener noreferrer" class="text-navy-600 hover:text-horizon-600 dark:text-navy-300 dark:hover:text-horizon-500 font-medium">View on DOAJ ↗</a>
+                <a href="{{ journal.doaj_url }}" target="_blank" rel="noopener noreferrer" class="text-navy-600 hover:text-horizon-600 dark:text-navy-300 dark:hover:text-horizon-500 font-medium">{{ t("journal_card.view_on_doaj", locale) }}</a>
                 {% endif %}
             </div>
 
@@ -164,7 +165,7 @@
                 hx-indicator="#online-enrichment-loading-{{ journal.id }}"
                 class="mt-2 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300"
             >
-                🌐 Get more info online (OpenAlex / Crossref)
+                🌐 {{ t("journal_card.get_more_info", locale) }}
                 <span id="online-enrichment-loading-{{ journal.id }}" class="htmx-indicator">…</span>
             </button>
             <div id="online-enrichment-{{ journal.id }}"></div>

@@ -1,4 +1,5 @@
 {% macro bar_list(title, data, icon="") %}
+{% set locale = request.state.locale %}
 {#
     #60 -- plain CSS bars (width set inline, proportional to the
     largest value in this list), no charting library/JS, consistent
@@ -22,7 +23,7 @@
         {% endfor %}
     </div>
     {% else %}
-    <p class="text-xs text-gray-400 dark:text-gray-500">No data available.</p>
+    <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("bar_list.no_data", locale) }}</p>
     {% endif %}
 </div>
 {% endmacro %}

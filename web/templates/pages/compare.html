@@ -1,17 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Compare Journals — {{ app.name }}{% endblock %}
+{% block title %}{{ t("compare.title", request.state.locale) }} — {{ app.name }}{% endblock %}
 
 {% block content %}
 
-<h1 class="text-2xl font-bold text-navy-600 dark:text-navy-300 mb-1">🔀 Compare Journals</h1>
+{% set locale = request.state.locale %}
+
+<h1 class="text-2xl font-bold text-navy-600 dark:text-navy-300 mb-1">🔀 {{ t("compare.title", locale) }}</h1>
 <p class="text-gray-500 dark:text-gray-400 mb-6">
-    Side-by-side comparison of your selected journals to support an informed submission decision.
+    {{ t("compare.subtitle", locale) }}
 </p>
 
 {% if not rows %}
 <div class="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
-    No journals selected yet. Go to <a href="/search" class="text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 font-medium">Search</a> and tick "Compare" on up to 4 journal cards.
+    {% set search_link %}<a href="/search" class="text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 font-medium">{{ t("compare.link_search", locale) }}</a>{% endset %}
+    {{ t("compare.empty_state", locale, search_link=search_link) | safe }}
 </div>
 {% else %}
 
@@ -36,32 +39,32 @@
   </thead>
   <tbody>
     <tr class="border-t border-gray-100 dark:border-gray-700">
-      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Recommendation</td>
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">{{ t("compare.row.recommendation", locale) }}</td>
       {% for row in rows %}
       <td class="p-3">
         {% if row.recommendation %}
         {% from "components/recommendation_badge.html" import recommendation_badge %}
         {{ recommendation_badge(row.recommendation.confidence) }}
         {% else %}
-        <span class="text-xs text-gray-400 dark:text-gray-500">Not in your current search results</span>
+        <span class="text-xs text-gray-400 dark:text-gray-500">{{ t("compare.cell.not_in_results", locale) }}</span>
         {% endif %}
       </td>
       {% endfor %}
     </tr>
     <tr class="border-t border-gray-100 dark:border-gray-700">
-      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Publisher</td>
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">{{ t("compare.row.publisher", locale) }}</td>
       {% for row in rows %}<td class="p-3">{{ row.journal.publisher or "—" }}</td>{% endfor %}
     </tr>
     <tr class="border-t border-gray-100 dark:border-gray-700">
-      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Country</td>
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">{{ t("compare.row.country", locale) }}</td>
       {% for row in rows %}<td class="p-3">{{ row.journal.country or "—" }}</td>{% endfor %}
     </tr>
     <tr class="border-t border-gray-100 dark:border-gray-700">
-      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Subject Areas</td>
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">{{ t("compare.row.subjects", locale) }}</td>
       {% for row in rows %}<td class="p-3">{{ format_subjects(row.journal.subjects) or "—" }}</td>{% endfor %}
     </tr>
     <tr class="border-t border-gray-100 dark:border-gray-700">
-      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Indexing</td>
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">{{ t("compare.row.indexing", locale) }}</td>
       {% for row in rows %}
       <td class="p-3">
         {% for detail in row.journal.source_details %}<span class="inline-flex items-center gap-1 mr-2">✓ {{ format_source_chip(detail) }}</span>{% else %}—{% endfor %}
@@ -75,7 +78,7 @@
           but not the underlying SJR/H-index numbers, so those get
           their own row rather than being folded silently into a chip.
       #}
-      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Metrics (SJR / H-index)</td>
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">{{ t("compare.row.metrics", locale) }}</td>
       {% for row in rows %}
       {% set metric_detail = row.journal.source_details | selectattr("source", "equalto", "Scopus") | first
           or row.journal.source_details | selectattr("source", "equalto", "Web of Science") | first %}
@@ -88,28 +91,28 @@
       {% endfor %}
     </tr>
     <tr class="border-t border-gray-100 dark:border-gray-700">
-      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Open Access / APC</td>
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">{{ t("compare.row.open_access", locale) }}</td>
       {% for row in rows %}
       <td class="p-3">
-        {% if row.is_free %}Free (No APC)
+        {% if row.is_free %}{{ t("compare.cell.free", locale) }}
         {% elif row.usd_amount is not none %}~${{ "%.0f"|format(row.usd_amount) }}
-        {% else %}Paid (unconfirmed)
+        {% else %}{{ t("compare.cell.paid_unconfirmed", locale) }}
         {% endif %}
       </td>
       {% endfor %}
     </tr>
     <tr class="border-t border-gray-100 dark:border-gray-700">
-      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Language(s)</td>
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">{{ t("compare.row.languages", locale) }}</td>
       {% for row in rows %}<td class="p-3">{{ row.journal.languages or "—" }}</td>{% endfor %}
     </tr>
     <tr class="border-t border-gray-100 dark:border-gray-700">
-      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Typical Review Time</td>
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">{{ t("compare.row.review_time", locale) }}</td>
       {% for row in rows %}
-      <td class="p-3">{% if row.journal.review_weeks is not none %}~{{ row.journal.review_weeks }} weeks{% else %}—{% endif %}</td>
+      <td class="p-3">{% if row.journal.review_weeks is not none %}~{{ row.journal.review_weeks }} {{ t("compare.unit.weeks", locale) }}{% else %}—{% endif %}</td>
       {% endfor %}
     </tr>
     <tr class="border-t border-gray-100 dark:border-gray-700">
-      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">ISSN</td>
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">{{ t("compare.row.issn", locale) }}</td>
       {% for row in rows %}<td class="p-3 text-xs text-gray-400 dark:text-gray-500">{{ row.journal.issn_print or "—" }} / {{ row.journal.issn_online or "—" }}</td>{% endfor %}
     </tr>
   </tbody>
@@ -124,7 +127,7 @@
     branch this and the results-page bar's Clear button share.
 #}
 <form method="post" action="/search/compare/clear" class="mt-4">
-    <button type="submit" class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-600">Clear comparison</button>
+    <button type="submit" class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-600">{{ t("compare.button.clear", locale) }}</button>
 </form>
 
 {% endif %}
