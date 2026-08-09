@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Compare Journals — {{ app.name }}{% endblock %}
+
+{% block content %}
+
+<h1 class="text-2xl font-bold text-navy-600 dark:text-navy-300 mb-1">🔀 Compare Journals</h1>
+<p class="text-gray-500 dark:text-gray-400 mb-6">
+    Side-by-side comparison of your selected journals to support an informed submission decision.
+</p>
+
+{% if not rows %}
+<div class="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
+    No journals selected yet. Go to <a href="/search" class="text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 font-medium">Search</a> and tick "Compare" on up to 4 journal cards.
+</div>
+{% else %}
+
+{#
+    #56 -- "Scope" isn't a column here: the Scope & Focus dataset
+    doesn't exist yet (#73, blocked). Every other field the issue
+    names is real, already-available data.
+#}
+<div class="overflow-x-auto bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+<table class="w-full text-sm border-collapse">
+  <thead>
+    <tr>
+      <th class="text-left align-bottom p-3 w-36"></th>
+      {% for row in rows %}
+      <th class="text-left align-bottom p-3 min-w-[220px]">
+        <div class="font-semibold text-gray-900 dark:text-gray-50">{{ row.journal.title }}</div>
+        {% set pub_type = format_publication_type_badge(row.journal) %}
+        <span class="{{ pub_type.classes }} inline-block mt-1">{{ pub_type.icon }} {{ pub_type.label }}</span>
+      </th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="border-t border-gray-100 dark:border-gray-700">
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Recommendation</td>
+      {% for row in rows %}
+      <td class="p-3">
+        {% if row.recommendation %}
+        {% from "components/recommendation_badge.html" import recommendation_badge %}
+        {{ recommendation_badge(row.recommendation.confidence) }}
+        {% else %}
+        <span class="text-xs text-gray-400 dark:text-gray-500">Not in your current search results</span>
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    <tr class="border-t border-gray-100 dark:border-gray-700">
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Publisher</td>
+      {% for row in rows %}<td class="p-3">{{ row.journal.publisher or "—" }}</td>{% endfor %}
+    </tr>
+    <tr class="border-t border-gray-100 dark:border-gray-700">
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Country</td>
+      {% for row in rows %}<td class="p-3">{{ row.journal.country or "—" }}</td>{% endfor %}
+    </tr>
+    <tr class="border-t border-gray-100 dark:border-gray-700">
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Subject Areas</td>
+      {% for row in rows %}<td class="p-3">{{ format_subjects(row.journal.subjects) or "—" }}</td>{% endfor %}
+    </tr>
+    <tr class="border-t border-gray-100 dark:border-gray-700">
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Indexing</td>
+      {% for row in rows %}
+      <td class="p-3">
+        {% for detail in row.journal.source_details %}<span class="inline-flex items-center gap-1 mr-2">✓ {{ format_source_chip(detail) }}</span>{% else %}—{% endfor %}
+      </td>
+      {% endfor %}
+    </tr>
+    <tr class="border-t border-gray-100 dark:border-gray-700">
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Open Access / APC</td>
+      {% for row in rows %}
+      <td class="p-3">
+        {% if row.is_free %}Free (No APC)
+        {% elif row.usd_amount is not none %}~${{ "%.0f"|format(row.usd_amount) }}
+        {% else %}Paid (unconfirmed)
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    <tr class="border-t border-gray-100 dark:border-gray-700">
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Language(s)</td>
+      {% for row in rows %}<td class="p-3">{{ row.journal.languages or "—" }}</td>{% endfor %}
+    </tr>
+    <tr class="border-t border-gray-100 dark:border-gray-700">
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Typical Review Time</td>
+      {% for row in rows %}
+      <td class="p-3">{% if row.journal.review_weeks is not none %}~{{ row.journal.review_weeks }} weeks{% else %}—{% endif %}</td>
+      {% endfor %}
+    </tr>
+    <tr class="border-t border-gray-100 dark:border-gray-700">
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">ISSN</td>
+      {% for row in rows %}<td class="p-3 text-xs text-gray-400 dark:text-gray-500">{{ row.journal.issn_print or "—" }} / {{ row.journal.issn_online or "—" }}</td>{% endfor %}
+    </tr>
+  </tbody>
+</table>
+</div>
+
+{#
+    Deliberately a plain form, not HTMX -- clearing here should leave
+    the whole comparison table behind (it has nothing left to show),
+    not just update the (now-empty) bar underneath a stale table. See
+    web/routers/compare.py's clear_compare() for the HX-Request-aware
+    branch this and the results-page bar's Clear button share.
+#}
+<form method="post" action="/search/compare/clear" class="mt-4">
+    <button type="submit" class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-600">Clear comparison</button>
+</form>
+
+{% endif %}
+
+{% endblock %}

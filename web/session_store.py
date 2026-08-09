@@ -93,6 +93,10 @@ def get_session(session_id: str) -> dict:
             # this lets a user opt all the way out if they'd rather this
             # app never talk to an external API on their behalf.
             "enrichment_enabled": True,
+
+            # #56 -- journal ids currently selected for side-by-side
+            # comparison, capped at MAX_COMPARE (web/routers/compare.py).
+            "compare_journal_ids": [],
         }
 
     _SESSIONS[session_id]["_last_access"] = time.time()

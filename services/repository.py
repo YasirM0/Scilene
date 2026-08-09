@@ -190,6 +190,33 @@ def get_all_journals():
     return result
 
 
+def get_journals_by_ids(journal_ids):
+    """
+    Batch-fetch specific journals by id, preserving `journal_ids`'
+    order (#56, Journal Comparison -- a user's selection order).
+    Unknown/deleted ids are silently skipped, not an error.
+    """
+    journal_ids = list(journal_ids)
+
+    if not journal_ids:
+        return []
+
+    conn = get_connection()
+
+    placeholders = ",".join("?" for _ in journal_ids)
+    dataframe = pd.read_sql_query(
+        f"SELECT * FROM journals WHERE id IN ({placeholders})",
+        conn,
+        params=journal_ids,
+    )
+
+    result = _rows_to_journals(dataframe, conn=conn)
+    conn.close()
+
+    by_id = {journal.id: journal for journal in result}
+    return [by_id[jid] for jid in journal_ids if jid in by_id]
+
+
 def search_by_title(title):
     """Search journals by title."""
 

@@ -1,4 +1,4 @@
-{% macro journal_card(journal, enrichment_enabled=True) %}
+{% macro journal_card(journal, enrichment_enabled=True, compare_ids=[]) %}
 <div class="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
 
     <div class="flex items-start justify-between gap-3">
@@ -76,6 +76,26 @@
             </p>
         </div>
     </div>
+
+    {#
+        #56 -- a plain checkbox, native browser state (checked/
+        unchecked) handles the visible toggle instantly; the HTMX POST
+        just informs the server and OOB-updates #compare-bar with the
+        running count. Disabled once MAX_COMPARE is reached for
+        journals not already selected, rather than silently no-op'ing
+        past the cap.
+    #}
+    <label class="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <input type="checkbox"
+            hx-post="/search/compare/toggle/{{ journal.id }}"
+            hx-target="#compare-bar"
+            hx-swap="outerHTML"
+            {% if journal.id in compare_ids %}checked{% endif %}
+            {% if journal.id not in compare_ids and compare_ids | length >= 4 %}disabled{% endif %}
+            class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+        Compare
+    </label>
 
     <details class="mt-3 group">
         <summary class="cursor-pointer text-sm font-medium text-navy-600 hover:text-horizon-600 dark:text-navy-300 dark:hover:text-horizon-500 list-none flex items-center gap-1">

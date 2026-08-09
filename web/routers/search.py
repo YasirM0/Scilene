@@ -119,6 +119,7 @@ def _results_context(session):
             "has_search": False,
             "history": session["history"],
             "enrichment_enabled": session.get("enrichment_enabled", True),
+            "compare_ids": session.get("compare_journal_ids", []),
         }
 
     visible_results = filter_visible_results(all_results, session["show_weaker"])
@@ -149,6 +150,7 @@ def _results_context(session):
         "history": session["history"],
         "detected_disciplines": detected_disciplines,
         "enrichment_enabled": session.get("enrichment_enabled", True),
+        "compare_ids": session.get("compare_journal_ids", []),
     }
 
 

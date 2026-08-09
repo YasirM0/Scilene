@@ -87,9 +87,12 @@
     &middot; Data: DOAJ &middot; SCImago Journal &amp; Country Rank &middot; SINTA
 </p>
 
+{% from "components/compare_bar.html" import compare_bar %}
+{{ compare_bar(compare_ids, 4) }}
+
 <div class="space-y-3">
     {% for journal in page_results %}
-        {{ journal_card(journal, enrichment_enabled=enrichment_enabled) }}
+        {{ journal_card(journal, enrichment_enabled=enrichment_enabled, compare_ids=compare_ids) }}
     {% endfor %}
 </div>
 

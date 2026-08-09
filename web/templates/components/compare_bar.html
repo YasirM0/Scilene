@@ -1,0 +1,24 @@
+{% macro compare_bar(compare_ids, max_compare, oob=False) %}
+{#
+    #56 -- always rendered (even empty, so it's always a valid HTMX
+    swap target), just visually empty when nothing's selected. `oob`
+    lets a card's toggle checkbox update this from elsewhere, same
+    pattern as components/confirmed_tags.html.
+#}
+<div id="compare-bar" {% if oob %}hx-swap-oob="true"{% endif %}>
+    {% if compare_ids %}
+    <div class="flex items-center justify-between gap-3 px-3 py-2 bg-navy-50 dark:bg-gray-900 rounded-md text-sm mb-3">
+        <span class="text-navy-700 dark:text-navy-300">🔀 {{ compare_ids | length }}/{{ max_compare }} selected for comparison</span>
+        <div class="flex items-center gap-4">
+            <a href="/search/compare" class="font-medium text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500">Compare Now</a>
+            <button type="button"
+                hx-post="/search/compare/clear"
+                hx-target="#compare-bar"
+                hx-swap="outerHTML"
+                class="text-gray-400 dark:text-gray-500 hover:text-red-600"
+            >Clear</button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
