@@ -293,15 +293,19 @@ Not done (still real implementation work, not this pass):
   ID matching now makes a re-import idempotent regardless of order,
   but the pipeline still runs Elsevier third, after Scopus/WoS, not
   first as the issue originally specified).
-- Active/Inactive, Coverage, Source Record ID, and Article Language
-  ARE now implemented (a later pass) -- see `importers/elsevier.py`
-  and `journal_sources`' four new columns. Inactive journals are
-  hidden from default search results and surfaced only via the
-  existing "Show weaker recommendations" toggle
+- Active/Inactive, Coverage, Source Record ID, Article Language, and
+  Added-to-list ("Indexed in Scopus since June 2026") ARE now
+  implemented (later passes) -- see `importers/elsevier.py` and
+  `journal_sources`' five new columns. Inactive journals are hidden
+  from default search results and surfaced only via the existing
+  "Show weaker recommendations" toggle
   (`web/search_presentation.is_inactive_scopus` /
-  `filter_visible_results`) -- no separate filter, per the issue.
-  Title history moved to `importers/aliases.py` (#100) instead of
-  living here, since it's genuinely a title-matching concern shared
+  `filter_visible_results`) -- no separate filter, per the issue. The
+  added-to-list period is read from Elsevier's own column HEADER
+  ("Added to List <period>", not a per-row date) by prefix match, so a
+  future CSV with a different month/year is picked up without a code
+  change. Title history moved to `importers/aliases.py` (#100) instead
+  of living here, since it's genuinely a title-matching concern shared
   with DOAJ and ERIH PLUS, not Scopus-specific.
 
 ---

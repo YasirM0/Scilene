@@ -74,9 +74,27 @@ def _load_by_source_record_id(conn, source_label):
     return {record_id: journal_id for record_id, journal_id in rows}
 
 
+def _find_added_to_list_column(columns):
+    """
+    Elsevier bakes the snapshot's own vintage into the column header
+    itself (e.g. "Added to List June 2026") rather than a per-row
+    date -- there's no separate date field to read. Finding the column
+    by prefix (not a hardcoded name) means a future CSV with a
+    different month/year still gets picked up without a code change.
+    """
+    for column in columns:
+        if column.startswith("Added to List "):
+            return column
+    return None
+
+
 def import_elsevier(csv_path, source_label="Scopus", index=None, conn=None):
 
     df = pd.read_csv(csv_path, encoding="utf-8-sig", dtype=str)
+    added_to_list_column = _find_added_to_list_column(df.columns)
+    added_to_list_period = (
+        added_to_list_column[len("Added to List "):] if added_to_list_column else None
+    )
 
     owns_connection = conn is None
     if owns_connection:
@@ -120,6 +138,14 @@ def import_elsevier(csv_path, source_label="Scopus", index=None, conn=None):
         else:
             inactive_count += 1
 
+        # "Added" this snapshot -> store the period as plain text
+        # ("June 2026"), not a relative phrase that goes stale --
+        # #98 explicitly warns against "Recently indexed" for exactly
+        # that reason. NaN/missing -> None, same as every other field.
+        added_to_list = None
+        if added_to_list_column and _clean(row.get(added_to_list_column)) == "Added":
+            added_to_list = added_to_list_period
+
         # No quartile/sjr/h_index passed here -- Scopus-indexed per
         # Elsevier, but that's SCImago's field to set (or leave
         # unavailable), tag_source's COALESCE upsert never lets this
@@ -131,6 +157,7 @@ def import_elsevier(csv_path, source_label="Scopus", index=None, conn=None):
             "article_language": _clean(
                 row.get("Article Language in Source (Three-Letter ISO Language Codes)")
             ),
+            "added_to_list": added_to_list,
         })
 
         update_publication_type(conn, journal_id, _clean(row.get("Source Type")))

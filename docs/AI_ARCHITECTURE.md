@@ -215,7 +215,14 @@ Done (scaffolding only, no real model anywhere):
   rather than a new taxonomy or hardcoded placeholder — directly
   matches #102's own "reuse existing metadata, avoid new taxonomies"
   guidance. A future real classifier could replace this without
-  changing anything that calls `detect_disciplines()`.
+  changing anything that calls `detect_disciplines()`. The "Edit"
+  step (#102's own spec: "Remove incorrect disciplines, Add missing
+  disciplines, Adjust the detected research focus") is now complete —
+  checkboxes cover remove/select, and a plain text field
+  (`extra_disciplines` on `POST /search/refine-with-disciplines`)
+  covers "add missing," parsed the same comma/semicolon way
+  `fallback_tags` already is. Originally only the checkboxes shipped;
+  the add-missing half was caught in a later audit pass.
 - Research Idea Assistant (#85, `web/routers/research_idea.py`) — the
   full "Start from a Research Idea" modal → generate → review/edit →
   "Continue to Search" flow, feeding `session["confirmed_tags"]` — the

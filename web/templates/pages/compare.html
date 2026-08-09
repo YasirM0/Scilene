@@ -69,6 +69,25 @@
       {% endfor %}
     </tr>
     <tr class="border-t border-gray-100 dark:border-gray-700">
+      {#
+          #56 names "metrics" as its own comparison dimension --
+          Indexing's chip shows quartile inline (e.g. "Scopus (Q1)")
+          but not the underlying SJR/H-index numbers, so those get
+          their own row rather than being folded silently into a chip.
+      #}
+      <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Metrics (SJR / H-index)</td>
+      {% for row in rows %}
+      {% set metric_detail = row.journal.source_details | selectattr("source", "equalto", "Scopus") | first
+          or row.journal.source_details | selectattr("source", "equalto", "Web of Science") | first %}
+      <td class="p-3">
+        {% if metric_detail and (metric_detail.sjr is not none or metric_detail.h_index is not none) %}
+          {{ "%.3f"|format(metric_detail.sjr) if metric_detail.sjr is not none else "—" }} SJR
+          / {{ metric_detail.h_index if metric_detail.h_index is not none else "—" }} H-index
+        {% else %}—{% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    <tr class="border-t border-gray-100 dark:border-gray-700">
       <td class="p-3 font-medium text-gray-500 dark:text-gray-400">Open Access / APC</td>
       {% for row in rows %}
       <td class="p-3">

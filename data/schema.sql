@@ -77,6 +77,13 @@ CREATE TABLE journal_sources (
     source_record_id TEXT,
     article_language TEXT,
 
+    -- The period from Elsevier's own "Added to List <period>" column
+    -- header (e.g. "June 2026"), stored as plain text ONLY for rows
+    -- that column flags "Added" -- resolved to a real, dated sentence
+    -- at import time ("Indexed in Scopus since June 2026"), never a
+    -- relative one ("Recently indexed") that would go stale (#98).
+    added_to_list TEXT,
+
     PRIMARY KEY (journal_id, source),
     FOREIGN KEY (journal_id) REFERENCES journals(id)
 );

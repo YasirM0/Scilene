@@ -40,6 +40,15 @@
     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Scopus coverage: {{ scopus_detail.coverage }}</p>
     {% endif %}
 
+    {% if scopus_detail and scopus_detail.added_to_list %}
+    {#
+        A dated sentence ("Indexed in Scopus since June 2026"), not a
+        relative one ("Recently indexed") -- #98 calls out relative
+        wording by name as something that goes stale.
+    #}
+    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Indexed in Scopus since {{ scopus_detail.added_to_list }}</p>
+    {% endif %}
+
     {% set enrichment_badges = format_enrichment_badges(journal.enrichment) %}
     {% if enrichment_badges %}
     {#

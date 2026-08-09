@@ -52,13 +52,13 @@ def _fetch_sources(conn, journal_ids):
 
         rows = conn.execute(
             f"SELECT journal_id, source, quartile, sjr, h_index, accreditation, "
-            f"active, coverage, source_record_id, article_language "
+            f"active, coverage, source_record_id, article_language, added_to_list "
             f"FROM journal_sources WHERE journal_id IN ({placeholders})",
             chunk,
         ).fetchall()
 
         for (journal_id, source, quartile, sjr, h_index, accreditation,
-             active, coverage, source_record_id, article_language) in rows:
+             active, coverage, source_record_id, article_language, added_to_list) in rows:
             details_by_id.setdefault(journal_id, []).append({
                 "source": source,
                 "quartile": quartile,
@@ -71,6 +71,7 @@ def _fetch_sources(conn, journal_ids):
                 "coverage": coverage,
                 "source_record_id": source_record_id,
                 "article_language": article_language,
+                "added_to_list": added_to_list,
             })
 
     return details_by_id
@@ -702,9 +703,9 @@ def tag_source(conn, journal_id, source, metadata=None):
         """
         INSERT INTO journal_sources (
             journal_id, source, quartile, sjr, h_index, accreditation,
-            active, coverage, source_record_id, article_language
+            active, coverage, source_record_id, article_language, added_to_list
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(journal_id, source) DO UPDATE SET
             quartile = COALESCE(excluded.quartile, journal_sources.quartile),
             sjr = COALESCE(excluded.sjr, journal_sources.sjr),
@@ -713,7 +714,8 @@ def tag_source(conn, journal_id, source, metadata=None):
             active = COALESCE(excluded.active, journal_sources.active),
             coverage = COALESCE(excluded.coverage, journal_sources.coverage),
             source_record_id = COALESCE(excluded.source_record_id, journal_sources.source_record_id),
-            article_language = COALESCE(excluded.article_language, journal_sources.article_language)
+            article_language = COALESCE(excluded.article_language, journal_sources.article_language),
+            added_to_list = COALESCE(excluded.added_to_list, journal_sources.added_to_list)
         """,
         (
             journal_id,
@@ -726,6 +728,7 @@ def tag_source(conn, journal_id, source, metadata=None):
             metadata.get("coverage"),
             metadata.get("source_record_id"),
             metadata.get("article_language"),
+            metadata.get("added_to_list"),
         ),
     )
 

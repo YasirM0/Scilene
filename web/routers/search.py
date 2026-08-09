@@ -317,11 +317,18 @@ def run_search(
 
 
 @router.post("/refine-with-disciplines")
-def refine_with_disciplines(request: Request, session=Depends(get_session_state), disciplines: list[str] = Form([])):
+def refine_with_disciplines(
+    request: Request,
+    session=Depends(get_session_state),
+    disciplines: list[str] = Form([]),
+    extra_disciplines: str = Form(""),
+):
     """
     #102's "[Edit] -> confirm -> recalculates recommendations using
     the updated disciplines as an additional signal" -- adds the
-    user-selected Detected Research Areas to confirmed_tags and
+    user-selected Detected Research Areas (and any manually-typed
+    ones -- #102's own "Add missing disciplines", not just remove/
+    select from what was auto-detected) to confirmed_tags and
     genuinely re-runs the exact same search (via last_search_params,
     set by _execute_search) with the expanded concept list. The
     traditional recommendation signals are otherwise unchanged; this
@@ -336,7 +343,8 @@ def refine_with_disciplines(request: Request, session=Depends(get_session_state)
         return _render(request, "partials/search_results.html", context, session)
 
     confirmed = session.get("confirmed_tags", [])
-    for discipline in disciplines:
+    extra = [d.strip() for d in extra_disciplines.replace(";", ",").split(",") if d.strip()]
+    for discipline in list(disciplines) + extra:
         if discipline not in confirmed:
             confirmed.append(discipline)
     session["confirmed_tags"] = confirmed
