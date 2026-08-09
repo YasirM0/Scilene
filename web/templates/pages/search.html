@@ -9,6 +9,30 @@
     Enter your manuscript information to discover journals that best match your research.
 </p>
 
+<details class="group mb-6">
+    <summary class="cursor-pointer text-sm font-medium text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 list-none flex items-center gap-1">
+        <span class="transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
+        📂 Load a saved session (.jis)
+    </summary>
+    <form
+        hx-post="/search/import-jis"
+        hx-target="#results-panel"
+        hx-swap="innerHTML"
+        hx-encoding="multipart/form-data"
+        class="mt-2 flex flex-wrap items-center gap-2"
+    >
+        <input type="file" name="file" accept=".jis,application/json" required
+            class="text-sm text-gray-600 dark:text-gray-300">
+        <button type="submit"
+            class="px-3 py-1.5 text-sm font-medium rounded-md bg-navy-600 text-white hover:bg-navy-700"
+        >Load session</button>
+    </form>
+    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+        Re-runs the saved search live against the current database — recommendations
+        are always regenerated, never replayed from the file.
+    </p>
+</details>
+
 <form hx-post="/search" hx-target="#results-panel" hx-swap="innerHTML" class="space-y-4">
 
     <div class="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">

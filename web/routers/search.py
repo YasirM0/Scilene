@@ -12,11 +12,13 @@ functions or in the templates.
 from datetime import datetime, timezone
 from io import BytesIO
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, Request, UploadFile, File
 from fastapi.responses import StreamingResponse, HTMLResponse
 
 from services import search_service
+from services.app_info import APP_VERSION
 from services.discipline_detection import detect_disciplines
+from services.jis_format import serialize_jis, parse_jis_import, InvalidJisFile
 from services.report_context import ReportContext, build_filters_summary
 from services.reports import generate_pdf, generate_docx, generate_xlsx, generate_markdown
 
@@ -438,6 +440,12 @@ def export_results(fmt: str, session=Depends(get_session_state)):
     if fmt == "csv":
         data = search_service.export_results_csv(results, context=_build_report_context(search_meta, results))
         media_type = "text/csv"
+    elif fmt == "jis":
+        # Portable Search Session (#91) -- unlike every other format
+        # here, this isn't a report OF the results, it's the search
+        # ITSELF (params + tags), reopenable via /search/import-jis.
+        data = serialize_jis(session, APP_VERSION)
+        media_type = "application/json"
     elif fmt in _EXPORT_GENERATORS:
         generator, media_type = _EXPORT_GENERATORS[fmt]
         data = generator(_build_report_context(search_meta, results))
@@ -450,3 +458,64 @@ def export_results(fmt: str, session=Depends(get_session_state)):
         headers={"Content-Disposition": f'attachment; filename="{basename}.{fmt}"'},
     )
     return attach_session_cookie(response, session)
+
+
+@router.post("/import-jis")
+def import_jis(request: Request, file: UploadFile = File(...), session=Depends(get_session_state)):
+    """
+    Portable Search Sessions (#91) -- the counterpart to /export/jis.
+    Always genuinely RE-RUNS the search against the live database
+    (via _execute_search, the exact function a manual search calls)
+    rather than replaying the file's results_snapshot -- a session
+    opened days later or on another device should reflect the current
+    database, not a stale copy of it.
+    """
+    raw = file.file.read()
+
+    try:
+        search = parse_jis_import(raw)
+    except InvalidJisFile as exc:
+        context = {
+            **_filter_context(),
+            **_results_context(session),
+            "warning": f"Couldn't load this .jis file: {exc}",
+        }
+        return _render(request, "partials/search_results.html", context, session)
+
+    indexing = search.get("indexing") or []
+    if not indexing:
+        context = {
+            **_filter_context(),
+            **_results_context(session),
+            "warning": "This .jis file has no journal index selected — nothing to search with.",
+        }
+        return _render(request, "partials/search_results.html", context, session)
+
+    strategy_label = search.get("strategy_label")
+    if strategy_label not in STRATEGY_LABELS:
+        strategy_label = "⚖️ Balanced (Recommended)"
+
+    abstract = (search.get("abstract") or "").strip()
+    confirmed = [str(tag) for tag in (search.get("confirmed_tags") or [])]
+    session["confirmed_tags"] = confirmed
+
+    _execute_search(
+        session, abstract, confirmed, strategy_label,
+        search.get("languages"),
+        bool(search.get("free_only")),
+        search.get("min_budget"),
+        search.get("max_budget"),
+        indexing,
+        search.get("quartiles") or [],
+        search.get("sinta_levels") or [],
+        search.get("max_review_weeks"),
+        STRATEGY_LABELS[strategy_label],
+    )
+
+    context = {
+        **_filter_context(),
+        **_results_context(session),
+        **_interpreter_form_context(session),
+        **language_form_context(session),
+    }
+    return _render(request, "partials/search_results.html", context, session)
