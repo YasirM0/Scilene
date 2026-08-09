@@ -120,7 +120,8 @@ def interpret_suggest_another(request: Request, category: str, session=Depends(g
     if category in CATEGORIES:
         tag = _find_suggestion(session, category)
         if tag is not None:
-            tag["value"] = next_suggestion(category, tag["value"])
+            abstract = session.get("interpreter_abstract_snapshot") or ""
+            tag["value"] = next_suggestion(category, tag["value"], abstract)
             tag["cycled"] = True
     session["interpreter_editing_category"] = None
     return _render_panel(request, session, current_suggestions_context(session))

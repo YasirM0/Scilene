@@ -1,9 +1,11 @@
 # Research Interpreter (UI scaffolding)
 
-**Status:** Interaction and UI only — `services/research_interpreter.py`
-returns hardcoded placeholder suggestions. No real analysis of the
-abstract happens yet. This document describes the architecture the
-real interpreter will plug into, not a finished feature.
+**Status:** Partially real. "Field of Study" is genuine as of #53
+(`services/field_detection.py` matches the abstract against the
+database's own subject vocabulary, deterministic, not a fake AI call).
+"Key Research Focus" is still a hardcoded placeholder pool — no real
+analysis of that slot happens yet. This document describes the
+architecture the fully-real interpreter will plug into.
 
 ---
 
