@@ -54,45 +54,19 @@
 
         <div>
             <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Filter by Index, Quality &amp; Language</p>
+            {#
+                #135 -- compact multi-select dropdowns + removable
+                chips instead of four always-open checkbox panels
+                (components/multi_select_filter.html); the language
+                filter keeps its own card since it has extra behavior
+                (detected-language hint, the "touch" tracker) a plain
+                multi-select doesn't need.
+            #}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-gray-50 dark:bg-gray-900 rounded-md p-3">
-                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Preferred Indexing</p>
-                    <div class="space-y-1">
-                        {% for option in indexing_options %}
-                        <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                            <input type="checkbox" name="indexing" value="{{ option }}" {% if option == "DOAJ" %}checked{% endif %}
-                                class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
-                            {{ option }}
-                        </label>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="bg-gray-50 dark:bg-gray-900 rounded-md p-3">
-                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Scopus / WoS Quartile</p>
-                    <div class="space-y-1">
-                        {% for option in quartile_options %}
-                        <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                            <input type="checkbox" name="quartiles" value="{{ option }}"
-                                class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
-                            {{ option }}
-                        </label>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="bg-gray-50 dark:bg-gray-900 rounded-md p-3">
-                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">SINTA Level</p>
-                    <div class="space-y-1 max-h-28 overflow-y-auto pr-2">
-                        {% for option in sinta_level_options %}
-                        <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                            <input type="checkbox" name="sinta_levels" value="{{ option }}"
-                                class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
-                            {{ option }}
-                        </label>
-                        {% endfor %}
-                    </div>
-                </div>
+                {% from "components/multi_select_filter.html" import multi_select_filter %}
+                {{ multi_select_filter("indexing", "Preferred Indexing", indexing_options, selected=["DOAJ"]) }}
+                {{ multi_select_filter("quartiles", "Scopus / WoS Quartile", quartile_options) }}
+                {{ multi_select_filter("sinta_levels", "SINTA Level", sinta_level_options) }}
 
                 {% from "components/language_filter_card.html" import language_filter_card %}
                 {{ language_filter_card(language_options, selected_languages, detected_language, language_touched) }}
