@@ -1,7 +1,14 @@
 {% macro recommendation_badge(confidence) %}
+{#
+    #130 -- `confidence` itself stays the canonical English value from
+    services/recommender.py (CONFIDENCE_LEVELS) since confidence_colors/
+    confidence_stars key their styling off it; only the displayed word
+    is translated, via the same canonical-value-lookup pattern used for
+    filter option labels (web/i18n.py's confidence_level.* keys).
+#}
 <div class="flex flex-col items-end gap-0.5">
     <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ confidence_colors.get(confidence, 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300') }}">
-        {{ confidence }}
+        {{ t("confidence_level." ~ confidence, request.state.locale) }}
     </span>
     <span class="text-xs {{ confidence_star_colors.get(confidence, 'text-gray-400') }}" aria-hidden="true">{{ confidence_stars.get(confidence, '') }}</span>
 </div>

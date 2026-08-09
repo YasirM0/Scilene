@@ -42,11 +42,10 @@ DEFAULT_LOCALE = "en"
 
 _STRINGS = {
     "nav.home": {"en": "Home", "ar": "الرئيسية", "id": "Beranda"},
-    "nav.search": {"en": "Submission Search", "ar": "بحث الإرسال", "id": "Pencarian Naskah"},
+    "nav.search": {"en": "Submission Search", "ar": "بحث المخطوطات", "id": "Pencarian Naskah"},
     "nav.statistics": {"en": "Statistics", "ar": "الإحصائيات", "id": "Statistik"},
     "nav.about": {"en": "About", "ar": "حول", "id": "Tentang"},
     "nav.documentation": {"en": "Documentation", "ar": "التوثيق", "id": "Dokumentasi"},
-    "nav.settings": {"en": "Settings", "ar": "الإعدادات", "id": "Pengaturan"},
     "nav.language": {"en": "Language", "ar": "اللغة", "id": "Bahasa"},
 
     "footer.data_label": {"en": "Data:", "ar": "البيانات:", "id": "Data:"},
@@ -419,7 +418,7 @@ _STRINGS = {
     "bar_list.no_data": {"en": "No data available.", "ar": "لا توجد بيانات متاحة.", "id": "Tidak ada data yang tersedia."},
 
     # -- Submission Search page (#129) -----------------------------------
-    "search.title": {"en": "Submission Search", "ar": "بحث الإرسال", "id": "Pencarian Naskah"},
+    "search.title": {"en": "Submission Search", "ar": "بحث المخطوطات", "id": "Pencarian Naskah"},
     "search.heading": {"en": "Journal Search", "ar": "بحث المجلات", "id": "Pencarian Jurnal"},
     "search.subtitle": {
         "en": "Enter your manuscript information to discover journals that best match your research.",
@@ -524,8 +523,8 @@ _STRINGS = {
     "interpreter.category.key_focus": {"en": "Key Research Focus", "ar": "التركيز البحثي الرئيسي", "id": "Fokus Riset Utama"},
 
     # -- Confirmed tags (#129) ---------------------------------------------
-    "confirmed_tags.badge_user": {"en": "USER", "ar": "المستخدم", "id": "PENGGUNA"},
-    "confirmed_tags.badge_ai": {"en": "AI", "ar": "ذكاء اصطناعي", "id": "AI"},
+    "confirmed_tags.badge_user": {"en": "USER", "ar": "مستخدم", "id": "PENGGUNA"},
+    "confirmed_tags.badge_ai": {"en": "AI", "ar": "ذكاء", "id": "AI"},
     "confirmed_tags.remove_aria": {"en": "Remove {value}", "ar": "إزالة {value}", "id": "Hapus {value}"},
     "confirmed_tags.empty": {
         "en": "No concepts confirmed yet — accept a suggestion below or add your own tags.",
@@ -568,8 +567,8 @@ _STRINGS = {
     "search_results.clear_button": {"en": "Clear Search", "ar": "مسح البحث", "id": "Hapus Pencarian"},
     "search_results.show_weaker": {
         "en": "Show weaker matches too (Moderate / Weak / Poor)",
-        "ar": "إظهار التطابقات الأضعف أيضاً (متوسط / ضعيف / سيئ)",
-        "id": "Tampilkan juga kecocokan yang lebih lemah (Sedang / Lemah / Buruk)",
+        "ar": "إظهار التطابقات الأضعف أيضاً (متوسط / منخفض / ضعيف)",
+        "id": "Tampilkan juga kecocokan yang lebih lemah (Sedang / Lemah / Kurang)",
     },
     "search_results.detected_areas_label": {"en": "Detected Research Areas", "ar": "المجالات البحثية المكتشفة", "id": "Bidang Riset Terdeteksi"},
     "search_results.extra_discipline_placeholder": {
@@ -758,6 +757,17 @@ _STRINGS = {
         "id": "{app_name} — Temukan jurnal yang tepat untuk riset Anda",
     },
     "about.logo_alt": {"en": "Scilene logo", "ar": "شعار Scilene", "id": "Logo Scilene"},
+
+    # -- Recommendation confidence levels (#130) -----------------------------
+    # Keyed by the exact English value from services/recommender.py's
+    # CONFIDENCE_LEVELS -- that value stays canonical (it's also the
+    # dict key confidence_colors/confidence_stars look styling up by,
+    # web/search_presentation.py), only the displayed word translates.
+    "confidence_level.Poor": {"en": "Poor", "ar": "ضعيف", "id": "Kurang"},
+    "confidence_level.Weak": {"en": "Weak", "ar": "منخفض", "id": "Lemah"},
+    "confidence_level.Moderate": {"en": "Moderate", "ar": "متوسط", "id": "Sedang"},
+    "confidence_level.Strong": {"en": "Strong", "ar": "قوي", "id": "Kuat"},
+    "confidence_level.Excellent": {"en": "Excellent", "ar": "ممتاز", "id": "Sangat Baik"},
 }
 
 

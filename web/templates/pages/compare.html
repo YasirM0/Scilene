@@ -43,7 +43,7 @@
       {% for row in rows %}
       <td class="p-3">
         {% if row.recommendation %}
-        {% from "components/recommendation_badge.html" import recommendation_badge %}
+        {% from "components/recommendation_badge.html" import recommendation_badge with context %}
         {{ recommendation_badge(row.recommendation.confidence) }}
         {% else %}
         <span class="text-xs text-gray-400 dark:text-gray-500">{{ t("compare.cell.not_in_results", locale) }}</span>
