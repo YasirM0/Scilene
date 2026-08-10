@@ -4,15 +4,15 @@
 <details class="bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 group">
     <summary class="cursor-pointer list-none px-4 py-3 flex items-center justify-between">
         <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ t("search_history.summary", locale, count=history|length) }}</span>
-        <span class="text-gray-400 dark:text-gray-500 transition-transform group-open:rotate-90">▶</span>
+        <span class="text-gray-500 dark:text-gray-400 transition-transform group-open:rotate-90">▶</span>
     </summary>
     <div class="px-4 pb-4 space-y-2">
-        <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("search_history.helper", locale) }}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">{{ t("search_history.helper", locale) }}</p>
         {% for entry in history %}
         <div class="flex items-center justify-between gap-3 py-2 border-t border-gray-100 dark:border-gray-700">
             <div>
                 <p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ entry.search_meta.display_label or t("search_history.untitled", locale) }}</p>
-                <p class="text-xs text-gray-400 dark:text-gray-500">
+                <p class="text-xs text-gray-500 dark:text-gray-400">
                     {{ entry.timestamp }} {{ t("search_history.utc", locale) }} &middot; {{ entry.search_meta.strategy_label }} &middot; {{ t("search_history.results_count", locale, count=entry.result_count) }}
                 </p>
             </div>

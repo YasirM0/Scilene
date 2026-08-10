@@ -1,6 +1,6 @@
 <footer class="border-t border-gray-200 dark:border-gray-700 mt-auto">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 space-y-1">
-        <p class="text-xs text-gray-400 dark:text-gray-500 text-center">
+        <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
             {{ app.name }} v{{ app.version }} &middot; {{ app.license }} {{ t('footer.license_word', request.state.locale) }}
             &middot; {{ t('footer.data_label', request.state.locale) }} DOAJ &middot; SCImago Journal &amp; Country Rank &middot; SINTA
         </p>
@@ -9,7 +9,7 @@
             small line, same muted size/color as the line above it, not
             a portfolio-style callout. The app stays the focus.
         #}
-        <p class="text-xs text-gray-400 dark:text-gray-500 text-center">
+        <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
             {{ t('footer.created_by', request.state.locale) }} {{ app.author }}
             &middot;
             <a href="{{ app.github }}" target="_blank" rel="noopener noreferrer" class="hover:text-horizon-600 dark:hover:text-horizon-500 transition-colors">GitHub</a>

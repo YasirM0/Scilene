@@ -20,7 +20,7 @@
             {{ t("search_results.showing", locale, visible=visible_count, total=total_count) }}
         </p>
         {% if hidden_count and not show_weaker %}
-        <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("search_results.hidden_matches", locale, count=hidden_count) }}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">{{ t("search_results.hidden_matches", locale, count=hidden_count) }}</p>
         {% endif %}
     </div>
     <button
@@ -81,7 +81,7 @@
         <button type="submit" class="text-xs font-medium text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500">
             {{ t("search_results.refine_button", locale) }}
         </button>
-        <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
             {{ t("search_results.detected_areas_helper", locale) }}
         </p>
     </form>
@@ -94,7 +94,7 @@
 </div>
 {% endif %}
 
-<p class="text-xs text-gray-400 dark:text-gray-500 mb-4">
+<p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
     {{ t("search_results.privacy_footer", locale) }}
     &middot; {{ t("search_results.data_label", locale) }} DOAJ &middot; SCImago Journal &amp; Country Rank &middot; SINTA
 </p>

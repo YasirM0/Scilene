@@ -14,7 +14,7 @@
 </p>
 
 {% if not stats %}
-<div class="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
+<div class="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
     {{ t("statistics.empty", locale) }}
 </div>
 {% else %}
@@ -41,7 +41,7 @@
     {{ bar_list(t("statistics.chart.open_access_cost", locale), stats.free_vs_paid, "💰") }}
 </div>
 
-<p class="text-xs text-gray-400 dark:text-gray-500 mt-6">
+<p class="text-xs text-gray-500 dark:text-gray-400 mt-6">
     {{ t("statistics.footnote", locale) }}
 </p>
 

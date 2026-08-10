@@ -14,7 +14,7 @@
         <div>
             <div class="flex items-center justify-between gap-3 text-xs text-gray-600 dark:text-gray-300 mb-0.5">
                 <span class="truncate">{{ label }}</span>
-                <span class="text-gray-400 dark:text-gray-500 shrink-0">{{ "{:,}".format(count) }}</span>
+                <span class="text-gray-500 dark:text-gray-400 shrink-0">{{ "{:,}".format(count) }}</span>
             </div>
             <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div class="h-full bg-navy-600 dark:bg-navy-300 rounded-full" style="width: {{ (count / max_value * 100) | round(1) }}%"></div>
@@ -23,7 +23,7 @@
         {% endfor %}
     </div>
     {% else %}
-    <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("bar_list.no_data", locale) }}</p>
+    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t("bar_list.no_data", locale) }}</p>
     {% endif %}
 </div>
 {% endmacro %}

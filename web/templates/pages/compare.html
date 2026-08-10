@@ -12,7 +12,7 @@
 </p>
 
 {% if not rows %}
-<div class="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
+<div class="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
     {% set search_link %}<a href="/search" class="text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 font-medium">{{ t("compare.link_search", locale) }}</a>{% endset %}
     {{ t("compare.empty_state", locale, search_link=search_link) | safe }}
 </div>
@@ -46,7 +46,7 @@
         {% from "components/recommendation_badge.html" import recommendation_badge with context %}
         {{ recommendation_badge(row.recommendation.confidence) }}
         {% else %}
-        <span class="text-xs text-gray-400 dark:text-gray-500">{{ t("compare.cell.not_in_results", locale) }}</span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">{{ t("compare.cell.not_in_results", locale) }}</span>
         {% endif %}
       </td>
       {% endfor %}
@@ -113,7 +113,7 @@
     </tr>
     <tr class="border-t border-gray-100 dark:border-gray-700">
       <td class="p-3 font-medium text-gray-500 dark:text-gray-400">{{ t("compare.row.issn", locale) }}</td>
-      {% for row in rows %}<td class="p-3 text-xs text-gray-400 dark:text-gray-500">{{ row.journal.issn_print or "—" }} / {{ row.journal.issn_online or "—" }}</td>{% endfor %}
+      {% for row in rows %}<td class="p-3 text-xs text-gray-500 dark:text-gray-400">{{ row.journal.issn_print or "—" }} / {{ row.journal.issn_online or "—" }}</td>{% endfor %}
     </tr>
   </tbody>
 </table>

@@ -23,7 +23,7 @@
 
     {% set alias_line = format_alias_line(journal.aliases) %}
     {% if alias_line %}
-    <p class="text-xs text-gray-400 dark:text-gray-500 italic mt-0.5">{{ alias_line }}</p>
+    <p class="text-xs text-gray-500 dark:text-gray-400 italic mt-0.5">{{ alias_line }}</p>
     {% endif %}
 
     <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
@@ -38,7 +38,7 @@
         Coverage is only meaningful for an inactive journal (#98) -- an
         active journal's coverage is just "ongoing", not information.
     #}
-    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ t("journal_card.scopus_coverage", locale, coverage=scopus_detail.coverage) }}</p>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t("journal_card.scopus_coverage", locale, coverage=scopus_detail.coverage) }}</p>
     {% endif %}
 
     {% if scopus_detail and scopus_detail.added_to_list %}
@@ -47,7 +47,7 @@
         relative one ("Recently indexed") -- #98 calls out relative
         wording by name as something that goes stale.
     #}
-    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ t("journal_card.indexed_since", locale, date=scopus_detail.added_to_list) }}</p>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t("journal_card.indexed_since", locale, date=scopus_detail.added_to_list) }}</p>
     {% endif %}
 
     {% set enrichment_badges = format_enrichment_badges(journal.enrichment) %}
@@ -58,7 +58,7 @@
         (docs/ENRICHMENT.md), not confirmed indexing sources, and
         should never look like they carry the same weight.
     #}
-    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
         {{ t("journal_card.also_listed_in", locale, badges=enrichment_badges | join(", ")) }}
     </p>
     {% endif %}
@@ -69,15 +69,15 @@
 
     <div class="grid grid-cols-3 gap-3 mt-3 text-sm">
         <div>
-            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t("journal_card.country", locale) }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">{{ t("journal_card.country", locale) }}</p>
             <p class="text-gray-800 dark:text-gray-200">{{ journal.country or "—" }}</p>
         </div>
         <div>
-            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t("journal_card.language", locale) }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">{{ t("journal_card.language", locale) }}</p>
             <p class="text-gray-800 dark:text-gray-200">{{ journal.languages or "—" }}</p>
         </div>
         <div>
-            <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t("journal_card.apc", locale) }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">{{ t("journal_card.apc", locale) }}</p>
             <p class="text-gray-800 dark:text-gray-200">
                 {% if journal.is_free %}{{ t("journal_card.free", locale) }}
                 {% elif journal.apc_amount is not none %}~${{ "%.0f"|format(journal.apc_amount) }}
@@ -126,7 +126,7 @@
             {% endif %}
 
             {% if journal.issn_print or journal.issn_online or journal.license %}
-            <p class="text-xs text-gray-400 dark:text-gray-500">
+            <p class="text-xs text-gray-500 dark:text-gray-400">
                 {% if journal.issn_print or journal.issn_online %}
                     {{ t("journal_card.issn", locale, print=journal.issn_print or "—", online=journal.issn_online or "—") }}
                 {% endif %}
