@@ -11,10 +11,11 @@ source, so it can succeed where OpenAlex has a gap.
 import requests
 
 from importers.enrichment.base import OnlineEnrichmentProvider
+from services.app_info import APP_VERSION, APP_GITHUB
 from utils.issn import normalize_issn
 
 REQUEST_TIMEOUT_SECONDS = 5
-USER_AGENT = "Scilene/0.2.5 (https://github.com/YasirM0/Scilene; mailto:none)"
+USER_AGENT = f"Scilene/{APP_VERSION} ({APP_GITHUB}; mailto:none)"
 
 
 class CrossrefProvider(OnlineEnrichmentProvider):

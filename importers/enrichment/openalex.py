@@ -16,10 +16,11 @@ user needs to see.
 import requests
 
 from importers.enrichment.base import OnlineEnrichmentProvider
+from services.app_info import APP_VERSION, APP_GITHUB
 from utils.issn import normalize_issn
 
 REQUEST_TIMEOUT_SECONDS = 5
-USER_AGENT = "Scilene/0.2.5 (https://github.com/YasirM0/Scilene; journal discovery platform)"
+USER_AGENT = f"Scilene/{APP_VERSION} ({APP_GITHUB}; journal discovery platform)"
 
 
 class OpenAlexProvider(OnlineEnrichmentProvider):
