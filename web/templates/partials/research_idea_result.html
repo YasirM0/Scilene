@@ -21,13 +21,13 @@
 
         <div class="flex items-center gap-4">
             <button type="submit"
-                class="px-4 py-2 text-sm font-medium rounded-md bg-navy-600 text-white hover:bg-navy-700"
+                class="px-4 py-2 text-sm font-medium rounded-md bg-navy-600 text-white hover:bg-navy-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition"
             >{{ t("research_idea_result.continue_button", locale) }}</button>
             <button type="button"
                 hx-get="/research-idea/form"
                 hx-target="#research-idea-body"
                 hx-swap="innerHTML"
-                class="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300"
+                class="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition-colors"
             >{{ t("research_idea_result.start_over_button", locale) }}</button>
         </div>
     </form>

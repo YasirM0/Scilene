@@ -11,12 +11,12 @@
     <div class="flex items-center justify-between gap-3 px-3 py-2 bg-navy-50 dark:bg-gray-900 rounded-md text-sm mb-3">
         <span class="text-navy-700 dark:text-navy-300">🔀 {{ t("compare_bar.selected_count", locale, selected=compare_ids|length, max=max_compare) }}</span>
         <div class="flex items-center gap-4">
-            <a href="/search/compare" class="font-medium text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500">{{ t("compare_bar.compare_now", locale) }}</a>
+            <a href="/search/compare" class="font-medium text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition-colors">{{ t("compare_bar.compare_now", locale) }}</a>
             <button type="button"
                 hx-post="/search/compare/clear"
                 hx-target="#compare-bar"
                 hx-swap="outerHTML"
-                class="text-gray-500 dark:text-gray-400 hover:text-red-600"
+                class="text-gray-500 dark:text-gray-400 hover:text-red-600 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition-colors"
             >{{ t("compare_bar.clear", locale) }}</button>
         </div>
     </div>

@@ -163,7 +163,7 @@
                 hx-target="#online-enrichment-{{ journal.id }}"
                 hx-swap="innerHTML"
                 hx-indicator="#online-enrichment-loading-{{ journal.id }}"
-                class="mt-2 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300"
+                class="mt-2 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition-colors"
             >
                 🌐 {{ t("journal_card.get_more_info", locale) }}
                 <span id="online-enrichment-loading-{{ journal.id }}" class="htmx-indicator">…</span>

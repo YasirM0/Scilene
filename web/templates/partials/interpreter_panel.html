@@ -41,14 +41,14 @@
             hx-include="[name=abstract]"
             hx-target="#interpreter-panel"
             hx-swap="innerHTML"
-            class="font-medium hover:text-yellow-900 dark:hover:text-yellow-100"
+            class="font-medium hover:text-yellow-900 dark:hover:text-yellow-100 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition-colors"
         >{{ t("interpreter.refresh_button", locale) }}</button>
         <button type="button"
             hx-post="/search/interpret/keep"
             hx-include="[name=abstract]"
             hx-target="#interpreter-panel"
             hx-swap="innerHTML"
-            class="font-medium hover:text-yellow-900 dark:hover:text-yellow-100"
+            class="font-medium hover:text-yellow-900 dark:hover:text-yellow-100 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition-colors"
         >{{ t("interpreter.keep_button", locale) }}</button>
     </div>
 </div>
@@ -89,13 +89,13 @@
             <input type="text" name="value" value="{{ tag.value }}" autofocus
                 class="flex-1 min-w-0 text-sm px-2 py-1 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
             <button type="submit"
-                class="text-xs font-medium text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 shrink-0"
+                class="text-xs font-medium text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition-colors"
             >{{ t("interpreter.save", locale) }}</button>
             <button type="button"
                 hx-post="/search/interpret/edit-cancel"
                 hx-target="#interpreter-panel"
                 hx-swap="innerHTML"
-                class="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-red-600 shrink-0"
+                class="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-red-600 shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition-colors"
             >{{ t("interpreter.cancel", locale) }}</button>
         </form>
         {% else %}
@@ -110,21 +110,21 @@
                     hx-target="#interpreter-panel"
                     hx-swap="innerHTML"
                     aria-label="{{ t('interpreter.accept_aria', locale, value=tag.value) }}"
-                    class="text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500"
+                    class="text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition-colors"
                 >✓</button>
                 <button type="button"
                     hx-post="/search/interpret/suggest-another/{{ tag.category }}"
                     hx-target="#interpreter-panel"
                     hx-swap="innerHTML"
                     aria-label="{{ t('interpreter.suggest_another_aria', locale, label=tag_label) }}"
-                    class="text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300"
+                    class="text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition-colors"
                 >↻</button>
                 <button type="button"
                     hx-post="/search/interpret/edit-start/{{ tag.category }}"
                     hx-target="#interpreter-panel"
                     hx-swap="innerHTML"
                     aria-label="{{ t('interpreter.edit_aria', locale, label=tag_label) }}"
-                    class="text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300"
+                    class="text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition-colors"
                 >✏</button>
                 {% if tag.cycled %}
                 <button type="button"
@@ -132,7 +132,7 @@
                     hx-target="#interpreter-panel"
                     hx-swap="innerHTML"
                     aria-label="{{ t('interpreter.remove_aria', locale, label=tag_label) }}"
-                    class="text-gray-500 dark:text-gray-400 hover:text-red-600"
+                    class="text-gray-500 dark:text-gray-400 hover:text-red-600 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition-colors"
                 >&times;</button>
                 {% endif %}
             </div>

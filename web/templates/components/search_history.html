@@ -20,7 +20,7 @@
                 hx-post="/search/history/{{ loop.index0 }}/rerun"
                 hx-target="#results-panel"
                 hx-swap="innerHTML"
-                class="shrink-0 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                class="shrink-0 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition"
             >
                 {{ t("search_history.rerun", locale) }}
             </button>

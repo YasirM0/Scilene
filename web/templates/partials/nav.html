@@ -67,14 +67,14 @@
             #}
             <details class="relative shrink-0">
                 <summary
-                    class="cursor-pointer list-none px-2 py-1.5 rounded-md text-xs sm:text-sm font-medium text-horizon-50 hover:text-white hover:bg-navy-700 transition-colors flex items-center gap-1"
+                    class="cursor-pointer list-none px-2 py-1.5 rounded-md text-xs sm:text-sm font-medium text-horizon-50 hover:text-white hover:bg-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors flex items-center gap-1"
                     aria-label="{{ t('nav.language', request.state.locale) }}"
                 >🌐 <span class="uppercase">{{ request.state.locale }}</span></summary>
                 <div class="absolute {% if supported_locales[request.state.locale].dir == 'rtl' %}left-0{% else %}right-0{% endif %} mt-1 py-1 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-lg min-w-[8rem] z-20">
                     {% for code, meta in supported_locales.items() %}
                     <form method="post" action="/locale/{{ code }}">
                         <button type="submit"
-                            class="w-full text-left px-3 py-1.5 text-sm whitespace-nowrap {% if request.state.locale == code %}font-semibold text-navy-600 dark:text-navy-300{% else %}text-gray-600 dark:text-gray-300{% endif %} hover:bg-gray-50 dark:hover:bg-gray-700"
+                            class="w-full text-left px-3 py-1.5 text-sm whitespace-nowrap {% if request.state.locale == code %}font-semibold text-navy-600 dark:text-navy-300{% else %}text-gray-600 dark:text-gray-300{% endif %} hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 focus-visible:ring-inset transition-colors"
                         >{{ meta.label }}</button>
                     </form>
                     {% endfor %}
@@ -95,7 +95,7 @@
                 id="theme-toggle"
                 type="button"
                 aria-label="{{ t('nav.theme_toggle_aria', request.state.locale) }}"
-                class="px-2 py-1.5 rounded-md text-sm text-horizon-50 hover:text-white hover:bg-navy-700 transition-colors shrink-0"
+                class="px-2 py-1.5 rounded-md text-sm text-horizon-50 hover:text-white hover:bg-navy-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition shrink-0"
             >
                 <span class="dark:hidden" aria-hidden="true">🌙</span>
                 <span class="hidden dark:inline" aria-hidden="true">☀️</span>

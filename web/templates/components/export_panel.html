@@ -14,18 +14,18 @@
         {{ t("export.helper", locale) }}
     </p>
     <div class="flex flex-wrap gap-2 items-start">
-        <a href="/search/export/pdf" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">📄 {{ t("export.pdf", locale) }}</a>
-        <a href="/search/export/docx" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">📝 {{ t("export.docx", locale) }}</a>
-        <a href="/search/export/md" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">📋 {{ t("export.markdown", locale) }}</a>
+        <a href="/search/export/pdf" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition">📄 {{ t("export.pdf", locale) }}</a>
+        <a href="/search/export/docx" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition">📝 {{ t("export.docx", locale) }}</a>
+        <a href="/search/export/md" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition">📋 {{ t("export.markdown", locale) }}</a>
         <details class="group">
             <summary class="cursor-pointer list-none flex items-center gap-1 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
                 {{ t("export.more", locale) }}
                 <span class="transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
             </summary>
             <div class="mt-2 flex flex-wrap gap-2">
-                <a href="/search/export/xlsx" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">📊 {{ t("export.xlsx", locale) }}</a>
-                <a href="/search/export/csv" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">📥 {{ t("export.csv", locale) }}</a>
-                <a href="/search/export/sls" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800" title="{{ t('export.save_session_title', locale) }}">💾 {{ t("export.save_session", locale) }}</a>
+                <a href="/search/export/xlsx" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition">📊 {{ t("export.xlsx", locale) }}</a>
+                <a href="/search/export/csv" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition">📥 {{ t("export.csv", locale) }}</a>
+                <a href="/search/export/sls" class="text-center px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition" title="{{ t('export.save_session_title', locale) }}">💾 {{ t("export.save_session", locale) }}</a>
             </div>
         </details>
     </div>

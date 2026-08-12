@@ -22,7 +22,7 @@
             hx-target="#confirmed-tags"
             hx-swap="outerHTML"
             aria-label="{{ t('confirmed_tags.remove_aria', locale, value=tag.value) }}"
-            class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-100"
+            class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition-colors"
         >&times;</button>
     </span>
     {% endfor %}
