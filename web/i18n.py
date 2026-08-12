@@ -481,7 +481,8 @@ _STRINGS = {
     "filter_option.Arabic": {"en": "Arabic", "ar": "العربية", "id": "Arab"},
     "filter_option.Indonesian": {"en": "Indonesian", "ar": "الإندونيسية", "id": "Indonesia"},
 
-    "multi_select.selected_count": {"en": "{selected}/{total} selected", "ar": "{selected}/{total} محدد", "id": "{selected}/{total} dipilih"},
+    "multi_select.placeholder": {"en": "Select...", "ar": "اختر...", "id": "Pilih..."},
+    "multi_select.remove_aria": {"en": "Remove {value}", "ar": "إزالة {value}", "id": "Hapus {value}"},
 
     "language_filter.label": {"en": "Journal Languages", "ar": "لغات المجلة", "id": "Bahasa Jurnal"},
     "language_filter.detected_hint": {

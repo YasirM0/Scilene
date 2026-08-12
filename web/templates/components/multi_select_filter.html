@@ -1,47 +1,45 @@
 {% macro multi_select_filter(name, label, options, selected=[]) %}
 {% set locale = request.state.locale %}
 {#
-    #135 -- compact multi-select: a closed-by-default dropdown (native
-    <details>, no JS) instead of a checkbox panel always taking up
-    full vertical space, with selections shown as removable chips.
+    #142 -- a real compact multi-select (Streamlit st.multiselect
+    equivalent): one bordered control showing selected values as
+    removable chips, click it to open a dropdown of the remaining
+    options, click anywhere outside to close. Needs
+    web/static/js/multiselect.js (see that file's header comment for
+    why native <details>/<summary> couldn't do this) -- the underlying
+    checkboxes are still the real form state and HTMX live-filter
+    trigger, unchanged from before.
 
-    The "remove" click works with zero JS via a real HTML mechanism,
-    not a trick: each option's checkbox gets a unique id, and BOTH the
-    dropdown row's own label AND the chip are separate <label for="id">
-    elements pointing at that same checkbox -- clicking either one
-    toggles it, which is exactly what a <label>/<input> pair already
-    does natively. The chip is not a duplicate input, just a second
-    label for the one real checkbox.
+    One chip per OPTION is always rendered (hidden unless that option
+    starts selected), rather than only rendering chips for currently-
+    selected options -- multiselect.js only ever toggles a chip's
+    `hidden` attribute to track its checkbox, it never generates chip
+    markup, so a translated label/aria-label is never duplicated in JS.
 #}
-<div class="border border-gray-200 dark:border-gray-700 rounded-md p-3">
+<div data-multiselect class="relative">
     <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ label }}</p>
 
-    {% if selected %}
-    <div class="flex flex-wrap gap-1.5 mb-2">
+    <div class="ms-control flex flex-wrap items-center gap-1.5 min-h-[2.25rem] px-2 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 cursor-pointer"
+        role="button" tabindex="0" aria-haspopup="true" aria-expanded="false"
+    >
         {% for option in options %}
-        {% if option in selected %}
-        <label for="{{ name }}-{{ loop.index }}"
-            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-navy-50 dark:bg-navy-700 text-navy-700 dark:text-navy-50 cursor-pointer hover:bg-navy-300 dark:hover:bg-navy-600"
-        >{{ option }} <span aria-hidden="true">&times;</span></label>
-        {% endif %}
+        <span class="ms-chip inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-navy-50 dark:bg-navy-700 text-navy-700 dark:text-navy-50" data-for="{{ name }}-{{ loop.index }}" {% if option not in selected %}hidden{% endif %}>
+            {{ option }}
+            <button type="button" class="ms-chip-remove hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 rounded" data-target="{{ name }}-{{ loop.index }}" aria-label="{{ t('multi_select.remove_aria', locale, value=option) }}">&times;</button>
+        </span>
+        {% endfor %}
+        <span class="ms-placeholder text-sm text-gray-400 dark:text-gray-500" {% if selected %}hidden{% endif %}>{{ t("multi_select.placeholder", locale) }}</span>
+        <span class="ms-chevron ml-auto text-gray-400 dark:text-gray-500 text-xs shrink-0" aria-hidden="true">▾</span>
+    </div>
+
+    <div class="ms-dropdown absolute left-0 z-20 mt-1 w-full max-h-40 overflow-y-auto py-1 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-lg" hidden>
+        {% for option in options %}
+        <label class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <input type="checkbox" id="{{ name }}-{{ loop.index }}" name="{{ name }}" value="{{ option }}" {% if option in selected %}checked{% endif %}
+                class="live-filter rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
+            {{ option }}
+        </label>
         {% endfor %}
     </div>
-    {% endif %}
-
-    <details class="group">
-        <summary class="cursor-pointer list-none flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300">
-            <span class="transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
-            {{ t("multi_select.selected_count", locale, selected=selected|length, total=options|length) }}
-        </summary>
-        <div class="mt-2 space-y-1 max-h-28 overflow-y-auto pr-2">
-            {% for option in options %}
-            <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                <input type="checkbox" id="{{ name }}-{{ loop.index }}" name="{{ name }}" value="{{ option }}" {% if option in selected %}checked{% endif %}
-                    class="live-filter rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
-                {{ option }}
-            </label>
-            {% endfor %}
-        </div>
-    </details>
 </div>
 {% endmacro %}

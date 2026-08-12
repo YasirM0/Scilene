@@ -91,6 +91,29 @@ navy nav bar is the one deliberate exception: it stays navy regardless
 of theme (see the brand table above — "Navigation bar" is an explicit
 navy use case, not something that should flip with the toggle).
 
+## JavaScript exceptions
+
+The app is server-rendered Jinja2 + HTMX with no custom JavaScript, by
+default. Two narrow, deliberate exceptions exist, both because the
+behavior they need is genuinely impossible in plain HTML/CSS, not
+because reaching for JS was easier:
+
+- **Dark-mode toggle** (`partials/nav.html`) — flips a `localStorage`-
+  backed preference, which is inherently client-local browser state,
+  not application data HTMX would ever need to know about.
+- **Compact multi-select filters** (`static/js/multiselect.js`, #142)
+  — chips-inside-a-collapsed-control with click-outside-to-close,
+  matching the Streamlit `st.multiselect` behavior this replaced.
+  Native `<details>/<summary>` (the original zero-JS attempt) has no
+  "click outside to close" behavior at all, and nesting a removable
+  chip inside a clickable `<summary>` makes removing a chip *also*
+  toggle the dropdown as an unwanted side effect. See that file's
+  header comment for the full reasoning.
+
+Any future addition to this list should meet the same bar: the
+behavior must be provably unavailable in HTML/CSS/HTMX alone, not
+merely more convenient to build in JS.
+
 ## Confidence tier colors
 
 `CONFIDENCE_COLORS` / `CONFIDENCE_STAR_COLORS` in `web/search_presentation.py`

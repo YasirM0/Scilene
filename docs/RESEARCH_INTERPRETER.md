@@ -70,10 +70,11 @@ services/research_interpreter.py  (placeholder suggestion logic)
 partials/interpreter_panel.html  (re-rendered, swapped back in)
 ```
 
-This is why there's no custom JS file for this feature (the one
-exception in the whole app is the dark-mode toggle, which is
-legitimately client-local browser state, not application data — see
-`docs/DESIGN_SYSTEM.md`). Two things worth calling out as pure-HTMX
+This is why there's no custom JS file for this feature (see
+`docs/DESIGN_SYSTEM.md`'s "JavaScript exceptions" note for the two
+narrow, deliberate exceptions that do exist elsewhere in the app, and
+why each was judged genuinely necessary rather than convenient). Two
+things worth calling out as pure-HTMX
 techniques rather than something needing hand-written JS:
 
 - **The "analyzing" delay** is `hx-trigger="load delay:900ms"` on the

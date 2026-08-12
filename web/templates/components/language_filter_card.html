@@ -2,7 +2,7 @@
 {% set locale = request.state.locale %}
 {#
     Multi-select (#89) -- was a single-select Any/English/Indonesian
-    dropdown before. The wrapping div's hx-trigger="change" catches
+    dropdown before. The dropdown's own hx-trigger="change" catches
     bubbled change events from ANY checkbox inside it (one listener,
     not one per checkbox) and clears the "detected" hint -- per the
     issue: "The hint should only appear while the language selection
@@ -11,42 +11,42 @@
     /search/interpret re-render this whole card (with the detected
     language pre-checked) as an out-of-band swap after abstract blur.
 
-    #135 -- same compact chip+dropdown visual pattern as
+    #142 -- same compact chip+dropdown control as
     components/multi_select_filter.html (kept as its own template
     rather than reusing that macro directly, since this card has
     extra behavior -- the hx-post wrapper and the detected-language
-    hint -- a plain multi-select doesn't need).
+    hint -- a plain multi-select doesn't need). Also relies on
+    web/static/js/multiselect.js's event delegation off `document`
+    specifically because THIS card is the one that gets replaced
+    wholesale by an OOB swap -- see that file's header comment.
 #}
-<div id="language-filter-card" {% if oob %}hx-swap-oob="true"{% endif %} class="border border-gray-200 dark:border-gray-700 rounded-md p-3">
+<div id="language-filter-card" {% if oob %}hx-swap-oob="true"{% endif %} data-multiselect class="relative">
     <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t("language_filter.label", locale) }}</p>
 
-    {% if selected_languages %}
-    <div class="flex flex-wrap gap-1.5 mb-2">
+    <div class="ms-control flex flex-wrap items-center gap-1.5 min-h-[2.25rem] px-2 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 cursor-pointer"
+        role="button" tabindex="0" aria-haspopup="true" aria-expanded="false"
+    >
         {% for option in language_options %}
-        {% if option in selected_languages %}
-        <label for="languages-{{ loop.index }}"
-            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-navy-50 dark:bg-navy-700 text-navy-700 dark:text-navy-50 cursor-pointer hover:bg-navy-300 dark:hover:bg-navy-600"
-        >{{ t("filter_option." ~ option, locale) }} <span aria-hidden="true">&times;</span></label>
-        {% endif %}
+        <span class="ms-chip inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-navy-50 dark:bg-navy-700 text-navy-700 dark:text-navy-50" data-for="languages-{{ loop.index }}" {% if option not in selected_languages %}hidden{% endif %}>
+            {{ t("filter_option." ~ option, locale) }}
+            <button type="button" class="ms-chip-remove hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 rounded" data-target="languages-{{ loop.index }}" aria-label="{{ t('multi_select.remove_aria', locale, value=t('filter_option.' ~ option, locale)) }}">&times;</button>
+        </span>
+        {% endfor %}
+        <span class="ms-placeholder text-sm text-gray-400 dark:text-gray-500" {% if selected_languages %}hidden{% endif %}>{{ t("multi_select.placeholder", locale) }}</span>
+        <span class="ms-chevron ml-auto text-gray-400 dark:text-gray-500 text-xs shrink-0" aria-hidden="true">▾</span>
+    </div>
+
+    <div hx-post="/search/language-filter/touch" hx-trigger="change" hx-target="#language-hint" hx-swap="innerHTML"
+        class="ms-dropdown absolute left-0 z-20 mt-1 w-full max-h-40 overflow-y-auto py-1 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-lg" hidden
+    >
+        {% for option in language_options %}
+        <label class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+            <input type="checkbox" id="languages-{{ loop.index }}" name="languages" value="{{ option }}" {% if option in selected_languages %}checked{% endif %}
+                class="live-filter rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
+            {{ t("filter_option." ~ option, locale) }}
+        </label>
         {% endfor %}
     </div>
-    {% endif %}
-
-    <details class="group">
-        <summary class="cursor-pointer list-none flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-navy-600 dark:hover:text-navy-300">
-            <span class="transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
-            {{ t("multi_select.selected_count", locale, selected=selected_languages|length, total=language_options|length) }}
-        </summary>
-        <div hx-post="/search/language-filter/touch" hx-trigger="change" hx-target="#language-hint" hx-swap="innerHTML" class="mt-2 space-y-1">
-            {% for option in language_options %}
-            <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                <input type="checkbox" id="languages-{{ loop.index }}" name="languages" value="{{ option }}" {% if option in selected_languages %}checked{% endif %}
-                    class="live-filter rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
-                {{ t("filter_option." ~ option, locale) }}
-            </label>
-            {% endfor %}
-        </div>
-    </details>
 
     <div id="language-hint" class="mt-1">
         {% if detected_language and not language_touched %}

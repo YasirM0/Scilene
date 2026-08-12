@@ -105,6 +105,13 @@
     </div>
 </nav>
 
+{#
+    One of two deliberate, narrow exceptions to this app's zero-
+    custom-JS architecture (see docs/DESIGN_SYSTEM.md's "JavaScript
+    exceptions" note) -- localStorage is inherently client-local
+    browser state, not application data HTMX would ever need to know
+    about.
+#}
 <script>
     document.getElementById("theme-toggle").addEventListener("click", function () {
         var isDark = document.documentElement.classList.toggle("dark");
