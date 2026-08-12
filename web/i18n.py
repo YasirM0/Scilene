@@ -96,21 +96,6 @@ _STRINGS = {
         "ar": "قاعدة بيانات المجلات",
         "id": "Basis Data Jurnal",
     },
-    "home.stat_total_journals": {
-        "en": "Total Journals",
-        "ar": "إجمالي المجلات",
-        "id": "Total Jurnal",
-    },
-    "home.sublabel_wos": {
-        "en": "{count} also indexed in Web of Science",
-        "ar": "{count} مفهرسة أيضًا في Web of Science",
-        "id": "{count} juga terindeks di Web of Science",
-    },
-    "home.sublabel_garuda": {
-        "en": "{count} also indexed in Garuda",
-        "ar": "{count} مفهرسة أيضًا في Garuda",
-        "id": "{count} juga terindeks di Garuda",
-    },
     "home.no_database": {
         "en": "Could not reach the database — see server logs.",
         "ar": "تعذّر الوصول إلى قاعدة البيانات — راجع سجلات الخادم.",
@@ -776,8 +761,8 @@ def t(key, locale, **kwargs):
     Looks up `key` for `locale`, falling back to DEFAULT_LOCALE (or
     the raw key itself if genuinely missing) rather than raising --
     a missing translation must never break a page render. `**kwargs`
-    fill a template's {placeholders}, e.g. t("home.sublabel_wos", "ar",
-    count="1,234").
+    fill a template's {placeholders}, e.g. t("search_results.hidden_matches",
+    "ar", count="12").
     """
     entry = _STRINGS.get(key)
     if not entry:

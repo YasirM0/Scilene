@@ -13,7 +13,7 @@
     does natively. The chip is not a duplicate input, just a second
     label for the one real checkbox.
 #}
-<div class="bg-gray-50 dark:bg-gray-900 rounded-md p-3">
+<div class="border border-gray-200 dark:border-gray-700 rounded-md p-3">
     <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ label }}</p>
 
     {% if selected %}
@@ -37,7 +37,7 @@
             {% for option in options %}
             <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                 <input type="checkbox" id="{{ name }}-{{ loop.index }}" name="{{ name }}" value="{{ option }}" {% if option in selected %}checked{% endif %}
-                    class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
+                    class="live-filter rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
                 {{ option }}
             </label>
             {% endfor %}

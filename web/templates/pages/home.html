@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% from "components/stat_card.html" import stat_card %}
 {% from "components/feature_card.html" import feature_card %}
 {% from "components/index_badge.html" import index_badge with context %}
 
@@ -49,23 +48,27 @@
 {% include "components/research_idea_modal.html" %}
 
 <section class="py-10 border-t border-gray-200 dark:border-gray-700">
-    <h2 class="text-center text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-6">
-        {{ t('home.section_journal_database', locale) }}
-    </h2>
     {% if stats %}
-    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
-        {{ stat_card("{:,}".format(stats.total_journals), t('home.stat_total_journals', locale)) }}
-        {{ stat_card("{:,}".format(stats.by_source.get("DOAJ", 0)), "DOAJ") }}
-        {{ stat_card(
-            "{:,}".format(stats.by_source.get("Scopus", 0)), "Scopus",
-            sublabel=t('home.sublabel_wos', locale, count="{:,}".format(stats.by_source.get("Web of Science", 0)))
-        ) }}
-        {{ stat_card("{:,}".format(stats.by_source.get("Web of Science", 0)), "Web of Science") }}
-        {{ stat_card(
-            "{:,}".format(stats.by_source.get("SINTA", 0)), "SINTA",
-            sublabel=t('home.sublabel_garuda', locale, count="{:,}".format(stats.by_enrichment.get("garuda", 0)))
-        ) }}
-    </div>
+    {#
+        #142 -- a single headline figure, not a row of cards. The old
+        layout showed Web of Science as its own stat_card right next
+        to Scopus, implying two independent, additive datasets, when
+        WoS is actually a tag on a SUBSET of Scopus journals (already
+        correctly disclosed as the Scopus card's sublabel below) --
+        having both in the same row undercut that disclosure the
+        moment someone glanced at the row rather than read the small
+        print. Per-source counts (DOAJ, Scopus, WoS-via-Scopus, SINTA,
+        plus the enrichment-only providers) now live in exactly ONE
+        place -- the "Supported Indexes & Coverage" section right
+        below -- instead of being repeated here AND there with no
+        stated relationship between the two.
+    #}
+    <p class="text-center text-5xl sm:text-6xl font-bold text-navy-600 dark:text-navy-300 tracking-tight">
+        {{ "{:,}".format(stats.total_journals) }}
+    </p>
+    <p class="text-center text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mt-2">
+        {{ t('home.section_journal_database', locale) }}
+    </p>
     {% else %}
     <p class="text-center text-sm text-gray-500 dark:text-gray-400">{{ t('home.no_database', locale) }}</p>
     {% endif %}
@@ -86,6 +89,12 @@
         still real information about a journal shown on its card. Both
         belong in an "at a glance" strip like this even though only the
         first four are indexing sources in the stricter sense.
+
+        This is now the ONLY place any of these per-source counts
+        appear -- see the comment on the section above for why that
+        matters (previously duplicated between here and the "Journal
+        Database" stat-card row, with no explanation of how the two
+        related).
     #}
     {% set index_items = [
         ("DOAJ", stats.by_source.get("DOAJ", 0)),

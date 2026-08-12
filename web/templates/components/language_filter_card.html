@@ -17,7 +17,7 @@
     extra behavior -- the hx-post wrapper and the detected-language
     hint -- a plain multi-select doesn't need).
 #}
-<div id="language-filter-card" {% if oob %}hx-swap-oob="true"{% endif %} class="bg-gray-50 dark:bg-gray-900 rounded-md p-3">
+<div id="language-filter-card" {% if oob %}hx-swap-oob="true"{% endif %} class="border border-gray-200 dark:border-gray-700 rounded-md p-3">
     <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t("language_filter.label", locale) }}</p>
 
     {% if selected_languages %}
@@ -41,7 +41,7 @@
             {% for option in language_options %}
             <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                 <input type="checkbox" id="languages-{{ loop.index }}" name="languages" value="{{ option }}" {% if option in selected_languages %}checked{% endif %}
-                    class="rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
+                    class="live-filter rounded border-gray-300 dark:border-gray-600 text-navy-600 focus:ring-horizon-500">
                 {{ t("filter_option." ~ option, locale) }}
             </label>
             {% endfor %}

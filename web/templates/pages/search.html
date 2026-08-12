@@ -35,7 +35,18 @@
     </p>
 </details>
 
-<form hx-post="/search" hx-target="#results-panel" hx-swap="innerHTML" class="space-y-4">
+{#
+    #142 -- "change from:.live-filter" makes the indexing/quartile/
+    SINTA/language checkboxes re-run the search immediately, on top of
+    the existing submit-button trigger, without needing hx-* attributes
+    repeated on every single checkbox. hx-sync="this:replace" cancels
+    an in-flight request if another filter changes before it resolves,
+    so rapidly toggling several boxes can't apply a stale response
+    after a newer one.
+#}
+<form hx-post="/search" hx-target="#results-panel" hx-swap="innerHTML"
+    hx-trigger="submit, change from:.live-filter" hx-sync="this:replace"
+    class="space-y-4">
 
     <div class="p-4 sm:p-5 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
         {% include "components/search_form.html" %}
