@@ -69,6 +69,15 @@ Used for:
 - SINTA ranking
 - Accreditation status
 
+Note: SINTA's own export lists a journal once per listing (observed:
+once per subject-area classification) rather than once per journal, so
+the raw row count is not the journal count -- `importers/sinta.py`
+deduplicates on SINTA's own `journal_id` column and reports both
+numbers (raw rows vs. distinct journals) in its import summary. If a
+future export's row count looks like it doesn't match what ends up in
+the database, check that printed summary first before assuming data
+went missing.
+
 ---
 
 ## DOAJ

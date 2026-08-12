@@ -67,8 +67,24 @@ def import_scimago(csv_path, source_label, index=None, conn=None):
     created = 0
     missing_issn = 0
     diamond_tagged = 0
+    duplicate_rows_skipped = 0
+
+    # Same defensive dedup as importers/sinta.py -- SCImago's own
+    # "Sourceid" is its stable per-journal identifier. Currently
+    # near-zero duplication in practice, but this keeps the import
+    # self-checking (see the assertion below) if a future export ever
+    # isn't as clean, instead of silently under- or over-counting with
+    # no visible signal.
+    seen_source_ids = set()
 
     for _, row in df.iterrows():
+
+        source_id = _clean(row.get("Sourceid"))
+        if source_id is not None:
+            if source_id in seen_source_ids:
+                duplicate_rows_skipped += 1
+                continue
+            seen_source_ids.add(source_id)
 
         issns = extract_issns(row.get("Issn"))
         title = _clean(row.get("Title"))
@@ -115,6 +131,7 @@ def import_scimago(csv_path, source_label, index=None, conn=None):
     summary = {
         "source": source_label,
         "rows": len(df),
+        "duplicate_rows_skipped": duplicate_rows_skipped,
         "matched_by_issn": matched_by_issn,
         "matched_by_title": matched_by_title,
         "created": created,
@@ -122,8 +139,16 @@ def import_scimago(csv_path, source_label, index=None, conn=None):
         "diamond_tagged": diamond_tagged,
     }
 
+    distinct_journals = matched_by_issn + matched_by_title + created
+    assert duplicate_rows_skipped + distinct_journals == len(df), (
+        f"{source_label} import row accounting doesn't add up: "
+        f"{duplicate_rows_skipped} duplicates + {distinct_journals} processed "
+        f"!= {len(df)} total rows"
+    )
+
     print(
-        f"{source_label}: {len(df)} rows | matched by ISSN: {matched_by_issn} | "
+        f"{source_label}: {len(df)} rows ({duplicate_rows_skipped} duplicate listings skipped -> "
+        f"{distinct_journals} distinct journals) | matched by ISSN: {matched_by_issn} | "
         f"matched by title: {matched_by_title} | new journals created: {created} | "
         f"rows with no usable ISSN: {missing_issn} | Diamond OA: {diamond_tagged}"
     )

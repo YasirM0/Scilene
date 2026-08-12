@@ -51,8 +51,30 @@ def import_sinta(csv_path, source_label="SINTA", index=None, conn=None):
     created = 0
     missing_issn = 0
     garuda_tagged = 0
+    duplicate_rows_skipped = 0
+
+    # SINTA's own export repeats a journal's row once per listing
+    # (observed: once per subject-area classification) rather than
+    # once per journal -- `journal_id` is SINTA's own stable
+    # identifier for the underlying journal, so seeing it twice in
+    # this file means the same journal, not two. Deduplicating on it
+    # explicitly (rather than relying on tag_source()'s upsert to
+    # silently absorb the repeat) keeps this import's own accounting
+    # honest: the assertion below only passes if every row is
+    # accounted for as either a skipped duplicate or a processed
+    # journal, so swapping in a differently-sized future export
+    # self-documents in the printed summary instead of silently
+    # changing the imported count with no visible signal.
+    seen_source_ids = set()
 
     for _, row in df.iterrows():
+
+        source_journal_id = _clean(row.get("journal_id"))
+        if source_journal_id is not None:
+            if source_journal_id in seen_source_ids:
+                duplicate_rows_skipped += 1
+                continue
+            seen_source_ids.add(source_journal_id)
 
         issns = [
             issn for issn in (
@@ -110,6 +132,7 @@ def import_sinta(csv_path, source_label="SINTA", index=None, conn=None):
     summary = {
         "source": source_label,
         "rows": len(df),
+        "duplicate_rows_skipped": duplicate_rows_skipped,
         "matched_by_issn": matched_by_issn,
         "matched_by_title": matched_by_title,
         "created": created,
@@ -117,8 +140,21 @@ def import_sinta(csv_path, source_label="SINTA", index=None, conn=None):
         "garuda_tagged": garuda_tagged,
     }
 
+    distinct_journals = matched_by_issn + matched_by_title + created
+    # Self-checking accounting: every row in the file must land in
+    # exactly one bucket. If this ever fails, something about the
+    # file's shape changed in a way this importer doesn't understand
+    # yet (e.g. a non-identical duplicate journal_id) -- fail loudly
+    # rather than silently import a number nobody can explain.
+    assert duplicate_rows_skipped + distinct_journals == len(df), (
+        f"{source_label} import row accounting doesn't add up: "
+        f"{duplicate_rows_skipped} duplicates + {distinct_journals} processed "
+        f"!= {len(df)} total rows"
+    )
+
     print(
-        f"{source_label}: {len(df)} rows | matched by ISSN: {matched_by_issn} | "
+        f"{source_label}: {len(df)} rows ({duplicate_rows_skipped} duplicate listings skipped -> "
+        f"{distinct_journals} distinct journals) | matched by ISSN: {matched_by_issn} | "
         f"matched by title: {matched_by_title} | new journals created: {created} | "
         f"rows with no usable ISSN: {missing_issn} | Garuda-indexed: {garuda_tagged}"
     )
