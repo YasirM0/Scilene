@@ -1,0 +1,25 @@
+{
+  "model": "BAAI/bge-small-en-v1.5",
+  "corpus_variant": "combined",
+  "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_sample_ids.json",
+  "parameter_count": 33360000,
+  "embedding_dim": 384,
+  "dataset_version": "20260808-133549",
+  "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+  "num_records_evaluated": 166,
+  "recommendation_engine_version": "0.4.5",
+  "timing": {
+    "load_seconds": 7.13,
+    "corpus_docs": 14000,
+    "corpus_encode_seconds": 322.92,
+    "corpus_docs_per_sec": 43.35,
+    "query_docs_per_sec": 12.98,
+    "torch_threads": 6
+  },
+  "metrics": {
+    "recall@5": 0.12650602409638553,
+    "recall@10": 0.16265060240963855,
+    "recall@20": 0.25903614457831325,
+    "mrr": 0.09852813561432869
+  }
+}

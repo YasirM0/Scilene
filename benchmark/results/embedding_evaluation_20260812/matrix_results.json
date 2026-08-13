@@ -1,0 +1,411 @@
+{
+  "stage1_results": [
+    {
+      "model": "nomic-ai/nomic-embed-text-v1.5",
+      "corpus_variant": "baseline",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_stage1_sample_ids.json",
+      "parameter_count": 136731648,
+      "embedding_dim": 768,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 10.42,
+        "corpus_docs": 2550,
+        "corpus_encode_seconds": 195.05,
+        "corpus_docs_per_sec": 13.07,
+        "query_docs_per_sec": 2.78,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.18072289156626506,
+        "recall@10": 0.25301204819277107,
+        "recall@20": 0.3373493975903614,
+        "mrr": 0.12670763965664933
+      },
+      "wall_seconds": 273.9,
+      "stage": 1
+    },
+    {
+      "model": "nomic-ai/nomic-embed-text-v1.5",
+      "corpus_variant": "openalex_topics",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_stage1_sample_ids.json",
+      "parameter_count": 136731648,
+      "embedding_dim": 768,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 9.83,
+        "corpus_docs": 2550,
+        "corpus_encode_seconds": 269.38,
+        "corpus_docs_per_sec": 9.47,
+        "query_docs_per_sec": 2.89,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.21686746987951808,
+        "recall@10": 0.27710843373493976,
+        "recall@20": 0.3313253012048193,
+        "mrr": 0.13837204645934922
+      },
+      "wall_seconds": 337.0,
+      "stage": 1
+    },
+    {
+      "model": "microsoft/harrier-oss-v1-270m",
+      "corpus_variant": "baseline",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_stage1_sample_ids.json",
+      "parameter_count": 268098176,
+      "embedding_dim": 640,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 17.9,
+        "corpus_docs": 2550,
+        "corpus_encode_seconds": 788.79,
+        "corpus_docs_per_sec": 3.23,
+        "query_docs_per_sec": 0.49,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.26506024096385544,
+        "recall@10": 0.3192771084337349,
+        "recall@20": 0.4036144578313253,
+        "mrr": 0.18823172467471022
+      },
+      "wall_seconds": 1145.3,
+      "stage": 1
+    },
+    {
+      "model": "microsoft/harrier-oss-v1-270m",
+      "corpus_variant": "openalex_topics",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_stage1_sample_ids.json",
+      "parameter_count": 268098176,
+      "embedding_dim": 640,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 13.56,
+        "corpus_docs": 2550,
+        "corpus_encode_seconds": 1222.23,
+        "corpus_docs_per_sec": 2.09,
+        "query_docs_per_sec": 0.49,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.21686746987951808,
+        "recall@10": 0.3253012048192771,
+        "recall@20": 0.4036144578313253,
+        "mrr": 0.16706091150447522
+      },
+      "wall_seconds": 1574.1,
+      "stage": 1
+    },
+    {
+      "model": "Snowflake/snowflake-arctic-embed-m-long",
+      "corpus_variant": "baseline",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_stage1_sample_ids.json",
+      "parameter_count": 136731648,
+      "embedding_dim": 768,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 17.84,
+        "corpus_docs": 2550,
+        "corpus_encode_seconds": 188.64,
+        "corpus_docs_per_sec": 13.52,
+        "query_docs_per_sec": 2.34,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.24096385542168675,
+        "recall@10": 0.3192771084337349,
+        "recall@20": 0.40963855421686746,
+        "mrr": 0.17671428733525418
+      },
+      "wall_seconds": 277.7,
+      "stage": 1
+    },
+    {
+      "model": "Snowflake/snowflake-arctic-embed-m-long",
+      "corpus_variant": "openalex_topics",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_stage1_sample_ids.json",
+      "parameter_count": 136731648,
+      "embedding_dim": 768,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 16.12,
+        "corpus_docs": 2550,
+        "corpus_encode_seconds": 279.25,
+        "corpus_docs_per_sec": 9.13,
+        "query_docs_per_sec": 2.4,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.25903614457831325,
+        "recall@10": 0.3192771084337349,
+        "recall@20": 0.40963855421686746,
+        "mrr": 0.18204069410473975
+      },
+      "wall_seconds": 365.0,
+      "stage": 1
+    },
+    {
+      "model": "codefuse-ai/F2LLM-v2-160M",
+      "corpus_variant": "baseline",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_stage1_sample_ids.json",
+      "parameter_count": 159185024,
+      "embedding_dim": 640,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 17.37,
+        "corpus_docs": 2550,
+        "corpus_encode_seconds": 528.97,
+        "corpus_docs_per_sec": 4.82,
+        "query_docs_per_sec": 0.81,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.22289156626506024,
+        "recall@10": 0.2891566265060241,
+        "recall@20": 0.35542168674698793,
+        "mrr": 0.14771727603052903
+      },
+      "wall_seconds": 752.0,
+      "stage": 1
+    },
+    {
+      "model": "codefuse-ai/F2LLM-v2-160M",
+      "corpus_variant": "openalex_topics",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_stage1_sample_ids.json",
+      "parameter_count": 159185024,
+      "embedding_dim": 640,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 15.05,
+        "corpus_docs": 2550,
+        "corpus_encode_seconds": 860.85,
+        "corpus_docs_per_sec": 2.96,
+        "query_docs_per_sec": 0.81,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.24096385542168675,
+        "recall@10": 0.3132530120481928,
+        "recall@20": 0.3795180722891566,
+        "mrr": 0.14696386989343646
+      },
+      "wall_seconds": 1080.7,
+      "stage": 1
+    },
+    {
+      "model": "codefuse-ai/F2LLM-v2-80M",
+      "corpus_variant": "baseline",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_stage1_sample_ids.json",
+      "parameter_count": 80084288,
+      "embedding_dim": 320,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 13.3,
+        "corpus_docs": 2550,
+        "corpus_encode_seconds": 295.01,
+        "corpus_docs_per_sec": 8.64,
+        "query_docs_per_sec": 1.45,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.13253012048192772,
+        "recall@10": 0.19879518072289157,
+        "recall@20": 0.2710843373493976,
+        "mrr": 0.1016974788704898
+      },
+      "wall_seconds": 422.8,
+      "stage": 1
+    },
+    {
+      "model": "codefuse-ai/F2LLM-v2-80M",
+      "corpus_variant": "openalex_topics",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_stage1_sample_ids.json",
+      "parameter_count": 80084288,
+      "embedding_dim": 320,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 14.61,
+        "corpus_docs": 2550,
+        "corpus_encode_seconds": 475.6,
+        "corpus_docs_per_sec": 5.36,
+        "query_docs_per_sec": 1.45,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.1566265060240964,
+        "recall@10": 0.19879518072289157,
+        "recall@20": 0.3072289156626506,
+        "mrr": 0.1143474215842637
+      },
+      "wall_seconds": 604.8,
+      "stage": 1
+    },
+    {
+      "model": "nomic-ai/nomic-embed-text-v2-moe",
+      "corpus_variant": "baseline",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_stage1_sample_ids.json",
+      "parameter_count": 475292928,
+      "embedding_dim": 768,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 29.37,
+        "corpus_docs": 2550,
+        "corpus_encode_seconds": 190.09,
+        "corpus_docs_per_sec": 13.41,
+        "query_docs_per_sec": 2.81,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.2289156626506024,
+        "recall@10": 0.30120481927710846,
+        "recall@20": 0.39156626506024095,
+        "mrr": 0.17790012766979457
+      },
+      "wall_seconds": 278.9,
+      "stage": 1
+    },
+    {
+      "model": "nomic-ai/nomic-embed-text-v2-moe",
+      "corpus_variant": "openalex_topics",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_stage1_sample_ids.json",
+      "parameter_count": 475292928,
+      "embedding_dim": 768,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 30.33,
+        "corpus_docs": 2550,
+        "corpus_encode_seconds": 307.07,
+        "corpus_docs_per_sec": 8.3,
+        "query_docs_per_sec": 2.94,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.26506024096385544,
+        "recall@10": 0.3373493975903614,
+        "recall@20": 0.43373493975903615,
+        "mrr": 0.18581302336967412
+      },
+      "wall_seconds": 395.0,
+      "stage": 1
+    }
+  ],
+  "stage2_results": [
+    {
+      "model": "nomic-ai/nomic-embed-text-v2-moe",
+      "corpus_variant": "openalex_topics",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_sample_ids.json",
+      "parameter_count": 475292928,
+      "embedding_dim": 768,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 28.53,
+        "corpus_docs": 14000,
+        "corpus_encode_seconds": 1776.54,
+        "corpus_docs_per_sec": 7.88,
+        "query_docs_per_sec": 2.83,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.14457831325301204,
+        "recall@10": 0.1746987951807229,
+        "recall@20": 0.22289156626506024,
+        "mrr": 0.09496837359075787
+      },
+      "wall_seconds": 1865.4,
+      "stage": 2
+    },
+    {
+      "model": "microsoft/harrier-oss-v1-270m",
+      "corpus_variant": "openalex_topics",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_sample_ids.json",
+      "parameter_count": 268098176,
+      "embedding_dim": 640,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 18.39,
+        "corpus_docs": 14000,
+        "corpus_encode_seconds": 7254.43,
+        "corpus_docs_per_sec": 1.93,
+        "query_docs_per_sec": 0.5,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.1144578313253012,
+        "recall@10": 0.16265060240963855,
+        "recall@20": 0.2289156626506024,
+        "mrr": 0.07829663580810584
+      },
+      "wall_seconds": 7604.7,
+      "stage": 2
+    },
+    {
+      "model": "microsoft/harrier-oss-v1-270m",
+      "corpus_variant": "baseline",
+      "sample_file": "/tmp/claude-1000/-var-home-yasirm0-journal-intelligence/3dbd5e89-3273-4b5e-90ac-3d063142f62a/scratchpad/embedding_matrix/embedding_sample_ids.json",
+      "parameter_count": 268098176,
+      "embedding_dim": 640,
+      "dataset_version": "20260808-133549",
+      "dataset_path": "benchmark/datasets/dataset_20260808_133453.json",
+      "num_records_evaluated": 166,
+      "recommendation_engine_version": "0.4.5",
+      "timing": {
+        "load_seconds": 19.71,
+        "corpus_docs": 14000,
+        "corpus_encode_seconds": 4198.34,
+        "corpus_docs_per_sec": 3.33,
+        "query_docs_per_sec": 0.46,
+        "torch_threads": 6
+      },
+      "metrics": {
+        "recall@5": 0.13855421686746988,
+        "recall@10": 0.1927710843373494,
+        "recall@20": 0.24096385542168675,
+        "mrr": 0.08951605033284693
+      },
+      "wall_seconds": 4582.0,
+      "stage": 2
+    }
+  ]
+}
