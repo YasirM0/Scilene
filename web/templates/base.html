@@ -7,9 +7,19 @@
 
     <link rel="icon" type="image/png" href="{{ url_for('static', path='img/scilene-logo.png') }}">
 
-    <link rel="stylesheet" href="{{ url_for('static', path='css/output.css') }}">
-    <script src="{{ url_for('static', path='js/htmx.min.js') }}" defer></script>
-    <script src="{{ url_for('static', path='js/multiselect.js') }}" defer></script>
+    {#
+        ?v=<mtime> cache-busts these automatically whenever a file
+        actually changes (web/static_versioning.py) -- a real bug
+        report once turned out to be a browser serving a stale cached
+        copy of multiselect.js from before a fix landed, because the
+        URL never changed to signal that. Tied to each file's own
+        last-modified time rather than APP_VERSION, so it's correct
+        even if a future edit forgets to bump the app version -- no
+        discipline required, every browser gets it right automatically.
+    #}
+    <link rel="stylesheet" href="{{ url_for('static', path='css/output.css') }}?v={{ static_version('css/output.css') }}">
+    <script src="{{ url_for('static', path='js/htmx.min.js') }}?v={{ static_version('js/htmx.min.js') }}" defer></script>
+    <script src="{{ url_for('static', path='js/multiselect.js') }}?v={{ static_version('js/multiselect.js') }}" defer></script>
 
     <script>
         // Dark is the default appearance (v0.2.5 Issue 4); light is an

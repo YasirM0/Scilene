@@ -61,6 +61,25 @@ async def resolve_locale(request: Request, call_next):
     return await call_next(request)
 
 
+@app.middleware("http")
+async def cache_versioned_static(request: Request, call_next):
+    """
+    Every /static/* URL is now requested with a ?v=<mtime> query string
+    (base.html, web/static_versioning.py) that only ever changes when
+    the underlying file actually does -- safe, then, to tell every
+    browser to cache it as aggressively as possible ("immutable": never
+    revalidate for the lifetime of this exact URL) rather than relying
+    on each browser's own heuristics for an unmarked response, which is
+    what let a stale copy of multiselect.js mislead a real bug report.
+    Faster repeat visits for everyone as a side effect, but the reason
+    this exists is correctness, not performance.
+    """
+    response = await call_next(request)
+    if request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    return response
+
+
 app.mount(
     "/static",
     StaticFiles(directory=Path(__file__).resolve().parent / "static"),
