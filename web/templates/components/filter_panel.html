@@ -61,17 +61,18 @@
                 (components/multi_select_filter.html); the language
                 filter keeps its own card since it has extra behavior
                 (detected-language hint, the "touch" tracker) a plain
-                multi-select doesn't need.
+                multi-select doesn't need. #143 -- selections and the
+                quartile/SINTA show-hide gating are locale-aware smart
+                defaults now, computed in web/routers/search.py
+                (_filter_context) -- see index_quality_language_filters.html.
             #}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {% from "components/multi_select_filter.html" import multi_select_filter with context %}
-                {{ multi_select_filter("indexing", t("filter.preferred_indexing", locale), indexing_options, selected=["DOAJ"]) }}
-                {{ multi_select_filter("quartiles", t("filter.quartile", locale), quartile_options) }}
-                {{ multi_select_filter("sinta_levels", t("filter.sinta_level", locale), sinta_level_options) }}
-
-                {% from "components/language_filter_card.html" import language_filter_card with context %}
-                {{ language_filter_card(language_options, selected_languages, detected_language, language_touched) }}
-            </div>
+            {% from "components/index_quality_language_filters.html" import index_quality_language_filters with context %}
+            {{ index_quality_language_filters(
+                indexing_options, selected_indexing,
+                quartile_options, sinta_level_options, selected_sinta_levels,
+                show_quartile_filter, show_sinta_filter,
+                language_options, selected_languages, detected_language, language_touched
+            ) }}
         </div>
 
     </div>

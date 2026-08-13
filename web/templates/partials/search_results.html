@@ -116,11 +116,30 @@
 {#
     Only set by /search/clear -- an out-of-band swap so "Clear Search"
     also visibly clears the confirmed-tags/interpreter panel, which
-    live in the form above #results-panel, not in this fragment.
+    live in the form above #results-panel, not in this fragment. #143
+    -- indexing/quartile/SINTA/language all reset to the locale's
+    smart defaults (not an empty "Any" state) via one OOB swap of the
+    whole group, same values web/routers/search.py's clear_search
+    already computed for this same response's top-level context.
 #}
 {% from "components/confirmed_tags.html" import confirmed_tags with context %}
 {{ confirmed_tags([], oob=True) }}
+{% if mode != "idea" %}
+{#
+    Idea mode never renders #interpreter-panel in the first place (no
+    abstract field to drive it -- see search_form.html) -- OOB-swapping
+    an id that doesn't exist on the page raises HTMX's own
+    htmx:oobErrorNoTarget console error, so this only fires in
+    manuscript mode, where the target genuinely exists.
+#}
 <div id="interpreter-panel" hx-swap-oob="true"></div>
-{% from "components/language_filter_card.html" import language_filter_card with context %}
-{{ language_filter_card(language_options, [], none, false, oob=True) }}
+{% endif %}
+{% from "components/index_quality_language_filters.html" import index_quality_language_filters with context %}
+{{ index_quality_language_filters(
+    indexing_options, selected_indexing,
+    quartile_options, sinta_level_options, selected_sinta_levels,
+    show_quartile_filter, show_sinta_filter,
+    language_options, selected_languages, detected_language, language_touched,
+    oob=True
+) }}
 {% endif %}

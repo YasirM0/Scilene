@@ -26,6 +26,7 @@ from web.confirmed_tags import add_confirmed_tag, confirmed_tag_values
 from web.dependencies import get_session_state, attach_session_cookie
 from web.i18n import t
 from web.interpreter_presentation import current_suggestions_context
+from web.filter_defaults import default_indexing, default_sinta_levels
 from web.language_presentation import language_form_context
 from web.search_cache import cached_search
 from web.session_store import MAX_HISTORY_ENTRIES
@@ -36,6 +37,7 @@ from web.search_presentation import (
     QUARTILE_OPTIONS,
     SINTA_LEVEL_OPTIONS,
     LANGUAGE_OPTIONS,
+    MIN_FALLBACK_TAGS,
     REVIEW_TIME_BANDS,
     budget_to_range,
     filter_visible_results,
@@ -65,14 +67,30 @@ def _render(request, name, context, session):
     return attach_session_cookie(response, session)
 
 
-def _filter_context():
-    """Static option lists the form/filter templates need — same on every render."""
+def _filter_context(locale):
+    """
+    Static option lists the form/filter templates need, plus the
+    locale-aware smart defaults (#143) for a FRESH render -- initial
+    page load or Clear Search, the only two places selections aren't
+    just whatever's already sitting in the DOM. `show_quartile_filter`
+    / `show_sinta_filter` mirror multiselect.js's own client-side
+    syncIndexGatedFilters() gating for the very first paint (before
+    any JS has run), so the two never disagree about whether a
+    Scopus/WoS-only or SINTA-only reader sees a filter that can't
+    possibly apply to anything they picked.
+    """
+    selected_indexing = default_indexing(locale)
+    selected_sinta_levels = default_sinta_levels(locale) if "SINTA" in selected_indexing else []
     return {
         "strategy_labels": list(STRATEGY_LABELS.keys()),
         "budget_options": BUDGET_OPTIONS,
         "indexing_options": INDEXING_OPTIONS,
+        "selected_indexing": selected_indexing,
         "quartile_options": QUARTILE_OPTIONS,
         "sinta_level_options": SINTA_LEVEL_OPTIONS,
+        "selected_sinta_levels": selected_sinta_levels,
+        "show_quartile_filter": any(v in selected_indexing for v in ("Scopus", "Web of Science")),
+        "show_sinta_filter": "SINTA" in selected_indexing,
         "language_options": LANGUAGE_OPTIONS,
         "review_time_options": list(REVIEW_TIME_BANDS.keys()),
     }
@@ -231,12 +249,28 @@ def _execute_search(session, abstract, concepts, strategy_label, resolved_langua
 
 
 @router.get("")
-def search_page(request: Request, session=Depends(get_session_state)):
+def search_page(request: Request, mode: str = "manuscript", session=Depends(get_session_state)):
+    """
+    `mode` (#143) is a pure GET-time presentation flag, not session
+    state -- it only decides whether search_form.html shows the
+    abstract field or skips straight to tag entry (the homepage's two
+    entry buttons set it: "I have a manuscript" -> default/omitted,
+    "I only have a research idea" -> ?mode=idea, same for the Research
+    Idea modal's "Continue to Search" redirect in
+    web/routers/research_idea.py). run_search() below doesn't care
+    which mode the page was in -- it just processes whatever fields
+    are actually present in the submitted form.
+    """
+    if mode not in ("manuscript", "idea"):
+        mode = "manuscript"
+    session["search_mode"] = mode
     context = {
-        **_filter_context(),
+        **_filter_context(request.state.locale),
         **_results_context(session),
         **_interpreter_form_context(session),
-        **language_form_context(session),
+        **language_form_context(session, request.state.locale),
+        "mode": mode,
+        "min_tags": MIN_FALLBACK_TAGS,
     }
     return _render(request, "pages/search.html", context, session)
 
@@ -246,7 +280,6 @@ def run_search(
     request: Request,
     session=Depends(get_session_state),
     abstract: str = Form(""),
-    fallback_tags: str = Form(""),
     strategy_label: str = Form(...),
     languages: list[str] = Form([]),
     budget_choice: str = Form("Any"),
@@ -258,19 +291,23 @@ def run_search(
     abstract = abstract.strip()
 
     # Confirmed concepts (accepted Research Interpreter suggestions +
-    # anything manually added) and the "no abstract" fallback tags feed
-    # the SAME recommender `keywords` list -- the UI doesn't distinguish
-    # between them once confirmed (docs/RESEARCH_INTERPRETER.md).
-    confirmed_values = confirmed_tag_values(session)
-    parsed_fallback = [t.strip() for t in fallback_tags.replace(";", ",").split(",") if t.strip()]
-    concepts = confirmed_values + [t for t in parsed_fallback if t not in confirmed_values]
+    # anything manually added via the Search Concepts tag builder) are
+    # the recommender's `keywords` list -- one mechanism regardless of
+    # whether the page is in manuscript or idea mode (#143 folded the
+    # old separate "10-tag fallback textarea" into this same tag
+    # builder rather than keeping two ways to add a tag on one page;
+    # see docs/RESEARCH_INTERPRETER.md).
+    concepts = confirmed_tag_values(session)
 
-    if not abstract and len(concepts) < 10:
+    if not abstract and len(concepts) < MIN_FALLBACK_TAGS:
         context = {
-            **_filter_context(),
+            **_filter_context(request.state.locale),
             **_results_context(session),
             **_interpreter_form_context(session),
-            "warning": t("warning.abstract_or_tags_required", request.state.locale, count=len(concepts)),
+            "warning": t(
+                "warning.abstract_or_tags_required", request.state.locale,
+                count=len(concepts), min=MIN_FALLBACK_TAGS,
+            ),
         }
         return _render(request, "partials/search_results.html", context, session)
 
@@ -285,7 +322,7 @@ def run_search(
         session["search_meta"] = None
 
         context = {
-            **_filter_context(),
+            **_filter_context(request.state.locale),
             **_results_context(session),
             **_interpreter_form_context(session),
             "warning": t("warning.no_index_selected", request.state.locale),
@@ -303,7 +340,7 @@ def run_search(
         sinta_levels, max_review_weeks, resolved_strategy,
     )
 
-    context = {**_filter_context(), **_results_context(session)}
+    context = {**_filter_context(request.state.locale), **_results_context(session)}
     if not results:
         context["warning"] = t("warning.no_results", request.state.locale)
 
@@ -333,7 +370,7 @@ def refine_with_disciplines(
     params = session.get("last_search_params")
     if not params:
         # Nothing to refine -- no search has run yet this session.
-        context = {**_filter_context(), **_results_context(session)}
+        context = {**_filter_context(request.state.locale), **_results_context(session)}
         return _render(request, "partials/search_results.html", context, session)
 
     for discipline in disciplines:
@@ -351,7 +388,7 @@ def refine_with_disciplines(
         params["sinta_levels"], params["max_review_weeks"], params["resolved_strategy"],
     )
 
-    context = {**_filter_context(), **_results_context(session)}
+    context = {**_filter_context(request.state.locale), **_results_context(session)}
     if not results:
         context["warning"] = t("warning.no_results", request.state.locale)
 
@@ -362,7 +399,7 @@ def refine_with_disciplines(
 def refine_results(request: Request, session=Depends(get_session_state), page: int = 1, show_weaker: str | None = None):
     session["show_weaker"] = show_weaker is not None
     session["page"] = page
-    context = {**_filter_context(), **_results_context(session)}
+    context = {**_filter_context(request.state.locale), **_results_context(session)}
     return _render(request, "partials/search_results.html", context, session)
 
 
@@ -375,7 +412,7 @@ def rerun_history(request: Request, index: int, session=Depends(get_session_stat
         session["show_weaker"] = False
         session["page"] = 1
 
-    context = {**_filter_context(), **_results_context(session)}
+    context = {**_filter_context(request.state.locale), **_results_context(session)}
     return _render(request, "partials/search_results.html", context, session)
 
 
@@ -398,9 +435,10 @@ def clear_search(request: Request, session=Depends(get_session_state)):
     session["language_touched"] = False
 
     context = {
-        **_filter_context(),
+        **_filter_context(request.state.locale),
         **_results_context(session),
-        **language_form_context(session),
+        **language_form_context(session, request.state.locale),
+        "mode": session.get("search_mode", "manuscript"),
         "reset_form": True,
     }
     return _render(request, "partials/search_results.html", context, session)
@@ -477,7 +515,7 @@ def import_sls(request: Request, file: UploadFile = File(...), session=Depends(g
     raw = file.file.read()
 
     try:
-        search = parse_sls_import(raw)
+        search = parse_sls_import(raw, MIN_FALLBACK_TAGS)
     except InvalidSlsFile as exc:
         # InvalidSlsFile's message is a fixed, known English string
         # from services/sls_format.py (framework-agnostic, no i18n of
@@ -488,7 +526,7 @@ def import_sls(request: Request, file: UploadFile = File(...), session=Depends(g
         translated = t(error_key, request.state.locale)
         error_text = str(exc) if translated == error_key else translated
         context = {
-            **_filter_context(),
+            **_filter_context(request.state.locale),
             **_results_context(session),
             "warning": t("warning.sls_load_error", request.state.locale, error=error_text),
         }
@@ -497,7 +535,7 @@ def import_sls(request: Request, file: UploadFile = File(...), session=Depends(g
     indexing = search.get("indexing") or []
     if not indexing:
         context = {
-            **_filter_context(),
+            **_filter_context(request.state.locale),
             **_results_context(session),
             "warning": t("warning.sls_no_index", request.state.locale),
         }
@@ -529,9 +567,9 @@ def import_sls(request: Request, file: UploadFile = File(...), session=Depends(g
     )
 
     context = {
-        **_filter_context(),
+        **_filter_context(request.state.locale),
         **_results_context(session),
         **_interpreter_form_context(session),
-        **language_form_context(session),
+        **language_form_context(session, request.state.locale),
     }
     return _render(request, "partials/search_results.html", context, session)

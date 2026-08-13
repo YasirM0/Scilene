@@ -72,14 +72,14 @@ _STRINGS = {
         "id": "untuk naskah Anda",
     },
     "home.hero_description_with_stats": {
-        "en": "{app_name} matches your manuscript's title, abstract, and keywords against {count} journals across DOAJ, Scopus, Web of Science, and SINTA — with a plain-language explanation for every recommendation.",
-        "ar": "يقارن {app_name} عنوان مخطوطتك وملخصها وكلماتها المفتاحية بأكثر من {count} مجلة عبر DOAJ وScopus وWeb of Science وSINTA — مع شرح مبسّط لكل توصية.",
-        "id": "{app_name} mencocokkan judul, abstrak, dan kata kunci naskah Anda dengan {count} jurnal dari DOAJ, Scopus, Web of Science, dan SINTA — disertai penjelasan yang mudah dipahami untuk setiap rekomendasi.",
+        "en": "{app_name} matches your abstract or a few descriptive tags against {count} journals across DOAJ, Scopus, Web of Science, and SINTA — with a plain-language explanation for every recommendation.",
+        "ar": "يقارن {app_name} ملخصك أو بضعة وسوم وصفية بأكثر من {count} مجلة عبر DOAJ وScopus وWeb of Science وSINTA — مع شرح مبسّط لكل توصية.",
+        "id": "{app_name} mencocokkan abstrak atau beberapa tag deskriptif Anda dengan {count} jurnal dari DOAJ, Scopus, Web of Science, dan SINTA — disertai penjelasan yang mudah dipahami untuk setiap rekomendasi.",
     },
     "home.hero_description_no_stats": {
-        "en": "{app_name} matches your manuscript against journals from DOAJ, Scopus, Web of Science, and SINTA — with a plain-language explanation for every recommendation.",
-        "ar": "يقارن {app_name} مخطوطتك بمجلات من DOAJ وScopus وWeb of Science وSINTA — مع شرح مبسّط لكل توصية.",
-        "id": "{app_name} mencocokkan naskah Anda dengan jurnal dari DOAJ, Scopus, Web of Science, dan SINTA — disertai penjelasan yang mudah dipahami untuk setiap rekomendasi.",
+        "en": "{app_name} matches your abstract or a few descriptive tags against journals from DOAJ, Scopus, Web of Science, and SINTA — with a plain-language explanation for every recommendation.",
+        "ar": "يقارن {app_name} ملخصك أو بضعة وسوم وصفية بمجلات من DOAJ وScopus وWeb of Science وSINTA — مع شرح مبسّط لكل توصية.",
+        "id": "{app_name} mencocokkan abstrak atau beberapa tag deskriptif Anda dengan jurnal dari DOAJ, Scopus, Web of Science, dan SINTA — disertai penjelasan yang mudah dipahami untuk setiap rekomendasi.",
     },
     "home.cta_manuscript": {
         "en": "I have a manuscript",
@@ -87,9 +87,9 @@ _STRINGS = {
         "id": "Saya punya naskah",
     },
     "home.cta_idea": {
-        "en": "I have a research idea",
-        "ar": "لدي فكرة بحثية",
-        "id": "Saya punya ide penelitian",
+        "en": "I only have a research idea",
+        "ar": "لدي فكرة بحثية فقط",
+        "id": "Saya hanya punya ide penelitian",
     },
     "home.section_journal_database": {
         "en": "Journal Database",
@@ -432,22 +432,12 @@ _STRINGS = {
         "ar": "سيقترح Scilene مجال دراسة وتركيزاً بحثياً رئيسياً بناءً على ملخصك.",
         "id": "Scilene akan menyarankan bidang studi dan fokus riset utama dari abstrak Anda.",
     },
-    "search_form.fallback_summary": {
-        "en": "Don't have an abstract? Add at least 10 descriptive tags instead",
-        "ar": "ليس لديك ملخص؟ أضف بدلاً منه 10 وسوم وصفية على الأقل",
-        "id": "Tidak punya abstrak? Tambahkan setidaknya 10 tag deskriptif sebagai gantinya",
-    },
-    "search_form.fallback_placeholder": {
-        "en": "digital governance, e-government, Indonesia, public administration, ...",
-        "ar": "الحوكمة الرقمية، الحكومة الإلكترونية، إندونيسيا، الإدارة العامة، ...",
-        "id": "tata kelola digital, e-government, Indonesia, administrasi publik, ...",
-    },
-    "search_form.fallback_helper": {
-        "en": "Separate tags with commas or semicolons — at least 10 if you're not providing an abstract.",
-        "ar": "افصل الوسوم بفواصل أو فواصل منقوطة — 10 على الأقل إذا لم تقدّم ملخصاً.",
-        "id": "Pisahkan tag dengan koma atau titik koma — minimal 10 jika Anda tidak menyertakan abstrak.",
-    },
     "search_form.concepts_label": {"en": "Search Concepts", "ar": "مفاهيم البحث", "id": "Konsep Pencarian"},
+    "search_form.idea_mode_helper": {
+        "en": "No abstract yet? Add at least {min} descriptive tags about your topic, methods, or field instead — e.g. \"machine learning\", \"public health policy\". The more relevant tags you add (around 10–15 works well), the better your matches will be.",
+        "ar": "ليس لديك ملخص بعد؟ أضف بدلاً منه {min} وسوم وصفية على الأقل حول موضوعك أو منهجك أو مجالك — مثل \"تعلم الآلة\"، \"سياسة الصحة العامة\". كلما أضفت وسوماً أكثر صلة (10–15 وسماً مناسب)، كانت النتائج أفضل.",
+        "id": "Belum punya abstrak? Tambahkan setidaknya {min} tag deskriptif tentang topik, metode, atau bidang Anda — misalnya \"pembelajaran mesin\", \"kebijakan kesehatan masyarakat\". Semakin banyak tag relevan yang Anda tambahkan (sekitar 10–15 sudah baik), semakin baik hasil pencocokannya.",
+    },
 
     # -- Filter panel (#129) ------------------------------------------------
     "filter.summary": {"en": "Publication Preferences", "ar": "تفضيلات النشر", "id": "Preferensi Publikasi"},
@@ -601,8 +591,11 @@ _STRINGS = {
     },
 
     # -- Research idea form/result/modal (#129) ------------------------------
-    "research_idea_modal.title": {"en": "Start from a Research Idea", "ar": "ابدأ من فكرة بحثية", "id": "Mulai dari Ide Riset"},
-    "research_idea_modal.close_aria": {"en": "Close", "ar": "إغلاق", "id": "Tutup"},
+    "search_form.idea_assist_summary": {
+        "en": "Not sure what to write? Describe your idea in one sentence",
+        "ar": "لست متأكداً مما تكتبه؟ صف فكرتك في جملة واحدة",
+        "id": "Belum yakin harus menulis apa? Jelaskan ide Anda dalam satu kalimat",
+    },
     "research_idea_form.label": {"en": "Describe your research idea", "ar": "صف فكرتك البحثية", "id": "Jelaskan ide riset Anda"},
     "research_idea_form.placeholder": {
         "en": "e.g. I want to study how social media use affects academic performance among university students...",
@@ -622,9 +615,9 @@ _STRINGS = {
     },
     "research_idea_result.keywords_label": {"en": "Suggested keywords", "ar": "الكلمات المفتاحية المقترحة", "id": "Kata kunci yang disarankan"},
     "research_idea_result.keywords_helper": {
-        "en": "Comma-separated — these become your search tags, same as typing them by hand. Scilene needs at least 10 if you're not pasting an abstract ({count} extracted from your idea{more_clause}).",
-        "ar": "مفصولة بفواصل — تصبح هذه وسوم بحثك، تماماً كما لو كتبتها يدوياً. يحتاج Scilene إلى 10 على الأقل إذا لم تلصق ملخصاً ({count} مستخرجة من فكرتك{more_clause}).",
-        "id": "Dipisahkan koma — ini menjadi tag pencarian Anda, sama seperti mengetiknya sendiri. Scilene memerlukan minimal 10 jika Anda tidak menempelkan abstrak ({count} diekstrak dari ide Anda{more_clause}).",
+        "en": "Comma-separated — these become your search tags, same as typing them by hand. Scilene needs at least {min} if you're not pasting an abstract ({count} extracted from your idea{more_clause}).",
+        "ar": "مفصولة بفواصل — تصبح هذه وسوم بحثك، تماماً كما لو كتبتها يدوياً. يحتاج Scilene إلى {min} على الأقل إذا لم تلصق ملخصاً ({count} مستخرجة من فكرتك{more_clause}).",
+        "id": "Dipisahkan koma — ini menjadi tag pencarian Anda, sama seperti mengetiknya sendiri. Scilene memerlukan minimal {min} jika Anda tidak menempelkan abstrak ({count} diekstrak dari ide Anda{more_clause}).",
     },
     "research_idea_result.keywords_helper_more": {
         "en": ", add a few more before continuing",
@@ -665,9 +658,9 @@ _STRINGS = {
 
     # -- Backend-supplied warnings/errors (#129) -----------------------------
     "warning.abstract_or_tags_required": {
-        "en": "Please provide an abstract, or at least 10 descriptive tags if you don't have one ({count} so far).",
-        "ar": "يرجى تقديم ملخص، أو 10 وسوم وصفية على الأقل إذا لم يكن لديك ملخص ({count} حتى الآن).",
-        "id": "Mohon berikan abstrak, atau setidaknya 10 tag deskriptif jika Anda tidak memilikinya ({count} sejauh ini).",
+        "en": "Please provide an abstract, or at least {min} descriptive tags if you don't have one ({count} so far).",
+        "ar": "يرجى تقديم ملخص، أو {min} وسوم وصفية على الأقل إذا لم يكن لديك ملخص ({count} حتى الآن).",
+        "id": "Mohon berikan abstrak, atau setidaknya {min} tag deskriptif jika Anda tidak memilikinya ({count} sejauh ini).",
     },
     "warning.no_index_selected": {
         "en": "Please select at least one journal index before searching.",
@@ -708,10 +701,10 @@ _STRINGS = {
         "ar": "يفتقر ملف الجلسة هذا إلى بيانات البحث الخاصة به.",
         "id": "File sesi ini kehilangan data pencariannya.",
     },
-    "error.This session has neither an abstract nor at least 10 tags -- nothing to search with.": {
-        "en": "This session has neither an abstract nor at least 10 tags -- nothing to search with.",
-        "ar": "لا تحتوي هذه الجلسة على ملخص ولا على 10 وسوم على الأقل — لا يوجد ما يمكن البحث به.",
-        "id": "Sesi ini tidak memiliki abstrak maupun setidaknya 10 tag — tidak ada yang bisa dicari.",
+    "error.This session has neither an abstract nor at least 5 tags -- nothing to search with.": {
+        "en": "This session has neither an abstract nor at least 5 tags -- nothing to search with.",
+        "ar": "لا تحتوي هذه الجلسة على ملخص ولا على 5 وسوم على الأقل — لا يوجد ما يمكن البحث به.",
+        "id": "Sesi ini tidak memiliki abstrak maupun setidaknya 5 tag — tidak ada yang bisa dicari.",
     },
     # Known literal AIResponse.error strings from services/ai_provider.py
     # (framework-agnostic by design, so it never imports web/i18n.py

@@ -28,6 +28,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from services.ai_provider import get_default_provider
 from web.confirmed_tags import add_confirmed_tag
 from web.dependencies import get_session_state, attach_session_cookie
+from web.search_presentation import MIN_FALLBACK_TAGS
 from web.templating import templates
 
 router = APIRouter(prefix="/research-idea")
@@ -58,6 +59,7 @@ def generate(request: Request, idea: str = Form("")):
     return _render(request, "partials/research_idea_result.html", {
         "ok": True,
         "keywords": response.data["keywords"],
+        "min_tags": MIN_FALLBACK_TAGS,
     })
 
 
@@ -85,5 +87,10 @@ def continue_to_search(
     response = templates.TemplateResponse(
         request=request, name="partials/empty.html", context={}
     )
-    response.headers["HX-Redirect"] = "/search"
+    # #143 -- idea mode, not the default: this entry point never had an
+    # abstract, so the destination page should skip straight to the
+    # tag builder (already carrying these keywords) rather than
+    # showing an empty abstract field the user has nothing to paste
+    # into.
+    response.headers["HX-Redirect"] = "/search?mode=idea"
     return attach_session_cookie(response, session)

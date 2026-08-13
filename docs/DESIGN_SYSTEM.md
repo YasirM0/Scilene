@@ -228,7 +228,7 @@ contain business logic — they only render data already computed by
 | `stat_card.html` | Centered value + label tile (homepage stats). |
 | `feature_card.html` | Icon + title + description tile (homepage feature grid). |
 | `filter_panel.html` | The Advanced Mode filter form fields (indexing, quartile, SINTA level, language, budget). |
-| `search_form.html` | Abstract input, the Research Interpreter panel, the fallback-tags disclosure, and confirmed tags — see `docs/RESEARCH_INTERPRETER.md`. |
+| `search_form.html` | Abstract input + Research Interpreter panel (manuscript mode only), and the Search Concepts tag builder (both modes) — see `docs/RESEARCH_INTERPRETER.md`. |
 | `confirmed_tags.html` | Chip list of confirmed search concepts, individually removable. Supports an HTMX out-of-band render (`oob=True`) for routes that update it from elsewhere. |
 | `search_history.html` | List of past searches from the session, each rerunnable. |
 | `pagination.html` | Page-number controls for the results list. |

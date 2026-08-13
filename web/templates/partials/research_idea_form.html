@@ -1,11 +1,24 @@
 {#
-    #85's idea-input step. Reused for both the modal's initial state
-    and "← Start over" after reviewing a generated result -- always
-    the same form, just optionally pre-filled with what was typed
-    last time.
+    #85's idea-input step. Reused for both the initial state and
+    "← Start over" after reviewing a generated result -- always the
+    same markup, just optionally pre-filled with what was typed last
+    time.
+
+    #143 -- a plain <div>, not a <form>: this now lives inside
+    components/search_form.html's #research-idea-body, itself inside
+    pages/search.html's main <form hx-post="/search">, and a <form>
+    nested inside another <form> is invalid HTML -- browsers reassign
+    the inner submit button to the OUTER form instead of the one it
+    visually belongs to, which silently POSTed idea text to /search
+    (a 422, since that endpoint doesn't expect an "idea" field) rather
+    than to /research-idea/generate. hx-post/hx-include go directly on
+    the button instead, the same pattern interpreter_panel.html's own
+    Refresh/Keep buttons already use for the abstract field
+    (hx-include="[name=abstract]") -- HTMX doesn't need a <form>
+    wrapper to collect and submit an input's value.
 #}
 {% set locale = request.state.locale %}
-<form hx-post="/research-idea/generate" hx-target="#research-idea-body" hx-swap="innerHTML">
+<div>
     <label for="research-idea-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         {{ t("research_idea_form.label", locale) }}
     </label>
@@ -17,7 +30,11 @@
     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
         {{ t("research_idea_form.helper", locale) }}
     </p>
-    <button type="submit"
+    <button type="button"
+        hx-post="/research-idea/generate"
+        hx-include="#research-idea-input"
+        hx-target="#research-idea-body"
+        hx-swap="innerHTML"
         class="mt-3 px-4 py-2 text-sm font-medium rounded-md bg-navy-600 text-white hover:bg-navy-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 transition"
     >{{ t("research_idea_form.generate_button", locale) }}</button>
-</form>
+</div>

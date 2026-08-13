@@ -1,0 +1,43 @@
+{% macro index_quality_language_filters(indexing_options, selected_indexing, quartile_options, sinta_level_options, selected_sinta_levels, show_quartile_filter, show_sinta_filter, language_options, selected_languages, detected_language, language_touched, oob=False) %}
+{% set locale = request.state.locale %}
+{#
+    #143 -- one includable unit so Clear Search can OOB-swap the whole
+    indexing/quartile/SINTA/language group back to its locale-aware
+    smart defaults (web/filter_defaults.py) in a single response, the
+    same way language_filter_card already reset itself alone. Wraps
+    that macro rather than duplicating its OOB mechanics.
+    multiselect.js's event delegation (off `document`, never
+    individual elements) means the swapped-in controls work
+    immediately with no re-init step -- the same guarantee that macro
+    already relied on.
+
+    Quartile only means anything for a Scopus/WoS-indexed journal;
+    SINTA Level only for a SINTA-indexed one -- services/recommender.py
+    ANDs `quartiles`/`sinta_levels` onto results independently of
+    `indexing`, so a stale pick left active in a HIDDEN control would
+    silently narrow results with no visible cause (pick DOAJ only, add
+    a leftover "SINTA 3" filter, and get zero explainable results).
+    Each wrapper below declares which indexing value(s) unlock it via
+    data-requires-indexing (comma-separated); show_quartile_filter /
+    show_sinta_filter set its INITIAL hidden state so first paint
+    already matches selected_indexing with no flash, and
+    multiselect.js's syncIndexGatedFilters() takes over from there on
+    every live change -- including clearing that group's own
+    checkboxes the moment it's hidden, not just hiding it.
+#}
+<div id="index-quality-language-filters" {% if oob %}hx-swap-oob="true"{% endif %} class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    {% from "components/multi_select_filter.html" import multi_select_filter with context %}
+    {{ multi_select_filter("indexing", t("filter.preferred_indexing", locale), indexing_options, selected=selected_indexing) }}
+
+    <div data-requires-indexing="Scopus,Web of Science" {% if not show_quartile_filter %}hidden{% endif %}>
+        {{ multi_select_filter("quartiles", t("filter.quartile", locale), quartile_options) }}
+    </div>
+
+    <div data-requires-indexing="SINTA" {% if not show_sinta_filter %}hidden{% endif %}>
+        {{ multi_select_filter("sinta_levels", t("filter.sinta_level", locale), sinta_level_options, selected=selected_sinta_levels) }}
+    </div>
+
+    {% from "components/language_filter_card.html" import language_filter_card with context %}
+    {{ language_filter_card(language_options, selected_languages, detected_language, language_touched) }}
+</div>
+{% endmacro %}

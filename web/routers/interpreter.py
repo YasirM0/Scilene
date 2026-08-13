@@ -22,8 +22,18 @@ from web.templating import templates
 router = APIRouter(prefix="/search")
 
 
-def _render_panel(request, session, extra_context=None):
+def _render_panel(request, session, extra_context=None, has_abstract=None):
     context = dict(extra_context or {})
+    if has_abstract is not None:
+        # #143 follow-up -- Search Concepts only appears once there's
+        # something for it to hold: the abstract currently has text,
+        # OR there are already-confirmed tags from earlier this
+        # session (which must stay visible even if the abstract was
+        # since cleared back to empty).
+        context["concepts_section_oob"] = {
+            "visible": has_abstract or bool(session.get("confirmed_tags")),
+            "confirmed_tags": session.get("confirmed_tags", []),
+        }
     response = templates.TemplateResponse(
         request=request, name="partials/interpreter_panel.html", context=context
     )
@@ -61,14 +71,16 @@ def interpret(request: Request, abstract: str = Form(""), session=Depends(get_se
 
     language_changed = _update_detected_language(session, abstract)
 
+    has_abstract = bool(abstract)
+
     if not abstract:
         session["interpreter_suggestions"] = []
         session["interpreter_abstract_snapshot"] = None
         session["interpreter_editing_category"] = None
         context = {"state": "empty"}
         if language_changed:
-            context["language_card_oob"] = language_form_context(session)
-        return _render_panel(request, session, context)
+            context["language_card_oob"] = language_form_context(session, request.state.locale)
+        return _render_panel(request, session, context, has_abstract=has_abstract)
 
     if is_too_short(abstract):
         # No snapshot saved -- once the abstract clears the minimum,
@@ -78,8 +90,8 @@ def interpret(request: Request, abstract: str = Form(""), session=Depends(get_se
         session["interpreter_editing_category"] = None
         context = {"state": "too_short"}
         if language_changed:
-            context["language_card_oob"] = language_form_context(session)
-        return _render_panel(request, session, context)
+            context["language_card_oob"] = language_form_context(session, request.state.locale)
+        return _render_panel(request, session, context, has_abstract=has_abstract)
 
     snapshot = session.get("interpreter_abstract_snapshot")
 
@@ -90,8 +102,8 @@ def interpret(request: Request, abstract: str = Form(""), session=Depends(get_se
         session["interpreter_editing_category"] = None
         context = {"state": "analyzing"}
         if language_changed:
-            context["language_card_oob"] = language_form_context(session)
-        return _render_panel(request, session, context)
+            context["language_card_oob"] = language_form_context(session, request.state.locale)
+        return _render_panel(request, session, context, has_abstract=has_abstract)
 
     if abstract != snapshot:
         # Existing suggestions, but the text has moved on -- don't
@@ -99,13 +111,13 @@ def interpret(request: Request, abstract: str = Form(""), session=Depends(get_se
         # the user already made), ask first.
         context = {"state": "changed_notice"}
         if language_changed:
-            context["language_card_oob"] = language_form_context(session)
-        return _render_panel(request, session, context)
+            context["language_card_oob"] = language_form_context(session, request.state.locale)
+        return _render_panel(request, session, context, has_abstract=has_abstract)
 
     context = current_suggestions_context(session)
     if language_changed:
-        context["language_card_oob"] = language_form_context(session)
-    return _render_panel(request, session, context)
+        context["language_card_oob"] = language_form_context(session, request.state.locale)
+    return _render_panel(request, session, context, has_abstract=has_abstract)
 
 
 @router.get("/interpret/reveal")

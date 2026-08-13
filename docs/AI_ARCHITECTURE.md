@@ -219,14 +219,19 @@ Done (scaffolding only, no real model anywhere):
   step (#102's own spec: "Remove incorrect disciplines, Add missing
   disciplines, Adjust the detected research focus") is now complete —
   checkboxes cover remove/select, and a plain text field
-  (`extra_disciplines` on `POST /search/refine-with-disciplines`)
-  covers "add missing," parsed the same comma/semicolon way
-  `fallback_tags` already is. Originally only the checkboxes shipped;
-  the add-missing half was caught in a later audit pass.
+  (`extra_disciplines` on `POST /search/refine-with-disciplines`,
+  comma/semicolon-parsed) covers "add missing." Originally only the
+  checkboxes shipped; the add-missing half was caught in a later audit
+  pass.
 - Research Idea Assistant (#85, `web/routers/research_idea.py`) — the
-  full "Start from a Research Idea" modal → generate → review/edit →
-  "Continue to Search" flow, feeding `session["confirmed_tags"]` — the
-  exact tag-based path a manual search already uses.
+  full "describe your idea" → generate → review/edit → "Continue to
+  Search" flow, feeding `session["confirmed_tags"]` — the exact
+  tag-based path a manual search already uses. Originally a popup
+  modal reachable from the homepage; #143 relocated it to an inline,
+  optional disclosure directly on `/search?mode=idea` instead (the
+  homepage's "I only have a research idea" button links straight
+  there now), since a modal read as a second, separate flow rather
+  than "the same search page" the rest of this doc describes.
   `PlaceholderProvider.generate_search_inputs()` deliberately does NOT
   write new prose — writing a plausible title/abstract from a one-line
   idea is genuine text generation, which needs a real model to do
@@ -241,7 +246,8 @@ Done (scaffolding only, no real model anywhere):
   a "suggested abstract" pre-filling the search page's abstract field.
   #110 (implemented after #85, and the actual current shape of the
   Submission Search page) explicitly says a user without an abstract
-  should "provide at least 10 descriptive tags... No abstract
+  should "provide at least `MIN_FALLBACK_TAGS` descriptive tags
+  (`web/search_presentation.py`, 5 as of #143)... No abstract
   generation is required" — a direct contradiction. Per this project's
   rule for contradicting issues (newer wins), the web layer only ever
   reads `keywords` from `generate_search_inputs()`'s response;

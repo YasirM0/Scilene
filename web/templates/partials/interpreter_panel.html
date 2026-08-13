@@ -171,3 +171,16 @@
     oob=True
 ) }}
 {% endif %}
+
+{% if concepts_section_oob is defined %}
+{#
+    #143 follow-up -- set on every /search/interpret response (see
+    web/routers/interpreter.py's interpret()), toggling whether
+    components/search_concepts_section.html is visible based on
+    whether the abstract field currently has text (or there are
+    already-confirmed tags from earlier, which must never get hidden
+    just because the abstract was since cleared).
+#}
+{% from "components/search_concepts_section.html" import search_concepts_section with context %}
+{{ search_concepts_section(concepts_section_oob.confirmed_tags, concepts_section_oob.visible, oob=True) }}
+{% endif %}

@@ -47,6 +47,15 @@ def get_session(session_id: str) -> dict:
             "search_meta": None,          # abstract/display_label/strategy_label/filters_summary of the last search
             "show_weaker": False,
             "page": 1,
+            # Which layout the Submission Search page's last GET was
+            # rendered in (#143, "manuscript" default or "idea") --
+            # remembered so a later POST in the same session (Clear
+            # Search) knows whether #interpreter-panel even exists in
+            # the client's current DOM before trying to OOB-swap it;
+            # idea mode never renders that div (no abstract field to
+            # drive it), and HTMX raises htmx:oobErrorNoTarget for an
+            # OOB fragment with no matching target on the page.
+            "search_mode": "manuscript",
             "history": [],                # list of {results, search_meta, timestamp, result_count}
 
             # Research Interpreter (docs/RESEARCH_INTERPRETER.md) --
@@ -58,9 +67,10 @@ def get_session(session_id: str) -> dict:
             # for unrelated reasons, e.g. removing a manually-added tag).
             "interpreter_abstract_snapshot": None,
             # Plain strings -- accepted interpreter suggestions and
-            # manually-added/fallback tags land here indistinguishably.
-            # This list (plus any fallback_tags parsed at submit time)
-            # is exactly what becomes the recommender's `keywords`.
+            # manually-added tags land here indistinguishably (#143:
+            # this is now the ONLY tag mechanism, whether the page is
+            # in manuscript or idea mode). Exactly what becomes the
+            # recommender's `keywords`.
             "confirmed_tags": [],
 
             # Which suggestion category (if any) is currently showing

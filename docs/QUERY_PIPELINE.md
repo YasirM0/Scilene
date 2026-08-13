@@ -126,7 +126,7 @@ even though no field types are changing:
 |---|---|---|
 | `title` | The user's own paper title, verbatim | manual input only |
 | `abstract` | The user's pasted abstract, verbatim (never translated today) | manual input only |
-| `keywords` | Confirmed concepts: accepted Research Interpreter suggestions + manually-typed tags + fallback tags, **indistinguishably** | `session["confirmed_tags"]` + parsed `fallback_tags` (`web/routers/search.py`) |
+| `keywords` | Confirmed concepts: accepted Research Interpreter suggestions + manually-typed/idea-mode tags, **indistinguishably** | `session["confirmed_tags"]` (`web/routers/search.py`) |
 | `languages` | Journal-language filter selection, pre-checked from detected abstract language | `web/language_presentation.py` (#89) |
 
 If translation, expansion, or pre-search discipline detection are

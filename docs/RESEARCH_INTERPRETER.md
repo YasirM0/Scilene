@@ -35,11 +35,21 @@ nothing that calls it, and nothing in the templates.
   with a plain text input; Save writes the typed text as that
   suggestion's value, same as if the pool had suggested it), or
   removes.
-- **No abstract:** the user provides at least 10 descriptive tags
-  directly (`fallback_tags` on the search form) instead.
+- **No abstract:** the user provides at least `MIN_FALLBACK_TAGS`
+  (`web/search_presentation.py`, 5 as of #143) descriptive tags
+  directly via the same Search Concepts tag builder described below —
+  not a second, separate field. `/search?mode=idea` (the homepage's
+  "I only have a research idea" button, and the Research Idea modal's
+  "Continue to Search") renders this page with the abstract field and
+  Research Interpreter panel omitted entirely, so that builder is the
+  only thing shown (`web/templates/components/search_form.html`,
+  `web/routers/search.py`'s `search_page()`). #143 replaced an earlier
+  design with a SEPARATE "Don't have an abstract? Add tags instead"
+  textarea alongside this same builder — two ways to add a tag on one
+  page, with no stated relationship between them.
 
-Both paths feed the exact same place: `session["confirmed_tags"]` (plus
-any parsed `fallback_tags`) becomes the `keywords` list passed to
+Both paths feed the exact same place: `session["confirmed_tags"]`
+becomes the `keywords` list passed to
 `services.search_service.search_journals()` — the same parameter a
 manually-typed keyword already used. The recommender has no concept of
 "came from an abstract" vs. "came from a tag" — see
@@ -106,6 +116,9 @@ Added to `web/session_store.py`'s per-session defaults:
   returns the same two placeholder values on first call.
 - Persisting interpreter state into search history (`rerun_history`
   restores past results/filters but not past suggestion state).
-- A dedicated per-tag "add one tag at a time" UI for the fallback path
-  — it's a single comma/semicolon-separated textarea, parsed the same
-  way the old Keywords field was.
+- A bulk paste-many-at-once entry for the no-abstract path — #143
+  removed the old comma/semicolon-separated textarea in favor of the
+  same one-at-a-time Search Concepts builder the abstract path already
+  uses (see "Two search paths, one destination" above); pasting a
+  comma-separated list into that input still only confirms it as one
+  tag.

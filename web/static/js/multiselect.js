@@ -30,6 +30,12 @@
 // form state and HTMX live-filter trigger target (see
 // multi_select_filter.html's "live-filter" class and pages/search.html's
 // hx-trigger="change from:.live-filter") -- unchanged by any of this.
+//
+// #143 -- this file also owns showing/hiding the Quartile and SINTA
+// Level controls based on what's checked in Preferred Indexing (see
+// syncIndexGatedFilters() below and index_quality_language_filters.html's
+// header comment for why a hidden control must also be cleared, not
+// just hidden).
 
 document.addEventListener("click", function (event) {
     var chipRemove = event.target.closest(".ms-chip-remove");
@@ -95,6 +101,29 @@ document.addEventListener("keydown", function (event) {
 document.addEventListener("change", function (event) {
     var checkbox = event.target.closest(".live-filter");
     if (!checkbox) return;
+    syncChipForCheckbox(checkbox);
+});
+
+// #143 -- a SEPARATE, CAPTURE-phase listener (the `true` third
+// argument), not just another case inside the bubble-phase one above.
+// Capture runs top-down (document -> ... -> target) BEFORE the same
+// event's bubble phase reaches the <form>, where HTMX's own
+// `hx-trigger="change from:.live-filter"` reads the form's current
+// values. Clearing a now-irrelevant quartile/SINTA-level selection
+// HERE means that single read already sees the corrected state --
+// one accurate search request. Doing this in the bubble-phase
+// listener instead (tried first) worked too, but only by dispatching
+// a fresh "change" per cleared checkbox -- each one racing HTMX's
+// listener again and firing its own real, immediately-superseded
+// request, so unchecking one indexing source could fire 3-4 requests
+// in a burst instead of one.
+document.addEventListener("change", function (event) {
+    var checkbox = event.target.closest('input.live-filter[name="indexing"]');
+    if (!checkbox) return;
+    syncIndexGatedFilters();
+}, true);
+
+function syncChipForCheckbox(checkbox) {
     var wrapper = checkbox.closest("[data-multiselect]");
     if (!wrapper) return;
 
@@ -104,7 +133,40 @@ document.addEventListener("change", function (event) {
     var anySelected = !!wrapper.querySelector(".ms-chip:not([hidden])");
     var placeholder = wrapper.querySelector(".ms-placeholder");
     if (placeholder) placeholder.hidden = anySelected;
-});
+}
+
+// #143 -- hides components/index_quality_language_filters.html's
+// quartile/SINTA wrappers unless their required indexing source is
+// currently checked, AND clears (not just hides) that group's own
+// checkboxes the moment it's hidden -- a hidden control must never
+// keep silently narrowing results the user can no longer see or
+// adjust. Runs once on initial load/every HTMX swap (so an OOB reset
+// like Clear Search re-evaluates against its own fresh defaults) plus
+// reactively on every indexing checkbox change (see the capture-phase
+// listener above -- no "change" event is dispatched for the
+// checkboxes cleared here, on purpose; see that listener's comment).
+function syncIndexGatedFilters() {
+    var checkedIndexing = Array.prototype.map.call(
+        document.querySelectorAll('input.live-filter[name="indexing"]:checked'),
+        function (checkbox) { return checkbox.value; }
+    );
+
+    document.querySelectorAll("[data-requires-indexing]").forEach(function (gated) {
+        var required = gated.dataset.requiresIndexing.split(",");
+        var shouldShow = required.some(function (value) { return checkedIndexing.indexOf(value) !== -1; });
+
+        gated.hidden = !shouldShow;
+        if (!shouldShow) {
+            gated.querySelectorAll(".live-filter:checked").forEach(function (checkbox) {
+                checkbox.checked = false;
+                syncChipForCheckbox(checkbox);
+            });
+        }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", syncIndexGatedFilters);
+document.body.addEventListener("htmx:afterSwap", syncIndexGatedFilters);
 
 function openMultiselect(wrapper) {
     wrapper.classList.add("ms-open");

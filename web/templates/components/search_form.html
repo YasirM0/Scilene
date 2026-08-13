@@ -1,8 +1,42 @@
 {% set locale = request.state.locale %}
+{#
+    #143 -- `mode` ("manuscript" default, or "idea") comes from the
+    homepage's two entry buttons via /search?mode=... (see
+    web/routers/search.py's search_page()). Idea mode skips the
+    abstract field and its Research Interpreter panel entirely rather
+    than showing them alongside a separate "don't have an abstract?"
+    tag disclosure -- the old design had TWO different ways to add a
+    tag on the same page (a bulk fallback textarea AND this one-at-a-
+    time Search Concepts builder) with no stated relationship between
+    them. Now there's exactly one: components/search_concepts_section.html,
+    fed either by accepted Research Interpreter suggestions (when
+    there's an abstract) or typed/AI-suggested-from-idea tags directly.
+
+    #143 follow-up -- "I only have a research idea" now lands directly
+    on THIS page in idea mode rather than opening a popup modal first
+    (the popup read as a second, separate flow rather than "the same
+    search page"). The Research Idea Assistant (#85) still exists, but
+    only as an optional inline disclosure here -- same
+    #research-idea-body target web/routers/research_idea.py's
+    /generate and /continue already post to, just relocated from
+    components/research_idea_modal.html (now unused/removed) to
+    directly inside this page.
+#}
 <div>
     <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100 mb-3">📄 {{ t("search_form.heading", locale) }}</h2>
 
     <div class="space-y-4">
+        {% if mode == "idea" %}
+        <details class="group">
+            <summary class="cursor-pointer text-sm font-medium text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 list-none flex items-center gap-1">
+                <span class="transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
+                ✨ {{ t("search_form.idea_assist_summary", locale) }}
+            </summary>
+            <div id="research-idea-body" class="mt-2">
+                {% include "partials/research_idea_form.html" %}
+            </div>
+        </details>
+        {% else %}
         <div>
             <label for="abstract" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t("search_form.abstract_label", locale) }}</label>
             <textarea
@@ -23,30 +57,9 @@
         <div id="interpreter-panel">
             {% include "partials/interpreter_panel.html" %}
         </div>
+        {% endif %}
 
-        <details class="group">
-            <summary class="cursor-pointer text-sm font-medium text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 list-none flex items-center gap-1">
-                <span class="transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
-                {{ t("search_form.fallback_summary", locale) }}
-            </summary>
-            <div class="mt-2">
-                <textarea
-                    id="fallback_tags" name="fallback_tags" rows="3"
-                    placeholder="{{ t('search_form.fallback_placeholder', locale) }}"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500"
-                ></textarea>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {{ t("search_form.fallback_helper", locale) }}
-                </p>
-            </div>
-        </details>
-
-        <div>
-            <p class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t("search_form.concepts_label", locale) }}</p>
-            {% from "components/confirmed_tags.html" import confirmed_tags as confirmed_tags_chips with context %}
-            {{ confirmed_tags_chips(confirmed_tags) }}
-            {% from "components/add_tag_input.html" import add_tag_input with context %}
-            <div class="mt-2">{{ add_tag_input() }}</div>
-        </div>
+        {% from "components/search_concepts_section.html" import search_concepts_section with context %}
+        {{ search_concepts_section(confirmed_tags, visible=(mode == "idea" or confirmed_tags), mode=mode, min_tags=min_tags) }}
     </div>
 </div>

@@ -16,10 +16,10 @@ confirmed (accepted Research Interpreter suggestions, selected
 Detected Research Areas, Research Idea Assistant keywords) -- all of
 these are already presented to the user as Scilene's own suggestions
 elsewhere in the UI, even where the underlying logic is deterministic
-rather than a model call. "user" covers anything typed directly:
-the manual "Add a tag" field, #102's "add a missing discipline" field,
-the no-abstract fallback tags, and an imported .sls (or legacy .jis)
-session's tags.
+rather than a model call. "user" covers anything typed directly: the
+manual "Add a tag" field (also the only tag entry point in the
+no-abstract "idea" mode -- #143), #102's "add a missing discipline"
+field, and an imported .sls (or legacy .jis) session's tags.
 """
 
 

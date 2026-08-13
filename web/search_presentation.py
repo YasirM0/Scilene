@@ -72,6 +72,14 @@ SINTA_LEVEL_OPTIONS = [f"SINTA {n}" for n in range(1, 7)]
 # match services.language_detection.SUPPORTED_LANGUAGES' values.
 LANGUAGE_OPTIONS = ["English", "Arabic", "Indonesian"]
 
+# #143 -- the no-abstract "just give me tags" floor (#110 originally
+# shipped this at 10; lowered to feel less intimidating to a
+# first-time user with only a vague research idea, while still giving
+# the recommender enough real signal to narrow 55,000+ journals
+# meaningfully). One place both web/routers/search.py's validation and
+# every locale's UI copy read from, so the number is never repeated.
+MIN_FALLBACK_TAGS = 5
+
 BUDGET_OPTIONS = [
     "Any",
     "Free (No APC)",

@@ -45,12 +45,11 @@ def build_sls_export(session, app_version):
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "search": {
             "abstract": params.get("abstract", ""),
-            # search_meta["keywords"], NOT session["confirmed_tags"] --
-            # the latter misses fallback_tags-only searches (typed
-            # directly into the "at least 10 tags" field, #110's
-            # tag-based path), which never get copied into
-            # confirmed_tags. search_meta["keywords"] is exactly what
-            # _execute_search() actually searched with either way.
+            # search_meta["keywords"] -- exactly what _execute_search()
+            # actually searched with, same value as
+            # session["confirmed_tags"] at that moment (#143 folded
+            # #110's old separate fallback-tags textarea into the same
+            # confirmed-tags list this now always reads from).
             "confirmed_tags": search_meta.get("keywords", []),
             "strategy_label": params.get("strategy_label", ""),
             "languages": params.get("resolved_languages"),
@@ -78,10 +77,15 @@ def serialize_sls(session, app_version):
     return json.dumps(build_sls_export(session, app_version), indent=2, ensure_ascii=False).encode("utf-8")
 
 
-def parse_sls_import(raw_bytes):
-    """Returns the validated `search` dict, or raises InvalidSlsFile
-    with a message safe to show the user directly. Accepts both the
-    current .sls format and legacy .jis exports (#136)."""
+def parse_sls_import(raw_bytes, min_tags):
+    """
+    Returns the validated `search` dict, or raises InvalidSlsFile with
+    a message safe to show the user directly. Accepts both the
+    current .sls format and legacy .jis exports (#136). `min_tags`
+    is the caller's tag-only-search floor (web.search_presentation's
+    MIN_FALLBACK_TAGS, #143) -- passed in rather than imported, since
+    services/ deliberately never depends on web/.
+    """
     try:
         data = json.loads(raw_bytes)
     except (ValueError, UnicodeDecodeError):
@@ -94,9 +98,9 @@ def parse_sls_import(raw_bytes):
     if not isinstance(search, dict):
         raise InvalidSlsFile("This session file is missing its search data.")
 
-    if not search.get("abstract") and len(search.get("confirmed_tags") or []) < 10:
+    if not search.get("abstract") and len(search.get("confirmed_tags") or []) < min_tags:
         raise InvalidSlsFile(
-            "This session has neither an abstract nor at least 10 tags -- "
+            f"This session has neither an abstract nor at least {min_tags} tags -- "
             "nothing to search with."
         )
 

@@ -1,0 +1,25 @@
+{% macro search_concepts_section(confirmed_tags, visible, mode="manuscript", min_tags=None, oob=False) %}
+{% set locale = request.state.locale %}
+{#
+    #143 follow-up -- in manuscript mode this stays hidden until the
+    user has actually typed an abstract (or already has confirmed
+    tags from earlier in the session, e.g. a history rerun) rather
+    than showing an empty "no concepts yet" box before there's
+    anything for it to hold. web/routers/interpreter.py's interpret()
+    OOB-swaps this same fragment (oob=True) every time the abstract
+    field's own hx-trigger fires, toggling `visible` off the abstract's
+    actual current emptiness -- see interpreter_panel.html's
+    concepts_section_oob block. Idea mode (no abstract field at all)
+    always passes visible=True from search_form.html directly.
+#}
+<div id="search-concepts-section" {% if oob %}hx-swap-oob="true"{% endif %} {% if not visible %}hidden{% endif %}>
+    <p class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t("search_form.concepts_label", locale) }}</p>
+    {% if mode == "idea" %}
+    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">{{ t("search_form.idea_mode_helper", locale, min=min_tags) }}</p>
+    {% endif %}
+    {% from "components/confirmed_tags.html" import confirmed_tags as confirmed_tags_chips with context %}
+    {{ confirmed_tags_chips(confirmed_tags) }}
+    {% from "components/add_tag_input.html" import add_tag_input with context %}
+    <div class="mt-2">{{ add_tag_input() }}</div>
+</div>
+{% endmacro %}
