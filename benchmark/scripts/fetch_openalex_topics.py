@@ -100,16 +100,24 @@ def _fetch_one(session, journal_id, issn_print, issn_online, mailto):
     return journal_id, topics
 
 
+_SQL_CHUNK_SIZE = 500  # well under SQLite's bound-parameter limit (32766 on modern builds,
+                        # 999 on older ones) -- the full 55,745-journal corpus exceeded it
+                        # in one IN (...) query; chunking makes this correct at any sample size.
+
+
 def run(sample_file, output_path, mailto, workers=DEFAULT_WORKERS):
     with open(sample_file) as f:
         journal_ids = json.load(f)["journal_ids"]
 
     conn = get_connection()
-    placeholders = ",".join("?" * len(journal_ids))
-    rows = conn.execute(
-        f"SELECT id, issn_print, issn_online FROM journals WHERE id IN ({placeholders})",
-        journal_ids,
-    ).fetchall()
+    rows = []
+    for start in range(0, len(journal_ids), _SQL_CHUNK_SIZE):
+        chunk = journal_ids[start:start + _SQL_CHUNK_SIZE]
+        placeholders = ",".join("?" * len(chunk))
+        rows.extend(conn.execute(
+            f"SELECT id, issn_print, issn_online FROM journals WHERE id IN ({placeholders})",
+            chunk,
+        ).fetchall())
     conn.close()
 
     output_path = Path(output_path)

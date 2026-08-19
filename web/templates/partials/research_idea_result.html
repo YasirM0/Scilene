@@ -25,6 +25,18 @@
                 {% set more_clause = t("research_idea_result.keywords_helper_more", locale) if keywords | length < min_tags else "" %}
                 {{ t("research_idea_result.keywords_helper", locale, count=keywords|length, min=min_tags, more_clause=more_clause) }}
             </p>
+            {#
+                #143 multilingual follow-up -- only shown here, not on
+                the main Submission Search page's tag builder: someone
+                who already has a real abstract is naturally typing
+                everything in one language already, so the hint would
+                just be noise there. This is specifically the
+                no-abstract idea path (#110), where tags are typed
+                one-by-one and could plausibly end up mixed-language.
+            #}
+            <p class="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                {{ t("research_idea_result.language_note", locale) }}
+            </p>
         </div>
 
         <div class="flex items-center gap-4">

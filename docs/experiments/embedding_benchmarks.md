@@ -1,9 +1,22 @@
 # Embedding Model Evaluation (#143 follow-up)
 
-**Status:** Exploratory research, not wired into the shipped app. Answers the
-question the semantic-search epic (#52, #73–81, #101, #113–127) depends on:
-*is a real embedding model worth building a semantic layer around, and if so,
-which one?*
+**Status:** The evaluation itself is research (this doc). Its conclusion IS
+now shipped, though: `BAAI/bge-small-en-v1.5` with the `combined` corpus runs
+in production as the opt-in "✨ Try AI Semantic Search (Experimental)" path
+(`services/semantic_search.py`, `POST /search/semantic`) — a second, separate
+ranking strategy alongside the deterministic `services/recommender.py`, not a
+replacement of it. See that module's docstring for the runtime architecture
+(ONNX Runtime, not sentence-transformers/torch, to fit Heroku's slug size
+budget) and `scripts/build_semantic_index.py` for how the committed corpus
+embeddings (`models/bge-small-en-v1.5-onnx/`) get (re)built. **Also shipped:**
+a second model (`multilingual-e5-small`) and language-routed dual-model
+search, fixing a real English-only blind spot in the model above — see
+"Multilingual follow-up" below.
+
+This doc's original question was: *is a real embedding model worth building a
+semantic layer around, and if so, which one?* — answered here for the
+semantic-search epic (#52, #73–81, #101, #113–127) generally, not just the
+minimal path that got built first.
 
 ## Question this answers
 
@@ -214,6 +227,196 @@ the OpenAlex-topics proxy).
   constraint, since this evaluation's benchmark dataset (built from OpenAlex
   real papers) skews English and doesn't stress-test that axis either way.
 
+## Multilingual follow-up — the English-only blind spot (#143 second follow-up)
+
+The recommendation above shipped first without a per-language breakdown — the
+benchmark dataset skews English, so aggregate scores hid a real problem:
+**bge-small-en-v1.5 is an English-only model.** Re-running the same 166-query
+benchmark bucketed by the query abstract's actual detected language
+(`services/language_detection.py`, English/Arabic/Indonesian) surfaced it
+directly:
+
+| Bucket (n) | bge-small-en-v1.5 recall@10 / MRR |
+|---|---|
+| English (117) | 0.299 / 0.156 |
+| Indonesian (26) | **0.000 / 0.007** |
+| Undetected/other (23) | 0.217 / 0.051 |
+
+Indonesian abstracts get essentially zero usable results — not a tuning gap,
+an architectural one: the model was never trained on Indonesian text at all.
+Scilene's UI supports English, Arabic, and Indonesian, so this was a real
+production quality issue for two of the app's three languages, not a
+theoretical one.
+
+**Candidates tested as a multilingual fallback** (same 166-query benchmark, a
+5,057-journal representative sample corpus, per-language buckets):
+
+| Model | Params | English R@10 / MRR | Indonesian R@10 / MRR | Deployable (ONNX)? |
+|---|---:|---|---|---|
+| bge-small-en-v1.5 (reference) | 33M | 0.299 / 0.156 | 0.000 / 0.007 | yes |
+| nomic-embed-text-v2-moe | 305M active | 0.282 / 0.186 | 0.115 / 0.035 | **no** — no ONNX export |
+| **multilingual-e5-small** (quantized) | 117M | 0.154 / 0.082 | **0.115 / 0.044** | yes, 118MB |
+| multilingual-e5-base | 278M | 0.137 / 0.061 | 0.231 / 0.037 | borderline; no clear win over -small despite 2.4× the weight |
+| paraphrase-multilingual-MiniLM-L12-v2 | 118M | 0.137 / 0.042 | 0.000 / 0.000 | yes, but fails Indonesian entirely — a paraphrase/STS model, not built for asymmetric query→passage retrieval |
+| LaBSE | 471M | 0.051 / 0.024 | 0.000 / 0.000 | worst quality AND heaviest — a bitext-mining model (matching translation pairs), not retrieval |
+
+`nomic-embed-text-v2-moe` scores best on raw quality but has no ONNX export
+and would require ~350-400MB of torch/sentence-transformers dependencies to
+run at all — ruled out on deployability alone, same reasoning as the original
+recommendation above. Of the deployable candidates, `multilingual-e5-small`
+(quantized ONNX, `intfloat/multilingual-e5-small`) is the clear best: fixes
+Indonesian from 0.000 to a real 0.115 recall@10, and nothing tested beats it
+without either failing Indonesian outright or costing meaningfully more
+weight for no corresponding quality gain.
+
+**What was rejected and why:**
+
+- *Fully replacing bge-small with multilingual-e5-small.* Fixes Indonesian
+  but costs real English quality (recall@10 0.299 → 0.154, roughly half) —
+  unacceptable given English is Scilene's primary-quality language and the
+  majority of its actual usage.
+- *Translation layer (translate Arabic/Indonesian text to English, keep
+  bge-small as the only model).* Would need its own offline translation
+  model to stay consistent with this app's "no external API calls" search
+  philosophy — comparable weight cost to just adding a second embedding
+  model, but with an extra lossy step (translation errors, especially on
+  academic/technical terms, compound with embedding errors) that a model
+  natively trained for cross-lingual retrieval doesn't have. Also doesn't
+  cleanly solve mixed-language input (e.g. an English abstract with
+  Indonesian tags) without per-field translation, which the language-routing
+  approach below sidesteps by detecting on the combined query text as a
+  whole.
+
+**What shipped: language-routed dual-model search.** `services/semantic_search.py`
+now holds two independent models — `bge-small-en-v1.5` ("en") and
+`multilingual-e5-small` ("multilingual") — each with its own ONNX session,
+tokenizer, pooling strategy (CLS vs. mean), and precomputed corpus (embeddings
+from different models aren't comparable, so each model ranks only against its
+own full 55,745-journal corpus, built via `scripts/build_semantic_index.py
+--model <key>`). `route_model_key()` detects the query text's language
+(`services/language_detection.detect_language`, the same EN/AR/ID detector
+already used for filter pre-selection) and picks a model: Arabic or
+Indonesian → `multilingual-e5-small`; English, or a language the detector
+couldn't confidently place, → `bge-small-en-v1.5`. Defaulting undetected text
+to bge-small rather than the fallback isn't a gap — the benchmark table above
+shows bge-small was ALSO the stronger model on the "undetected" bucket
+(0.217 vs. multilingual-e5-small's 0.130), so undetected text (often
+short/mixed rather than genuinely Arabic or Indonesian) is safer on the
+model that's already Scilene's best English performer.
+
+Detection runs on the query text as a whole (abstract + tags concatenated,
+the same string that gets embedded) rather than per-field, since a mixed
+English-abstract/Indonesian-tags query can't be split across two models'
+incompatible embedding spaces anyway — there's no way to average or blend
+vectors from different models meaningfully.
+
+As a UX optimization, `web/routers/interpreter.py`'s abstract-language
+detection (already running on every `/search/interpret` call, to pre-select
+the journal-language filter checkbox per #89) now also fires a background
+thread to warm the multilingual ONNX session the moment the detected language
+flips to Arabic or Indonesian — so it's typically already loaded by the time
+the user reaches Search, not a cold load on the first semantic query.
+
+For the no-abstract "research idea" entry point (#110/#143), where tags are
+typed one at a time rather than extracted from one coherent block of text,
+there's no reliable single string to detect language from until the user has
+already typed several tags in whatever language(s) they choose. Rather than
+guess or flicker the routing mid-entry, `partials/research_idea_result.html`
+shows a plain note asking the user to keep all tags in one language (English
+recommended for best quality) — shown only on that entry point, since
+someone pasting a real abstract is naturally already writing in one language.
+
+**Known gap: Arabic quality is untested empirically.** The 166-query
+benchmark dataset (built from real OpenAlex papers) has zero Arabic-language
+records — the per-language table above only has English/Indonesian/undetected
+buckets, none of them Arabic, so there's no recall@10/MRR number for Arabic at
+all. Live spot-checks (an Arabic query through the real `/search/semantic`
+route) return plausible-looking results and multilingual-e5-small's own model
+card lists Arabic among its training languages, but that's confidence by
+inference, not a measured score, the way the English and Indonesian numbers
+are. Worth a real Arabic ground-truth sample if Arabic search quality becomes
+a specific concern later.
+
+## Deployment crisis: neither model ever actually reached GitHub or Heroku
+
+The dual-model build above was fully "shipped" in code and locally verified,
+but the first real `git push` of this feature failed outright:
+`bge-small-en-v1.5/model.onnx` (126.93MB) and `multilingual-e5-small/model.onnx`
+(112.86MB) both exceed GitHub's hard 100MB-per-file push limit (`GH001: Large
+files detected`, pre-receive hook rejection, no partial push). Neither this
+feature nor the original English-only version that preceded it had ever
+actually reached GitHub or a live Heroku deploy -- "shipped" only meant
+"committed locally," which this doc previously stated without having verified
+it. A separate empirical check also showed this was never going to fit a
+512MB Heroku dyno regardless of the push problem: both ONNX sessions +
+tokenizers + corpora resident together measured **~750-870MB** (`resource
+.getrusage(...).ru_maxrss`, real measurement, not estimated from file size)
+-- more than the entire dyno budget, before FastAPI/pandas/SQLite/the OS
+baseline even load. Even the original English-only bge-small path alone
+measured ~320-330MB, uncomfortably close to the limit by itself.
+
+**What fixed both problems at once: quantization on both models, plus
+vocabulary trimming on the multilingual model.**
+
+- Both `model.onnx` files were int8-quantized (`onnxruntime.quantization
+  .quantize_dynamic`, `QuantType.QUInt8`) -- bge-small 126.93MB -> 33.8MB,
+  multilingual-e5-small 112.86MB -> a still-too-large 112.86MB pre-trim (int8
+  quantization alone barely shrinks this model, see below). Quality cost:
+  cosine similarity 0.97-0.99 vs. each fp32 reference on real test embeddings,
+  consistent with this doc's original quantization precedent.
+- multilingual-e5-small's real size problem wasn't its parameter count -- it
+  was its 250,037-token cross-lingual vocabulary. Its `embeddings
+  .word_embeddings.weight` (250,037 x 384) alone is 96M of the model's
+  117.6M total parameters (82%), and unlike bge-small's 33K-token
+  English-only vocabulary, that's not something quantization touches
+  effectively -- it's already the dominant cost regardless of numeric
+  precision. Fixed via **vocabulary trimming**: tokenized English/Arabic/
+  Indonesian Wikipedia samples (3,000 articles each) PLUS Scilene's own full
+  55,745-journal corpus PLUS the #112 benchmark's 166 real abstracts with the
+  original tokenizer, unioned every token ID actually used (58,226 of
+  250,002, 23.3%), and rebuilt the embedding table + Unigram tokenizer vocab
+  to just that set (technique has real prior art: see
+  [sanjayasubedi.com.np's pruning writeup](https://sanjayasubedi.com.np/deeplearning/shrinking-embedding-models-by-pruning-vocabulary/)
+  and the [vocabtrimmer](https://github.com/asahi417/lm-vocab-trimmer)
+  library, which report 99.71% quality retention on a single-language trim;
+  this trim covers three languages plus Scilene's own domain vocabulary at
+  once, which neither tool supports in one pass, so it was built directly
+  against the original fp32 checkpoint rather than via either tool).
+  Verified **exact** (cosine similarity 1.0000, zero `<unk>` tokens) against
+  the untrimmed fp32 model on real English/Arabic/Indonesian test queries
+  before quantizing -- trimming only removes UNUSED vocabulary rows, so any
+  text that only uses kept tokens embeds identically. After trimming AND
+  quantizing: 112.86MB -> 44.3MB.
+- ONNX Runtime's memory arena (`enable_cpu_mem_arena`/`enable_mem_pattern`)
+  pre-allocates a working-memory pool well beyond a model's file size for
+  speed; disabled in `services/semantic_search.py`'s `_get_session()` since
+  RAM, not latency, is the binding constraint here. Modest but real: ~10-20%
+  additional savings on top of the above.
+
+**Combined result**: both models resident together, memory-measured (not
+estimated), went from **~750-870MB to ~402MB**. Both `.onnx` files are also
+now safely under GitHub's 100MB limit. Real, honest quality cost from the
+quantization+trimming combination, re-measured on the same 5,057-journal
+sample as the original multilingual candidate comparison:
+
+| | English R@10 / MRR | Indonesian R@10 / MRR | undetected R@10 / MRR |
+|---|---|---|---|
+| Before (fp32, untrimmed) | 0.154 / 0.082 | 0.115 / 0.044 | 0.130 / 0.084 |
+| After (trimmed + quantized) | 0.111 / 0.070 | 0.115 / 0.020 | 0.130 / 0.072 |
+
+Recall@10 held steady (Indonesian and undetected identical, English down
+somewhat); MRR dropped more meaningfully (~15-55% relative, worst on
+Indonesian) -- quantization noise more often reshuffles WHERE the right
+answer ranks among close competitors than knocks it out of the top 10
+entirely. A real, disclosed cost, not a free optimization -- accepted because
+the alternative was a feature that could not run on the target
+infrastructure at all, not a marginal quality-vs-speed choice.
+
+**Still open**: #145 tracks confirming this against actual Heroku dyno memory
+under real traffic, not just a local `ru_maxrss` measurement -- ~402MB
+leaves only ~110MB of headroom on a 512MB dyno for the rest of the
+FastAPI/pandas/SQLite stack, which is plausible but not verified live.
+
 ## Full Stage 1 screening table (2,500-journal sample, all 12 combinations)
 
 For reference — this is what the full-scale confirmation above was narrowed
@@ -243,14 +446,17 @@ are in `benchmark/results/embedding_evaluation_20260812/`.
 
 ## What this doesn't answer yet
 
-- Whether *any* of these numbers are good enough in absolute terms to justify
-  building #115–127's full pipeline (embedding service, vector store,
-  verifier, semantic index builder/importer) — that's a product decision,
-  not something this experiment resolves by itself.
+- What got built (see "Status" above) is deliberately the MINIMAL slice:
+  embed + rank, no filters, no vector-store abstraction (a flat in-memory
+  array is enough at 55,745 journals), no generator/verifier/dedup/confidence
+  pipeline (#120–125). Whether the fuller #115–127 pipeline is worth building
+  beyond this is still a product decision this experiment doesn't resolve by
+  itself.
 - Real curated index terms (#73/#74) may score meaningfully differently than
-  the OpenAlex-topics proxy used here — this should be re-run once that
-  dataset exists, using the same `--corpus-variant`-style extension point in
-  `evaluate_embeddings.py`.
+  the OpenAlex-topics proxy used here — re-run this evaluation (the same
+  `--corpus-variant`-style extension point in `evaluate_embeddings.py`) AND
+  `scripts/build_semantic_index.py` (see its own `_build_combined_text()`
+  docstring for the upgrade path) once that dataset exists.
 - Arabic/Indonesian retrieval quality specifically — the benchmark dataset's
   query abstracts are predominantly English (built from OpenAlex real
   papers), so this evaluation is not a reliable signal for Scilene's

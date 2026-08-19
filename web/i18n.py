@@ -418,6 +418,16 @@ _STRINGS = {
         "id": "Menjalankan ulang pencarian tersimpan secara langsung terhadap basis data saat ini — rekomendasi selalu dibuat ulang, tidak pernah diputar ulang dari file.",
     },
     "search.find_button": {"en": "Find Best Matching Journals", "ar": "ابحث عن أفضل المجلات المطابقة", "id": "Temukan Jurnal yang Paling Cocok"},
+    "search.semantic_find_button": {
+        "en": "Try AI Semantic Search (Experimental)",
+        "ar": "جرّب البحث الدلالي بالذكاء الاصطناعي (تجريبي)",
+        "id": "Coba Pencarian Semantik AI (Eksperimental)",
+    },
+    "search.semantic_find_helper": {
+        "en": "Ranks journals by AI-matched meaning instead of keyword overlap — doesn't use the filters above yet.",
+        "ar": "يرتّب المجلات حسب التطابق الدلالي بالذكاء الاصطناعي بدلاً من تطابق الكلمات المفتاحية — لا يستخدم عوامل التصفية أعلاه بعد.",
+        "id": "Mengurutkan jurnal berdasarkan kecocokan makna oleh AI, bukan kecocokan kata kunci — belum menggunakan filter di atas.",
+    },
 
     # -- Search form (#129) -----------------------------------------------
     "search_form.heading": {"en": "Describe Your Research", "ar": "صف بحثك", "id": "Jelaskan Riset Anda"},
@@ -626,6 +636,11 @@ _STRINGS = {
     },
     "research_idea_result.continue_button": {"en": "Continue to Search", "ar": "المتابعة إلى البحث", "id": "Lanjutkan ke Pencarian"},
     "research_idea_result.start_over_button": {"en": "← Start over", "ar": "← البدء من جديد", "id": "← Mulai lagi"},
+    "research_idea_result.language_note": {
+        "en": "Tip: keep all tags in the same language for the best search quality — English is recommended.",
+        "ar": "نصيحة: اجعل جميع الوسوم بلغة واحدة للحصول على أفضل جودة بحث — يُفضّل الإنجليزية.",
+        "id": "Tips: gunakan satu bahasa yang sama untuk semua tag agar kualitas pencarian terbaik — bahasa Inggris disarankan.",
+    },
 
     # -- Small shared components (#129) --------------------------------------
     "compare_bar.selected_count": {

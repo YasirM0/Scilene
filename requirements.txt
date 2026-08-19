@@ -25,3 +25,13 @@ requests==2.34.2
 # language detection (NOT an LLM), used only to pre-select a filter
 # checkbox. See services/language_detection.py.
 langdetect==1.0.9
+
+# Semantic search (#143) -- bge-small-en-v1.5 running on ONNX Runtime,
+# deliberately NOT sentence-transformers/torch (~350-400MB of
+# dependencies, real risk of exceeding Heroku's 500MB slug limit).
+# This pair adds ~22MB; the model weights themselves live in
+# models/bge-small-en-v1.5-onnx/ (committed directly, same convention
+# as data/journal_intelligence.db). See services/semantic_search.py
+# and docs/experiments/embedding_benchmarks.md.
+onnxruntime==1.28.0
+tokenizers==0.23.1

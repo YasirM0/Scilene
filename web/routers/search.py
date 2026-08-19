@@ -7,6 +7,12 @@ services.repository or the recommender directly. Presentation-only
 logic (option labels, confidence colors, pagination, visible-results
 filtering) lives in web.search_presentation, not in these route
 functions or in the templates.
+
+One deliberate exception: POST /search/semantic (#143) calls
+services.semantic_search directly, bypassing search_service/the
+recommender entirely — a genuinely separate, opt-in ranking strategy,
+not a variant of the deterministic pipeline every other route here
+goes through.
 """
 
 from datetime import datetime, timezone
@@ -15,7 +21,7 @@ from io import BytesIO
 from fastapi import APIRouter, Depends, Form, Request, UploadFile, File
 from fastapi.responses import StreamingResponse, HTMLResponse
 
-from services import search_service
+from services import search_service, semantic_search
 from services.app_info import APP_VERSION
 from services.discipline_detection import detect_disciplines
 from services.sls_format import serialize_sls, parse_sls_import, InvalidSlsFile
@@ -246,6 +252,92 @@ def _execute_search(session, abstract, concepts, strategy_label, resolved_langua
     }
 
     return results
+
+
+# How many results the semantic path returns -- generous enough that
+# pagination (10/page, web.search_presentation.PAGE_SIZE) has several
+# pages to work with, small enough that ranking/hydrating stays fast.
+# No filter parameters yet (#143's first, deliberately minimal cut of
+# this opt-in path) -- see services/semantic_search.py's search()
+# docstring.
+SEMANTIC_TOP_N = 40
+
+
+def _execute_semantic_search(session, query_text, display_label):
+    """
+    services/semantic_search.py's counterpart to _execute_search()
+    above -- same session-state contract (current_results/search_meta/
+    history), so _results_context() and everything downstream of it
+    (pagination, export, the show-weaker-matches toggle, journal_card.html)
+    work completely unchanged for either search path. `last_search_params`
+    stays None here on purpose: #102's "refine with detected disciplines"
+    re-runs a search by replaying recommender-specific parameters this
+    path doesn't have, so that feature is simply unavailable on a
+    semantic-search results set rather than faked.
+    """
+    results = semantic_search.search(query_text, top_n=SEMANTIC_TOP_N)
+
+    search_meta = {
+        "display_label": display_label,
+        "abstract": query_text,
+        "keywords": [],
+        "strategy_label": "✨ AI Semantic Match (Experimental)",
+        "filters_summary": [],
+    }
+
+    session["current_results"] = results
+    session["search_meta"] = search_meta
+    session["show_weaker"] = False
+    session["page"] = 1
+
+    session["history"].insert(0, {
+        "results": results,
+        "search_meta": search_meta,
+        "result_count": len(results),
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"),
+    })
+    session["history"] = session["history"][:MAX_HISTORY_ENTRIES]
+    session["last_search_params"] = None
+
+    return results
+
+
+@router.post("/semantic")
+def run_semantic_search(request: Request, session=Depends(get_session_state), abstract: str = Form("")):
+    """
+    #143 -- the opt-in "✨ Try AI Semantic Search" path
+    (web/templates/pages/search.html), a second submit button in the
+    same form with its own hx-post overriding the form's default.
+    Reads the same abstract field and Search Concepts tags every other
+    search route does; the actual ranking comes from
+    services/semantic_search.py instead of the recommender.
+    """
+    abstract = abstract.strip()
+    concepts = confirmed_tag_values(session)
+
+    if not abstract and len(concepts) < MIN_FALLBACK_TAGS:
+        context = {
+            **_filter_context(request.state.locale),
+            **_results_context(session),
+            **_interpreter_form_context(session),
+            "warning": t(
+                "warning.abstract_or_tags_required", request.state.locale,
+                count=len(concepts), min=MIN_FALLBACK_TAGS,
+            ),
+        }
+        return _render(request, "partials/search_results.html", context, session)
+
+    query_text = abstract
+    if concepts:
+        query_text = f"{abstract} {', '.join(concepts)}".strip()
+
+    results = _execute_semantic_search(session, query_text, _display_label(abstract, concepts))
+
+    context = {**_filter_context(request.state.locale), **_results_context(session)}
+    if not results:
+        context["warning"] = t("warning.no_results", request.state.locale)
+
+    return _render(request, "partials/search_results.html", context, session)
 
 
 @router.get("")

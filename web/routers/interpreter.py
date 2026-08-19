@@ -8,16 +8,27 @@ services/research_interpreter.py supplies the (placeholder) suggested
 values; nothing here ever touches services/recommender.py.
 """
 
+import threading
+
 from fastapi import APIRouter, Depends, Form, Request
 
 from services.abstract_validation import is_too_short
 from services.language_detection import detect_language
 from services.research_interpreter import suggest_concepts, next_suggestion, CATEGORIES
+from services.semantic_search import warm_model
 from web.confirmed_tags import add_confirmed_tag
 from web.dependencies import get_session_state, attach_session_cookie
 from web.interpreter_presentation import current_suggestions_context
 from web.language_presentation import language_form_context
 from web.templating import templates
+
+# #143 multilingual follow-up -- detected non-English languages that
+# have their own semantic search model (see services.semantic_search
+# .FALLBACK_LANGUAGES). Warming starts the moment the abstract's
+# language flips to one of these, well before the user reaches Search,
+# so the multilingual ONNX session is already resident in memory
+# instead of paying its cold-start cost on the first semantic query.
+_SEMANTIC_FALLBACK_LANGUAGES = {"Arabic", "Indonesian"}
 
 router = APIRouter(prefix="/search")
 
@@ -62,6 +73,15 @@ def _update_detected_language(session, abstract):
 
     session["detected_language"] = new_detected
     session["language_touched"] = False  # a genuinely new abstract earns a fresh hint
+
+    if new_detected in _SEMANTIC_FALLBACK_LANGUAGES:
+        # Fire-and-forget: loading an ONNX session is a few hundred ms
+        # to a couple seconds, not worth making the user's keystroke
+        # wait on, and warm_model() is a safe no-op if it's already
+        # loaded (e.g. a second Indonesian abstract later in the same
+        # process). Never blocks or affects this response either way.
+        threading.Thread(target=warm_model, args=("multilingual",), daemon=True).start()
+
     return True
 
 
