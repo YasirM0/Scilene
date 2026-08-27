@@ -24,6 +24,7 @@ from fastapi.responses import StreamingResponse, HTMLResponse
 from services import search_service, semantic_search
 from services.app_info import APP_VERSION
 from services.discipline_detection import detect_disciplines
+from services.query_translator import translate_query, ArabicNotSupportedOnline
 from services.sls_format import serialize_sls, parse_sls_import, InvalidSlsFile
 from services.report_context import ReportContext, build_filters_summary
 from services.reports import generate_pdf, generate_docx, generate_xlsx, generate_markdown
@@ -330,6 +331,17 @@ def run_semantic_search(request: Request, session=Depends(get_session_state), ab
     query_text = abstract
     if concepts:
         query_text = f"{abstract} {', '.join(concepts)}".strip()
+
+    try:
+        query_text, _ = translate_query(query_text)
+    except ArabicNotSupportedOnline as e:
+        context = {
+            **_filter_context(request.state.locale),
+            **_results_context(session),
+            "warning": str(e),
+            "warning_rtl": True,
+        }
+        return _render(request, "partials/search_results.html", context, session)
 
     results = _execute_semantic_search(session, query_text, _display_label(abstract, concepts))
 

@@ -36,6 +36,10 @@ class Journal:
     keywords: str | None = None
     languages: str | None = None
 
+    # Semicolon-separated curated index terms (#73/#74) -- see
+    # data/schema.sql's own comment on this column for provenance.
+    index_terms: str | None = None
+
     apc: str | None = None
     apc_amount: str | None = None
     waiver_policy: str | None = None
@@ -133,6 +137,7 @@ class Journal:
             subjects=clean(row["subjects"]),
             keywords=clean(row["keywords"]),
             languages=clean(row["languages"]),
+            index_terms=clean(row["index_terms"]),
             apc=clean(row["apc"]),
             apc_amount=clean(row["apc_amount"]),
             waiver_policy=clean(row["waiver_policy"]),

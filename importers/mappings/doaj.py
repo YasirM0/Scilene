@@ -20,6 +20,7 @@ DOAJ_COLUMNS = {
     "subjects": "Subjects",
     "keywords": "Keywords",
     "languages": "Languages in which the journal accepts manuscripts",
+    "index_terms": "index_terms",
 
     # Publishing model
     "apc": "APC",

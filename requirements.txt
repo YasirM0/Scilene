@@ -36,10 +36,11 @@ langdetect==1.0.9
 onnxruntime==1.28.0
 tokenizers==0.23.1
 
-# Fetches data/raw + data/enrichment source CSVs from a private HF
-# dataset repo on demand (scripts/fetch_source_csvs.py) -- NOT used by
-# the live app (web/, services/ never import this), only by the
-# offline database-rebuild path. Lives here rather than a separate
-# dev-requirements file because it needs to be importable inside a
-# `heroku run` one-off dyno, which shares the same slug as web dynos.
-huggingface-hub>=0.23.0
+# Fetches data/processed + data/raw source CSVs from Cloudcube (S3-
+# compatible Heroku add-on) on demand (scripts/fetch_source_csvs.py) --
+# NOT used by the live app (web/, services/ never import this), only
+# by the offline database-rebuild path. Lives here rather than a
+# separate dev-requirements file because it needs to be importable
+# inside a `heroku run` one-off dyno, which shares the same slug as
+# web dynos.
+boto3>=1.34.0

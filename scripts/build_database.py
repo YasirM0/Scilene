@@ -2,10 +2,8 @@
 Full database build pipeline.
 
 Rebuilds journal_intelligence.db from scratch using the CSV files in
-data/processed/ -- the enriched exports (each is its data/raw/
-counterpart plus appended scope/index_terms columns; every column an
-importer actually reads keeps its original raw name unchanged, so
-these are safe drop-in replacements, not a different schema):
+data/processed/ -- each already contains full journal metadata plus
+appended scope/index_terms enrichment columns:
   - doaj_complete.csv     -> base journal catalog (richest per-journal
                               metadata)
   - scimago_complete.csv  -> tags matching journals as Scopus-indexed
@@ -18,10 +16,8 @@ these are safe drop-in replacements, not a different schema):
 Then, from data/enrichment/:
   - wos.csv        -> SCImago's own export, pre-filtered by the user to
                        Web-of-Science-indexed journals only; tags matches
-                       as Web-of-Science-indexed. Lives here (not
-                       data/raw/) since it's a derived, hand-filtered
-                       subset of scimagojr.csv, not an independent
-                       primary-source export.
+                       as Web-of-Science-indexed. Small enough to stay
+                       committed directly, unlike the 3 files above.
   - Elsevier.csv   -> fills Scopus-indexing gaps SCImago's periodic
                        snapshot hasn't caught up to yet (#98) -- tags a
                        matched, Active journal as Scopus-indexed if it
@@ -45,15 +41,14 @@ Then, from data/enrichment/:
                        above; see importers/aliases.py.
 
 None of data/processed/'s complete exports (doaj_complete.csv,
-scimago_complete.csv, sinta_complete.csv) or data/enrichment/'s wos.csv
-are committed to this repo -- large, license-bound source exports, kept
-out of git and out of the Heroku slug entirely (the live app never
-reads them; only the already-built data/journal_intelligence.db does).
-Restore them first with `python -m scripts.fetch_source_csvs` (needs
-HF_TOKEN set -- see that script's docstring) before running this on a
-fresh clone. data/raw/'s original (non-enriched) versions of these
-same three exports are fetched too, purely as a provenance backup --
-this script doesn't read them.
+scimago_complete.csv, sinta_complete.csv) are committed to this repo --
+large, license-bound source exports, kept out of git and out of the
+Heroku slug entirely (the live app never reads them; only the
+already-built data/journal_intelligence.db does). Restore them first
+with `python -m scripts.fetch_source_csvs` (needs Cloudcube config vars
+set -- see that script's docstring) before running this on a fresh
+clone. data/enrichment/'s files (wos.csv, Elsevier.csv, etc.) stay
+committed since they're small.
 
 To update any dataset: replace the matching file with a newer export
 (same filename, same directory) and re-run this script. No code
@@ -112,7 +107,7 @@ def check_required_files():
             "Missing source file(s), not part of this repo:\n"
             + "\n".join(f"  - {m}" for m in missing)
             + "\n\nRun `python -m scripts.fetch_source_csvs` first (needs "
-            "HF_TOKEN set -- see that script's docstring)."
+            "Cloudcube config vars set -- see that script's docstring)."
         )
 
 
@@ -142,7 +137,7 @@ def main():
     index = JournalIndex(conn)
 
     print("--- Scopus (SCImago) ---")
-    index, scopus_summary = import_scimago(DATA_PROCESSED / "scimago_complete.csv", "Scopus", index=index, conn=conn)
+    index, scopus_summary = import_scimago(DATA_PROCESSED / "scimago_complete.csv", "Scopus", index=index, conn=conn, sep=",")
     conn.commit()
     print()
 

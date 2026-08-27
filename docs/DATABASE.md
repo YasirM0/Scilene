@@ -34,21 +34,15 @@ Indexes exist on `issn_print`, `issn_online`, `title`, `country`
 | Web of Science | `data/enrichment/wos.csv` | Tags + quartile/SJR/H-index — the SAME SCImago format, pre-filtered by the maintainer to WoS-indexed journals only. Lives in `data/enrichment/` rather than `data/processed/` since it's derived from `scimagojr.csv`, not an independent primary-source export |
 | SINTA | `data/processed/sinta_complete.csv` | Tags + accreditation tier (SINTA 1–6) |
 
-The three `data/processed/*_complete.csv` files are their `data/raw/`
-counterparts (`doaj.csv`, `scimagojr.csv`, `sinta.csv`) plus appended
-`scope`/`index_terms` enrichment columns — every column an importer
-actually reads keeps its original raw name, so these are safe drop-in
-replacements built directly from the raw exports, not a different
-schema. None of `data/processed/`'s complete exports or
-`data/enrichment/`'s `wos.csv` are committed to this repo — large,
-license-bound source data, kept out of git and out of the deployed app
-entirely (only the already-built `data/journal_intelligence.db` ships;
-the live app never reads these CSVs). Restore them with `python -m
-scripts.fetch_source_csvs` (see that script's own docstring for the
-required `HF_TOKEN`) before running a rebuild on a fresh clone —
-that same command also restores the original `data/raw/` exports, kept
-purely as a provenance backup since `scripts/build_database.py` itself
-reads from `data/processed/`.
+Each `data/processed/*_complete.csv` file already contains full
+journal metadata plus appended `scope`/`index_terms` enrichment
+columns (not yet imported into the database — no importer reads them
+yet). None of the 3 are committed to this repo — large, license-bound source
+data, kept out of git and out of the deployed app entirely (only the
+already-built `data/journal_intelligence.db` ships; the live app never
+reads these CSVs). Restore them with `python -m scripts.fetch_source_csvs`
+(see that script's own docstring for the required Cloudcube config
+vars) before running a rebuild on a fresh clone.
 
 Not yet supported: Google Scholar (no bulk export exists to import from
 — there's nothing to build a real filter against), OpenAlex, Crossref,

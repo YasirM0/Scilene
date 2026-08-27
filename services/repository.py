@@ -746,6 +746,22 @@ def update_publication_type(conn, journal_id, publication_type):
     )
 
 
+def update_index_terms(conn, journal_id, index_terms):
+    """
+    Set journals.index_terms (#73/#74) for a journal that already
+    exists -- never creates a row, safe to call for both a
+    newly-created journal (row starts with index_terms=NULL) and one
+    matched to an existing row. COALESCEs against the existing value
+    so whichever source's importer runs FIRST for a given journal
+    wins -- deliberately not concatenated across sources, to avoid
+    mixing two different enrichment passes' terms for one journal.
+    """
+    conn.execute(
+        "UPDATE journals SET index_terms = COALESCE(index_terms, ?) WHERE id = ?",
+        (index_terms, journal_id),
+    )
+
+
 def tag_enrichment(conn, journal_id, provider, data, fetched_at=None):
     """
     Attach a metadata enrichment provider's data to a journal that

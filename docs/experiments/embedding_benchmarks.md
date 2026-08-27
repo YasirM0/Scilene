@@ -1,17 +1,24 @@
 # Embedding Model Evaluation (#143 follow-up)
 
 **Status:** The evaluation itself is research (this doc). Its conclusion IS
-now shipped, though: `BAAI/bge-small-en-v1.5` with the `combined` corpus runs
-in production as the opt-in "✨ Try AI Semantic Search (Experimental)" path
-(`services/semantic_search.py`, `POST /search/semantic`) — a second, separate
-ranking strategy alongside the deterministic `services/recommender.py`, not a
-replacement of it. See that module's docstring for the runtime architecture
-(ONNX Runtime, not sentence-transformers/torch, to fit Heroku's slug size
-budget) and `scripts/build_semantic_index.py` for how the committed corpus
-embeddings (`models/bge-small-en-v1.5-onnx/`) get (re)built. **Also shipped:**
-a second model (`multilingual-e5-small`) and language-routed dual-model
-search, fixing a real English-only blind spot in the model above — see
-"Multilingual follow-up" below.
+shipped: a single model (currently `sentence-transformers/all-MiniLM-L12-v2`,
+originally `BAAI/bge-small-en-v1.5`) runs in production as the opt-in
+"✨ Try AI Semantic Search (Experimental)" path (`services/semantic_search.py`,
+`POST /search/semantic`) — a second, separate ranking strategy alongside the
+deterministic `services/recommender.py`, not a replacement of it. See that
+module's docstring for the runtime architecture (ONNX Runtime, not
+sentence-transformers/torch, to fit Heroku's slug size budget) and
+`scripts/build_semantic_index.py` for how the committed corpus embeddings
+get (re)built.
+
+**Multilingual routing (a second model, `multilingual-e5-small`,
+language-routed for Arabic/Indonesian queries) was built, shipped, and then
+REMOVED.** See "Multilingual follow-up" and "Superseded" below for the full
+history — the short version: once real curated index terms (#73/#74) existed,
+a translate-to-English + single-model design (`services/query_translator.py`)
+tested clearly better than routing Arabic/Indonesian queries to a second
+model against a weaker corpus, so the second model was retired rather than
+carried forward as unused weight.
 
 This doc's original question was: *is a real embedding model worth building a
 semantic layer around, and if so, which one?* — answered here for the
@@ -412,10 +419,82 @@ entirely. A real, disclosed cost, not a free optimization -- accepted because
 the alternative was a feature that could not run on the target
 infrastructure at all, not a marginal quality-vs-speed choice.
 
-**Still open**: #145 tracks confirming this against actual Heroku dyno memory
-under real traffic, not just a local `ru_maxrss` measurement -- ~402MB
-leaves only ~110MB of headroom on a 512MB dyno for the rest of the
-FastAPI/pandas/SQLite stack, which is plausible but not verified live.
+**Still open**: #145 tracked confirming this against actual Heroku dyno memory
+under real traffic, not just a local `ru_maxrss` measurement -- moot now that
+the multilingual model has been removed (see "Superseded" below), but the
+same live-memory-verification gap applies to the single remaining model too.
+
+## Superseded: multilingual routing removed once real index terms landed
+
+Everything above (the dual-model architecture, the quantization/trimming
+work, the ~402MB combined footprint) genuinely shipped and worked. It was
+then removed. Here's why, in sequence:
+
+1. **Real curated index terms arrived (#73/#74)**, replacing the
+   OpenAlex-topics proxy `bge-small-en-v1.5`/`multilingual-e5-small` had both
+   been searching against. A maintainer-run benchmark on the new
+   `index_terms`-only corpus found `BAAI/bge-base-en-v1.5` scored best (MRR
+   0.0856, R@10 0.1562) -- but it measured ~556MB resident alongside the
+   multilingual model (over the entire 512MB budget) and its quantized file
+   (109.7MB) still exceeded GitHub's 100MB push limit. Rejected on
+   deployability, same reasoning as every other model this doc covers.
+2. **`sentence-transformers/all-MiniLM-L12-v2`** replaced `bge-small` for
+   English instead -- same 384-dim embeddings (corpus doesn't double the way
+   bge-base's 768-dim would), ships as an official pre-quantized ONNX export
+   (34.1MB, no manual quantization work needed), measured ~403.5MB combined
+   with the multilingual model (a lateral move from bge-small's own
+   footprint). Re-run on the real #112 harness: recall@10 0.094 -> 0.120
+   (+28% relative) on the full 55,745-journal corpus, a real if modest gain.
+3. **With English quality now resting on real index terms**, the natural
+   question became whether Arabic/Indonesian queries should also reach that
+   same good corpus, rather than a second model searching the older,
+   weaker OpenAlex-topics-proxy corpus. A direct empirical A/B test
+   (500-journal sample, 10 real academic queries machine-translated to
+   Arabic/Indonesian and back) measured overlap@10 against each query's
+   English-reference ranking:
+
+   | Approach | Arabic overlap@10 | Indonesian overlap@10 |
+   |---|---|---|
+   | Dual-model routing (multilingual-e5-small) | 2.80 | 6.00 |
+   | Translate to English + single model | **3.90** | **8.40** |
+
+   Translation won clearly on retrieval consistency, at the cost of ~500-600ms
+   of added per-query latency (Helsinki-NLP/opus-mt-{ar,id}-en via
+   unoptimized PyTorch `.generate()`) and several outright translation
+   failures on short technical phrases (an empty string for "cardiovascular
+   disease treatment", "renewable energy solar wind" mistranslated to
+   "United", "human rights" degenerating into five repeated words).
+4. **Argos Translate** (CTranslate2-based) was evaluated as a higher-quality
+   Arabic alternative -- and its translation quality genuinely was
+   dramatically better, correctly handling every case Helsinki-NLP's model
+   had mangled. But `import ctranslate2` alone costs **530.6MB** of resident
+   memory before loading any model or running any inference -- not
+   tunable away via threading/arena settings the way `onnxruntime`'s
+   overhead was earlier in this doc. A real quality win that simply doesn't
+   fit this app's infrastructure.
+5. **Final design**: `services/query_translator.py`, no second embedding
+   model at all.
+   - English: unchanged, straight to `all-MiniLM-L12-v2`.
+   - Indonesian: dictionary lookup (`data/indonesian_academic_dict.json`,
+     913 real academic terms extracted from this project's own
+     `index_terms` data and translated via Helsinki-NLP/opus-mt-en-id,
+     manually spot-checked) rewrites recognized terms to English before
+     embedding; unrecognized words pass through untranslated. A parallel
+     Arabic dictionary was built the same way but discarded -- 27% of its
+     1000 source terms translated to an empty string, and manual review
+     found confidently-wrong translations even among outputs that passed
+     every automated quality check (e.g. "المصدر:" was mapped to
+     "Epidemiology"; it actually means "Source:").
+   - Arabic: `ArabicNotSupportedOnline` is raised before any embedding
+     model is touched, prompting the user to search in English or use the
+     planned Scilene desktop app (where a locally-installed Argos package
+     isn't fighting a 512MB hosted-dyno budget).
+6. **`multilingual-e5-small` and its corpus were deleted entirely** --
+   ~90MB of committed model/corpus storage, and ~159.5MB of resident RAM
+   (its own measured incremental contribution in the combined-footprint
+   test above) recovered. The English-only semantic search path now runs
+   at a single model's footprint (~310-320MB total resident, per a fresh
+   measurement after removal) instead of two.
 
 ## Full Stage 1 screening table (2,500-journal sample, all 12 combinations)
 

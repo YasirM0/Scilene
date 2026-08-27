@@ -1,18 +1,44 @@
 """
-Builds a model's semantic search corpus embeddings (#143 follow-up,
-multilingual follow-up) -- every journal's "combined" text
-(title+subjects+keywords, same as the existing keyword search,
-concatenated with real OpenAlex Topics) embedded with the given
-model via services/semantic_search.py.
+Builds the semantic search corpus embeddings (#143 follow-up, #73/#74
+index-terms follow-up) via services/semantic_search.py. Corpus text is
+real curated index terms (journals.index_terms, #73/#74) alone -- per
+the maintainer's own benchmark, concatenating scope/description text
+alongside terms actively hurt retrieval quality. Falls back to
+baseline (title+subjects+keywords) text only for journals real index
+terms don't cover yet (see scripts/backfill_index_terms.py -- an
+ongoing enrichment effort, not a permanent gap).
 
-One-time (or run-after-a-database-rebuild, or after adding a new
-model) offline step. Output is committed directly to the repo
-(models/<model>/data/), same convention as data/journal_intelligence.db
--- the deployed app only ever loads these files, it never re-embeds
-the corpus itself. Run once per model key in services.semantic_search
-.MODEL_CONFIGS -- each model's corpus lives under its own directory,
-since embeddings from different models aren't comparable and so can't
-share one file.
+One model only (sentence-transformers/all-MiniLM-L12-v2) -- an earlier
+version of this script also built a second corpus for a multilingual
+model handling Arabic/Indonesian queries directly; that whole approach
+was removed once real index terms made a translate-to-English +
+single-model design clearly better (see
+docs/experiments/embedding_benchmarks.md and
+services/query_translator.py). Non-English queries are handled before
+they ever reach services/semantic_search.py now, so there's only ever
+one corpus to build.
+
+One-time (or run-after-a-database-rebuild) offline step. Output is
+committed directly to the repo (models/all-MiniLM-L12-v2-onnx/data/),
+same convention as data/journal_intelligence.db -- the deployed app
+only ever loads these files, it never re-embeds the corpus itself.
+
+SECURITY: this script WIPES journals.index_terms back to NULL in the
+database once it's done embedding it. The maintainer's curated index
+terms represent real, significant effort and are deliberately kept
+off GitHub entirely (data/processed/*_complete.csv never leaves
+Cloudcube -- see scripts/fetch_source_csvs.py). But
+data/journal_intelligence.db itself IS committed directly to a public
+repo, same as every other model/data file this project ships -- so if
+index_terms stayed populated in that file, the full curated list would
+ship in plain, readable text to anyone who clones the repo, completely
+defeating the point of keeping the source CSVs private. The live app
+never reads journals.index_terms at request time (only the embeddings
+below), and nothing in web/templates/ ever displays it, so wiping it
+here costs the shipped app nothing -- only a future rebuild needs it
+repopulated first, via scripts/backfill_index_terms.py against the
+CSVs, which is the durable, private source of truth this was always
+supposed to be.
 
 Stored as float16, not float32 -- halves the file size (~43MB vs
 ~86MB for 55,745 journals x 384 dims) with no meaningful precision
@@ -20,114 +46,89 @@ loss for cosine-similarity ranking (normalized embedding components
 are small values well within float16's usable range); cast back to
 float32 at load time for the actual dot product.
 
-Prerequisite: models/bge-small-en-v1.5-onnx/data/openalex_topics_full.json
-must already exist (benchmark/scripts/fetch_openalex_topics.py against
-all_journal_ids.json) -- this script does not fetch it itself, since
-that's a slow network-bound step independent of the fast CPU-bound
-embedding step here, and re-running this script (e.g. after a DB
-content update, or for a second model) shouldn't force a redundant
-OpenAlex re-fetch. Reused as-is for every model, not per-model --
-OpenAlex topics are a property of the JOURNAL, not of which embedding
-model is reading them.
-
 Run from the project root:
-    python3 -m scripts.build_semantic_index --model en
-    python3 -m scripts.build_semantic_index --model multilingual
+    python3 -m scripts.build_semantic_index
 """
 
-import argparse
 import json
-from pathlib import Path
 
 import numpy as np
 
 from benchmark.baselines.tfidf import build_journal_corpus
 from services.repository import get_connection
-from services.semantic_search import embed, MODEL_CONFIGS
+from services.semantic_search import embed, MODEL_DIR
 
-OPENALEX_TOPICS_PATH = (
-    Path(__file__).resolve().parent.parent / "models" / "bge-small-en-v1.5-onnx" / "data" / "openalex_topics_full.json"
-)
+DATA_DIR = MODEL_DIR / "data"
+CORPUS_EMBEDDINGS_PATH = DATA_DIR / "corpus_embeddings.f16.npy"
+CORPUS_IDS_PATH = DATA_DIR / "corpus_ids.json"
 
 MAX_CHARS = 400  # same cap used throughout benchmark/ -- keeps worst-case
                   # batch memory bounded regardless of what's in the DB
 BATCH_SIZE = 64
 
 
-def _build_combined_text(baseline_corpus, topics_cache):
-    """
-    UPGRADE PATH: once journals have a real curated index-terms field
-    (#73/#74 -- no such column/table exists yet as of this writing),
-    that text should take OpenAlex topics' place here -- either
-    replacing it outright or concatenating alongside it, the same way
-    this already concatenates baseline text with the OpenAlex proxy.
-    Re-run this script for every model key once that data exists; the
-    rest of the pipeline (services/semantic_search.py, the /search/semantic
-    route) needs no changes either way, since it only ever consumes
-    the resulting corpus_embeddings.f16.npy / corpus_ids.json output.
-    """
-    combined, matched = {}, 0
+def _build_index_terms_corpus(conn, baseline_corpus):
+    """Real curated index terms alone (comma-joined; the source data
+    is semicolon-separated, but a natural comma-separated list reads
+    closer to the plain-language text this model was trained on than
+    raw semicolons). Falls back to baseline text for journals not yet
+    covered by data/processed/*_complete.csv."""
+    rows = conn.execute("SELECT id, index_terms FROM journals").fetchall()
+    terms_by_id = {jid: terms for jid, terms in rows if terms}
+
+    corpus, matched = {}, 0
     for jid, base_text in baseline_corpus.items():
-        topics = topics_cache.get(str(jid))
-        if topics:
+        terms = terms_by_id.get(jid)
+        if terms:
             matched += 1
-            combined[jid] = f"{base_text} {' '.join(topics)}"
+            corpus[jid] = ", ".join(t.strip() for t in terms.split(";") if t.strip())
         else:
-            combined[jid] = base_text
-    print(f"combined corpus: {matched}/{len(baseline_corpus)} journals used real OpenAlex topics")
-    return combined
+            corpus[jid] = base_text
+    print(f"index_terms corpus: {matched}/{len(baseline_corpus)} journals used real curated index "
+          f"terms ({len(baseline_corpus) - matched} fell back to baseline text)")
+    return corpus
 
 
-def run(model_key):
-    if model_key not in MODEL_CONFIGS:
-        raise SystemExit(f"Unknown model key {model_key!r} -- choices are {list(MODEL_CONFIGS)}")
-    if not OPENALEX_TOPICS_PATH.exists():
-        raise SystemExit(
-            f"{OPENALEX_TOPICS_PATH} not found -- run "
-            f"benchmark.scripts.fetch_openalex_topics against all_journal_ids.json first."
-        )
-
-    data_dir = MODEL_CONFIGS[model_key]["dir"] / "data"
-    corpus_embeddings_path = data_dir / "corpus_embeddings.f16.npy"
-    corpus_ids_path = data_dir / "corpus_ids.json"
-
+def run():
     conn = get_connection()
     baseline_corpus = build_journal_corpus(conn)
-    conn.close()
+    combined = _build_index_terms_corpus(conn, baseline_corpus)
     print(f"Loaded baseline text for {len(baseline_corpus)} journals", flush=True)
 
-    with open(OPENALEX_TOPICS_PATH) as f:
-        topics_cache = json.load(f)
-
-    combined = _build_combined_text(baseline_corpus, topics_cache)
     journal_ids = list(combined.keys())
     texts = [combined[jid][:MAX_CHARS] for jid in journal_ids]
 
-    print(f"Embedding {len(texts)} journal documents with model={model_key!r} ...", flush=True)
+    print(f"Embedding {len(texts)} journal documents ...", flush=True)
     all_embeddings = []
     for start in range(0, len(texts), BATCH_SIZE):
         chunk = texts[start:start + BATCH_SIZE]
-        all_embeddings.append(embed(chunk, model_key))
+        all_embeddings.append(embed(chunk))
         if start % 5000 < BATCH_SIZE:
             print(f"  embedded {min(start + BATCH_SIZE, len(texts))}/{len(texts)}", flush=True)
 
     embeddings = np.vstack(all_embeddings).astype(np.float16)
 
-    data_dir.mkdir(parents=True, exist_ok=True)
-    np.save(corpus_embeddings_path, embeddings)
-    with open(corpus_ids_path, "w") as f:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    np.save(CORPUS_EMBEDDINGS_PATH, embeddings)
+    with open(CORPUS_IDS_PATH, "w") as f:
         json.dump(journal_ids, f)
 
-    print(f"Saved {embeddings.shape} embeddings -> {corpus_embeddings_path}")
-    print(f"Saved {len(journal_ids)} journal IDs -> {corpus_ids_path}")
+    print(f"Saved {embeddings.shape} embeddings -> {CORPUS_EMBEDDINGS_PATH}")
+    print(f"Saved {len(journal_ids)} journal IDs -> {CORPUS_IDS_PATH}")
 
-
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", required=True, choices=list(MODEL_CONFIGS))
-    args = parser.parse_args()
-    run(args.model)
+    # See module docstring's SECURITY note -- embeddings are already
+    # safely on disk above, so wiping the source text here costs
+    # nothing the shipped app needs, and keeps it out of the database
+    # file that gets committed to a public repo.
+    stripped = conn.execute(
+        "SELECT COUNT(*) FROM journals WHERE index_terms IS NOT NULL AND index_terms != ''"
+    ).fetchone()[0]
+    conn.execute("UPDATE journals SET index_terms = NULL")
+    conn.commit()
+    conn.close()
+    print(f"Wiped index_terms back to NULL for {stripped} journals (embeddings already saved above -- "
+          f"see module docstring's SECURITY note).")
 
 
 if __name__ == "__main__":
-    main()
+    run()

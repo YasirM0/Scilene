@@ -21,6 +21,15 @@ CREATE TABLE journals (
     keywords TEXT,
     languages TEXT,
 
+    -- Semicolon-separated curated index terms (#73/#74), from
+    -- data/processed/*_complete.csv's "index_terms" column -- the real
+    -- replacement for the OpenAlex-topics proxy scripts/build_semantic_index.py
+    -- used before this existed. Same "first source to set it wins" rule
+    -- as other core metadata (DOAJ imports first): not concatenated
+    -- across sources, to avoid mixing two different enrichment passes'
+    -- terms for one journal.
+    index_terms TEXT,
+
     apc TEXT,
     apc_amount REAL,
     waiver_policy TEXT,

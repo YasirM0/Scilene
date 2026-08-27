@@ -39,7 +39,7 @@ once per journal regardless of which pass(es) match it.
 import pandas as pd
 
 from services.dedup import JournalIndex
-from services.repository import get_connection, insert_minimal_journal, tag_source, tag_enrichment
+from services.repository import get_connection, insert_minimal_journal, tag_source, tag_enrichment, update_index_terms
 from utils.issn import extract_issns
 
 
@@ -59,9 +59,15 @@ def _clean(value):
     return str(value).strip() or None
 
 
-def import_scimago(csv_path, source_label, index=None, conn=None):
+def import_scimago(csv_path, source_label, index=None, conn=None, sep=";"):
+    """
+    `sep` defaults to ";" (data/enrichment/wos.csv's own raw-SCImago-export
+    format), but data/processed/scimago_complete.csv -- the enriched
+    Scopus source, see scripts/build_database.py -- is comma-separated
+    instead, so that call passes sep="," explicitly.
+    """
 
-    df = pd.read_csv(csv_path, sep=";", encoding="utf-8")
+    df = pd.read_csv(csv_path, sep=sep, encoding="utf-8")
 
     owns_connection = conn is None
     if owns_connection:
@@ -127,6 +133,7 @@ def import_scimago(csv_path, source_label, index=None, conn=None):
             matched_by_title += 1
 
         tag_source(conn, journal_id, source_label, metadata)
+        update_index_terms(conn, journal_id, _clean(row.get("index_terms")))
 
         if _clean(row.get("Open Access Diamond")) == "Yes":
             tag_enrichment(conn, journal_id, "diamond_oa", {})

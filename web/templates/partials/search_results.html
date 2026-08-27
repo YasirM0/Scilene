@@ -5,7 +5,8 @@
 {% from "components/journal_card.html" import journal_card with context %}
 
 {% if warning %}
-<div class="px-4 py-3 rounded-md bg-yellow-50 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300 text-sm border border-yellow-200 dark:border-yellow-700 mb-4">
+<div class="px-4 py-3 rounded-md bg-yellow-50 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300 text-sm border border-yellow-200 dark:border-yellow-700 mb-4"
+     {% if warning_rtl %}dir="rtl"{% endif %}>
     {{ warning }}
 </div>
 {% endif %}

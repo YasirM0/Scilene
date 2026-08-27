@@ -25,7 +25,7 @@ rather than as a separate importers/enrichment/ provider.
 import pandas as pd
 
 from services.dedup import JournalIndex
-from services.repository import get_connection, insert_minimal_journal, tag_source, tag_enrichment
+from services.repository import get_connection, insert_minimal_journal, tag_source, tag_enrichment, update_index_terms
 from utils.issn import normalize_issn
 
 
@@ -120,6 +120,7 @@ def import_sinta(csv_path, source_label="SINTA", index=None, conn=None):
             matched_by_title += 1
 
         tag_source(conn, journal_id, source_label, metadata)
+        update_index_terms(conn, journal_id, _clean(row.get("index_terms")))
 
         if bool(row.get("garuda_indexed")):
             tag_enrichment(conn, journal_id, "garuda", {})
