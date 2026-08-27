@@ -8,6 +8,8 @@ The name combines *Sci* (science) with *Selene*, the Greek personification of th
 
 Unlike many journal finders that provide only a ranked list, Scilene explains **why** each journal matches your manuscript.
 
+**Live demo:** [scilene-25055279a542.herokuapp.com](https://scilene-25055279a542.herokuapp.com/)
+
 ---
 
 ## Overview
@@ -116,6 +118,12 @@ Project documentation is available in:
 ```
 docs/INDEX.md
 ```
+
+---
+
+## Related Projects
+
+**[Loupe](https://github.com/YasirM0/loupe)** — a free, open-source citation verifier: checks whether a paper's claims are actually supported by its cited sources, flags uncited claims, and hunts for contradictions between a paper and its references. Runs entirely in-browser, no server or account required. If Scilene helps you find where to publish, Loupe helps you check your citations hold up before you do.
 
 ---
 

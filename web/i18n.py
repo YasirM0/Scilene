@@ -320,6 +320,21 @@ _STRINGS = {
         "ar": "تُقاس كل ميزة جديدة بالسؤال نفسه: هل يجعل هذا Scilene أكثر شفافية، أو أسهل فهماً، أو أكثر فائدة لباحث يقرر أين يرسل عمله؟",
         "id": "Setiap fitur baru diukur dengan pertanyaan yang sama: apakah ini membuat Scilene lebih transparan, lebih mudah dipahami, atau lebih bermanfaat bagi peneliti yang memutuskan ke mana harus mengirimkan karyanya?",
     },
+    "about.section.related_projects.title": {
+        "en": "Related projects",
+        "ar": "مشاريع ذات صلة",
+        "id": "Proyek terkait",
+    },
+    "about.section.related_projects.body": {
+        "en": "Loupe is a free, open-source citation verifier by the same author — it checks whether a paper's claims are actually supported by its cited sources, flags uncited claims, and hunts for contradictions between a paper and its references. If Scilene helps you find where to publish, Loupe helps you check your citations hold up before you do.",
+        "ar": "لوب (Loupe) أداة مجانية ومفتوحة المصدر للتحقق من الاستشهادات المرجعية من إعداد نفس المطوّر — تتحقق مما إذا كانت ادعاءات الورقة البحثية مدعومة فعلاً بمصادرها المُستشهد بها، وتكشف الادعاءات غير المُوثّقة، وتبحث عن أي تناقضات بين الورقة ومراجعها. إذا كان Scilene يساعدك في العثور على مكان النشر، فإن Loupe يساعدك في التأكد من صحة استشهاداتك قبل ذلك.",
+        "id": "Loupe adalah alat verifikasi kutipan gratis dan sumber terbuka oleh pengembang yang sama — alat ini memeriksa apakah klaim dalam sebuah makalah benar-benar didukung oleh sumber yang dikutip, menandai klaim yang tidak memiliki kutipan, dan mencari kontradiksi antara makalah dan referensinya. Jika Scilene membantu Anda menemukan tempat untuk menerbitkan karya, Loupe membantu Anda memastikan kutipan Anda akurat sebelum itu.",
+    },
+    "about.section.related_projects.link": {
+        "en": "View Loupe on GitHub",
+        "ar": "عرض Loupe على GitHub",
+        "id": "Lihat Loupe di GitHub",
+    },
 
     # -- Journal card (#129) -------------------------------------------
     "journal_card.scopus_coverage": {"en": "Scopus coverage: {coverage}", "ar": "تغطية Scopus: {coverage}", "id": "Cakupan Scopus: {coverage}"},

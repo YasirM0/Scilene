@@ -23,6 +23,12 @@ APP_AUTHOR = "Yasir Mohammed"
 APP_GITHUB = "https://github.com/YasirM0/Scilene"
 APP_LICENSE = "MIT"
 
+# A separate, related project by the same author (README.md's own
+# "Related Projects" section) -- a citation/reference verifier, not
+# part of Scilene itself. Kept here rather than hardcoded in
+# footer.html/about.html so both templates reference one source.
+APP_LOUPE = "https://github.com/YasirM0/loupe"
+
 # Sources actually imported by scripts/build_database.py's core
 # indexing pipeline (not the enrichment providers in
 # docs/ENRICHMENT.md, which are display-only). Kept as a plain string
@@ -39,6 +45,7 @@ APP = SimpleNamespace(
     author=APP_AUTHOR,
     github=APP_GITHUB,
     license=APP_LICENSE,
+    loupe=APP_LOUPE,
 )
 
 

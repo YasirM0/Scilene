@@ -82,6 +82,14 @@
     <p>{{ t("about.section.vision.body2", locale) }}</p>
     {% endcall %}
 
+    {% call accordion_card(t("about.section.related_projects.title", locale), "about", "🔍") %}
+    <p>{{ t("about.section.related_projects.body", locale) }}</p>
+    <a href="{{ app.loupe }}" target="_blank" rel="noopener noreferrer"
+       class="inline-block text-sm text-horizon-600 dark:text-horizon-500 hover:underline">
+        {{ t("about.section.related_projects.link", locale) }} →
+    </a>
+    {% endcall %}
+
 </section>
 
 {% endblock %}
