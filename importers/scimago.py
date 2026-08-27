@@ -7,10 +7,18 @@ Attribution kept wherever this data is shown or redistributed:
 "Data source: SCImago Journal & Country Rank (www.scimagojr.com)."
 
 Two files in this project share this exact format:
-  - data/raw/scimagojr.csv  -> full SCImago export, tagged "Scopus"
-  - data/raw/wos.csv        -> the same export, pre-filtered by the user
-                                to Web-of-Science-indexed journals only,
-                                tagged "Web of Science"
+  - data/processed/scimago_complete.csv  -> full SCImago export (plus
+                                      appended scope/index_terms columns
+                                      this importer doesn't read), tagged
+                                      "Scopus"
+  - data/enrichment/wos.csv       -> the same export, pre-filtered by the
+                                      user to Web-of-Science-indexed
+                                      journals only, tagged "Web of Science"
+                                      (lives in data/enrichment/, not
+                                      data/processed/, since it's derived
+                                      from scimagojr.csv rather than an
+                                      independent primary-source export,
+                                      and small enough to stay committed)
 
 Each row is matched against the existing `journals` table by ISSN, then
 by exact normalized title (see services.dedup). A match gets tagged

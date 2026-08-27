@@ -29,10 +29,26 @@ Indexes exist on `issn_print`, `issn_online`, `title`, `country`
 
 | Source | File | Role |
 |---|---|---|
-| DOAJ | `data/raw/doaj.csv` | Base catalog — richest per-journal metadata |
-| Scopus | `data/raw/scimagojr.csv` | Tags + quartile/SJR/H-index, via SCImago |
-| Web of Science | `data/raw/wos.csv` | Tags + quartile/SJR/H-index — the SAME SCImago format, pre-filtered by the maintainer to WoS-indexed journals only |
-| SINTA | `data/raw/sinta.csv` | Tags + accreditation tier (SINTA 1–6) |
+| DOAJ | `data/processed/doaj_complete.csv` | Base catalog — richest per-journal metadata |
+| Scopus | `data/processed/scimago_complete.csv` | Tags + quartile/SJR/H-index, via SCImago |
+| Web of Science | `data/enrichment/wos.csv` | Tags + quartile/SJR/H-index — the SAME SCImago format, pre-filtered by the maintainer to WoS-indexed journals only. Lives in `data/enrichment/` rather than `data/processed/` since it's derived from `scimagojr.csv`, not an independent primary-source export |
+| SINTA | `data/processed/sinta_complete.csv` | Tags + accreditation tier (SINTA 1–6) |
+
+The three `data/processed/*_complete.csv` files are their `data/raw/`
+counterparts (`doaj.csv`, `scimagojr.csv`, `sinta.csv`) plus appended
+`scope`/`index_terms` enrichment columns — every column an importer
+actually reads keeps its original raw name, so these are safe drop-in
+replacements built directly from the raw exports, not a different
+schema. None of `data/processed/`'s complete exports or
+`data/enrichment/`'s `wos.csv` are committed to this repo — large,
+license-bound source data, kept out of git and out of the deployed app
+entirely (only the already-built `data/journal_intelligence.db` ships;
+the live app never reads these CSVs). Restore them with `python -m
+scripts.fetch_source_csvs` (see that script's own docstring for the
+required `HF_TOKEN`) before running a rebuild on a fresh clone —
+that same command also restores the original `data/raw/` exports, kept
+purely as a provenance backup since `scripts/build_database.py` itself
+reads from `data/processed/`.
 
 Not yet supported: Google Scholar (no bulk export exists to import from
 — there's nothing to build a real filter against), OpenAlex, Crossref,
@@ -85,7 +101,7 @@ SINTA), tags display-only enrichment (ROAD, ERIH PLUS, SciELO, AJOL),
 and finally imports aliases (DOAJ, Elsevier, ERIH PLUS — see
 `journal_aliases` above) once every journal that could match one
 already exists. To refresh any dataset, replace the matching file in
-`data/raw/` or `data/enrichment/` (same filename) and re-run the
+`data/processed/` or `data/enrichment/` (same filename) and re-run the
 script — no code changes needed for a routine data update.
 
 ## Deduplication / merge strategy
