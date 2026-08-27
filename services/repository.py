@@ -751,14 +751,41 @@ def update_index_terms(conn, journal_id, index_terms):
     Set journals.index_terms (#73/#74) for a journal that already
     exists -- never creates a row, safe to call for both a
     newly-created journal (row starts with index_terms=NULL) and one
-    matched to an existing row. COALESCEs against the existing value
-    so whichever source's importer runs FIRST for a given journal
-    wins -- deliberately not concatenated across sources, to avoid
-    mixing two different enrichment passes' terms for one journal.
+    matched to an existing row (a journal indexed by more than one of
+    DOAJ/Scopus/SINTA gets a separate, independently-generated
+    index_terms enrichment pass from EACH source's own "_complete.csv"
+    row for it).
+
+    MERGES rather than first-source-wins: a real check across the
+    3 source files found ~11,800 journals where a later source's
+    enrichment pass would otherwise be silently discarded entirely,
+    and manual inspection showed those discarded terms were usually
+    genuinely complementary (e.g. one pass surfacing "Cancer;
+    Autoimmune Diseases" that another pass for the same journal never
+    mentioned), not redundant duplicates -- so keeping only the first
+    source's list was real signal loss, not harmless deduplication.
+    Case-insensitive dedup on the merge so an exact repeat from a
+    second source doesn't just get appended anyway.
     """
+    if not index_terms:
+        return
+
+    existing = conn.execute(
+        "SELECT index_terms FROM journals WHERE id = ?", (journal_id,)
+    ).fetchone()[0]
+
+    if not existing:
+        conn.execute("UPDATE journals SET index_terms = ? WHERE id = ?", (index_terms, journal_id))
+        return
+
+    existing_terms = [t.strip() for t in existing.split(";") if t.strip()]
+    new_terms = [t.strip() for t in index_terms.split(";") if t.strip()]
+    seen_lower = {t.lower() for t in existing_terms}
+    merged = existing_terms + [t for t in new_terms if t.lower() not in seen_lower]
+
     conn.execute(
-        "UPDATE journals SET index_terms = COALESCE(index_terms, ?) WHERE id = ?",
-        (index_terms, journal_id),
+        "UPDATE journals SET index_terms = ? WHERE id = ?",
+        ("; ".join(merged), journal_id),
     )
 
 
