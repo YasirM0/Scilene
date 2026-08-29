@@ -419,7 +419,8 @@ def search_candidates(keywords, languages=None, free_only=False, indexing=None,
 
 
 def filtered_journal_ids(languages=None, free_only=False, min_budget=None, max_budget=None,
-                          indexing=None, quartiles=None, sinta_levels=None, max_review_weeks=None):
+                          indexing=None, quartiles=None, sinta_levels=None, max_review_weeks=None,
+                          restrict_to_ids=None):
     """
     Returns the set of journal ids matching the given filters -- same
     filter dimensions and SQL condition pattern as search_candidates()
@@ -432,6 +433,16 @@ def filtered_journal_ids(languages=None, free_only=False, min_budget=None, max_b
     caller (semantic_search.search()) only needs this set to mask its
     corpus array before ranking -- hydrating tens of thousands of full
     rows here would be wasted work.
+
+    `restrict_to_ids` (#79) -- an already-computed id set to intersect
+    with everything else (e.g. services.subject_taxonomy's category
+    filter). Taken as a plain set rather than this module importing
+    subject_taxonomy itself, which would create a circular import
+    (subject_taxonomy already imports get_connection from here). A
+    non-None, EMPTY set is a real "nothing matches" result (the
+    category filter was used but matched nothing), distinct from
+    `None` (that filter dimension wasn't used at all) -- both are
+    handled below without conflating them.
     """
     conn = get_connection()
 
@@ -480,11 +491,15 @@ def filtered_journal_ids(languages=None, free_only=False, min_budget=None, max_b
 
     if not conditions:
         conn.close()
-        return None  # no filters active -- caller skips masking entirely
+        return restrict_to_ids  # None if that wasn't used either -- caller skips masking entirely
 
     query = "SELECT id FROM journals WHERE " + " AND ".join(conditions)
     ids = {row[0] for row in conn.execute(query, params).fetchall()}
     conn.close()
+
+    if restrict_to_ids is not None:
+        ids &= restrict_to_ids
+
     return ids
 
 

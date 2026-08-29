@@ -15,6 +15,7 @@ interfaces.
 
 from services.recommender import JournalRecommender, STRATEGIES, CONFIDENCE_LEVELS
 from services.semantic_search import corpus_coverage
+from services.subject_taxonomy import journal_ids_for_categories
 from services.export import export_to_csv
 from services.repository import (
     count_journals,
@@ -43,17 +44,27 @@ def search_journals(
     sinta_levels=None,
     max_review_weeks=None,
     strategy="Balanced",
+    categories=None,
 ):
     """
     Run a journal search/recommendation. Returns the full, ranked list
     of matching journals (see JournalRecommender.recommend for the
     dict shape) — no pagination or confidence filtering is applied here,
     that's presentation logic and belongs in the caller.
+
+    `categories` (#79) is applied as a plain post-filter on the
+    already-ranked results, unlike every other filter here (which
+    JournalRecommender.recommend() applies via SQL before scoring).
+    Safe to do after the fact specifically because recommend() has no
+    fixed-size cutoff before this point (unlike semantic_search.search()'s
+    top_n argpartition, which is why THAT path masks its corpus first
+    instead) -- filtering recommend()'s full, unranked-by-cutoff output
+    produces the exact same result as filtering before scoring would.
     """
 
     recommender = JournalRecommender()
 
-    return recommender.recommend(
+    results = recommender.recommend(
         title=title,
         keywords=keywords,
         abstract=abstract,
@@ -67,6 +78,12 @@ def search_journals(
         max_review_weeks=max_review_weeks,
         strategy=strategy,
     )
+
+    if categories:
+        allowed_ids = journal_ids_for_categories(categories)
+        results = [r for r in results if r["id"] in allowed_ids]
+
+    return results
 
 
 def export_results_csv(results, context=None):

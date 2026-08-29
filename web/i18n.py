@@ -518,6 +518,12 @@ _STRINGS = {
     "filter.preferred_indexing": {"en": "Preferred Indexing", "ar": "الفهرسة المفضلة", "id": "Pengindeksan Pilihan"},
     "filter.quartile": {"en": "Scopus / WoS Quartile", "ar": "ربعية Scopus / WoS", "id": "Kuartil Scopus / WoS"},
     "filter.sinta_level": {"en": "SINTA Level", "ar": "مستوى SINTA", "id": "Tingkat SINTA"},
+    "filter.subject_group_label": {"en": "Filter by Subject", "ar": "التصفية حسب الموضوع", "id": "Saring berdasarkan Subjek"},
+    "filter.category_label": {
+        "en": "Subject Category (DOAJ / OpenAlex)",
+        "ar": "الفئة الموضوعية (DOAJ / OpenAlex)",
+        "id": "Kategori Subjek (DOAJ / OpenAlex)",
+    },
 
     # Canonical option display text -- keyed by the exact English string
     # (also the literal form value/dict key used on the Python side, e.g.

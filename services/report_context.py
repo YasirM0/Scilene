@@ -36,7 +36,7 @@ class ReportContext:
 
 def build_filters_summary(languages=None, free_only=False, min_budget=None,
                            max_budget=None, indexing=None, quartiles=None,
-                           sinta_levels=None, max_review_weeks=None):
+                           sinta_levels=None, max_review_weeks=None, categories=None):
     """
     Human-readable lines describing exactly which filters were actually
     applied for a search — used in the "Applied Filters" section of
@@ -68,6 +68,9 @@ def build_filters_summary(languages=None, free_only=False, min_budget=None,
 
     if max_review_weeks:
         lines.append(f"Maximum review time: {max_review_weeks} weeks")
+
+    if categories:
+        lines.append(f"Subject Category: {', '.join(categories)}")
 
     if not lines:
         lines.append("None")

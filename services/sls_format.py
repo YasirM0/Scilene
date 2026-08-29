@@ -60,6 +60,7 @@ def build_sls_export(session, app_version):
             "quartiles": params.get("quartiles"),
             "sinta_levels": params.get("sinta_levels"),
             "max_review_weeks": params.get("max_review_weeks"),
+            "categories": params.get("categories"),
         },
         # Informational only -- a preview for a human opening the raw
         # file, never read back on import (results are always

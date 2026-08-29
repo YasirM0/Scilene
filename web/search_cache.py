@@ -37,6 +37,7 @@ def _cache_key(**kwargs):
         tuple(kwargs["sinta_levels"]) if kwargs.get("sinta_levels") else None,
         kwargs.get("max_review_weeks"),
         kwargs.get("strategy"),
+        tuple(sorted(kwargs["categories"])) if kwargs.get("categories") else None,
         db_mtime,
     )
 

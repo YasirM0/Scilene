@@ -50,6 +50,7 @@ from tokenizers import Tokenizer
 from services.recommender import parse_usd_amount
 from services.repository import get_journals_by_ids, filtered_journal_ids
 from services.stopwords import filter_stopwords
+from services.subject_taxonomy import journal_ids_for_categories
 from utils.publication_types import format_publication_type_badge
 
 MODEL_DIR = Path(__file__).resolve().parent.parent / "models" / "all-MiniLM-L12-v2-onnx"
@@ -265,7 +266,8 @@ def corpus_coverage():
 
 
 def search(query_text: str, top_n: int = 40, languages=None, free_only=False, min_budget=None,
-           max_budget=None, indexing=None, quartiles=None, sinta_levels=None, max_review_weeks=None) -> list[dict]:
+           max_budget=None, indexing=None, quartiles=None, sinta_levels=None, max_review_weeks=None,
+           categories=None) -> list[dict]:
     """
     Semantic search over the precomputed corpus -- embeds query_text,
     ranks every journal by cosine similarity, and returns the top_n as
@@ -290,13 +292,21 @@ def search(query_text: str, top_n: int = 40, languages=None, free_only=False, mi
     services.repository.search_candidates() (the deterministic path)
     already uses, so "Q1 only" or "free only" means the same thing on
     either search strategy.
+
+    `categories` (#79) -- subject/field names from
+    services.subject_taxonomy.all_categories(); resolved to an id set
+    here (not inside filtered_journal_ids(), which would need to
+    import subject_taxonomy and create a circular import -- see that
+    module's own docstring) and passed through as `restrict_to_ids`.
     """
     corpus_embeddings, corpus_ids = _get_corpus()
     query_vec = embed_query(query_text)
 
+    restrict_to_ids = journal_ids_for_categories(categories) if categories else None
     allowed_ids = filtered_journal_ids(
         languages=languages, free_only=free_only, min_budget=min_budget, max_budget=max_budget,
         indexing=indexing, quartiles=quartiles, sinta_levels=sinta_levels, max_review_weeks=max_review_weeks,
+        restrict_to_ids=restrict_to_ids,
     )
 
     scores = corpus_embeddings @ query_vec

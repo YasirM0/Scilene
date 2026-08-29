@@ -33,6 +33,7 @@ from services.discipline_detection import detect_disciplines
 from services.query_translator import translate_query, ArabicNotSupportedOnline
 from services.sls_format import serialize_sls, parse_sls_import, InvalidSlsFile
 from services.report_context import ReportContext, build_filters_summary
+from services.subject_taxonomy import all_categories
 from services.reports import generate_pdf, generate_docx, generate_xlsx, generate_markdown
 
 from web.confirmed_tags import add_confirmed_tag, confirmed_tag_values
@@ -108,6 +109,11 @@ def _filter_context(locale):
         "show_sinta_filter": "SINTA" in selected_indexing,
         "language_options": LANGUAGE_OPTIONS,
         "review_time_options": list(REVIEW_TIME_BANDS.keys()),
+        # #79 -- no smart default (like quartiles/sinta_levels above),
+        # always starts unselected: unlike a manuscript's detected
+        # language, there's no signal to guess a subject preference from.
+        "category_options": all_categories(),
+        "selected_categories": [],
     }
 
 
@@ -189,7 +195,7 @@ def _results_context(session):
 
 def _execute_search(session, abstract, concepts, strategy_label, resolved_languages,
                      free_only, min_budget, max_budget, indexing, quartiles,
-                     sinta_levels, max_review_weeks, resolved_strategy):
+                     sinta_levels, max_review_weeks, resolved_strategy, categories=None):
     """
     Runs a search and stores everything about it in the session --
     results, display metadata, history, AND the raw parameters
@@ -212,6 +218,7 @@ def _execute_search(session, abstract, concepts, strategy_label, resolved_langua
         sinta_levels=sinta_levels or None,
         max_review_weeks=max_review_weeks,
         strategy=resolved_strategy,
+        categories=categories or None,
     )
 
     filters_summary = build_filters_summary(
@@ -223,6 +230,7 @@ def _execute_search(session, abstract, concepts, strategy_label, resolved_langua
         quartiles=quartiles or None,
         sinta_levels=sinta_levels or None,
         max_review_weeks=max_review_weeks,
+        categories=categories or None,
     )
 
     search_meta = {
@@ -258,6 +266,7 @@ def _execute_search(session, abstract, concepts, strategy_label, resolved_langua
         "sinta_levels": sinta_levels,
         "max_review_weeks": max_review_weeks,
         "resolved_strategy": resolved_strategy,
+        "categories": categories,
     }
 
     return results
@@ -274,7 +283,7 @@ SEMANTIC_TOP_N = 40
 
 def _execute_semantic_search(session, query_text, display_label, languages=None, free_only=False,
                               min_budget=None, max_budget=None, indexing=None, quartiles=None,
-                              sinta_levels=None, max_review_weeks=None):
+                              sinta_levels=None, max_review_weeks=None, categories=None):
     """
     services/semantic_search.py's counterpart to _execute_search()
     above -- same session-state contract (current_results/search_meta/
@@ -295,6 +304,7 @@ def _execute_semantic_search(session, query_text, display_label, languages=None,
         query_text, top_n=SEMANTIC_TOP_N, languages=languages, free_only=free_only,
         min_budget=min_budget, max_budget=max_budget, indexing=indexing,
         quartiles=quartiles, sinta_levels=sinta_levels, max_review_weeks=max_review_weeks,
+        categories=categories,
     )
 
     search_meta = {
@@ -305,6 +315,7 @@ def _execute_semantic_search(session, query_text, display_label, languages=None,
         "filters_summary": build_filters_summary(
             languages=languages, free_only=free_only, min_budget=min_budget, max_budget=max_budget,
             indexing=indexing, quartiles=quartiles, sinta_levels=sinta_levels, max_review_weeks=max_review_weeks,
+            categories=categories,
         ),
     }
 
@@ -327,7 +338,7 @@ def _execute_semantic_search(session, query_text, display_label, languages=None,
 
 def _execute_unified_search(session, locale, abstract, concepts, strategy_label, resolved_languages,
                              free_only, min_budget, max_budget, indexing, quartiles,
-                             sinta_levels, max_review_weeks, resolved_strategy):
+                             sinta_levels, max_review_weeks, resolved_strategy, categories=None):
     """
     The one search action both run_search() and refine_with_disciplines()
     (#102) call -- tries AI Semantic Search first; automatically falls
@@ -374,6 +385,7 @@ def _execute_unified_search(session, locale, abstract, concepts, strategy_label,
             translated_query, top_n=SEMANTIC_TOP_N, languages=resolved_languages, free_only=free_only,
             min_budget=min_budget, max_budget=max_budget, indexing=indexing or None,
             quartiles=quartiles or None, sinta_levels=sinta_levels or None, max_review_weeks=max_review_weeks,
+            categories=categories or None,
         )
     except Exception:
         # A genuine technical failure (missing/corrupt model or corpus
@@ -387,7 +399,7 @@ def _execute_unified_search(session, locale, abstract, concepts, strategy_label,
         results = _execute_semantic_search(
             session, translated_query, display_label, languages=resolved_languages, free_only=free_only,
             min_budget=min_budget, max_budget=max_budget, indexing=indexing, quartiles=quartiles,
-            sinta_levels=sinta_levels, max_review_weeks=max_review_weeks,
+            sinta_levels=sinta_levels, max_review_weeks=max_review_weeks, categories=categories,
         )
         # Overrides _execute_semantic_search()'s own last_search_params=None
         # -- see this function's own docstring for why.
@@ -395,14 +407,14 @@ def _execute_unified_search(session, locale, abstract, concepts, strategy_label,
             "abstract": abstract, "strategy_label": strategy_label, "resolved_languages": resolved_languages,
             "free_only": free_only, "min_budget": min_budget, "max_budget": max_budget, "indexing": indexing,
             "quartiles": quartiles, "sinta_levels": sinta_levels, "max_review_weeks": max_review_weeks,
-            "resolved_strategy": resolved_strategy,
+            "resolved_strategy": resolved_strategy, "categories": categories,
         }
         return results, None, False
 
     results = _execute_search(
         session, abstract, concepts, strategy_label, resolved_languages,
         free_only, min_budget, max_budget, indexing, quartiles,
-        sinta_levels, max_review_weeks, resolved_strategy,
+        sinta_levels, max_review_weeks, resolved_strategy, categories=categories,
     )
 
     warning = None
@@ -459,6 +471,7 @@ def run_search(
     indexing: list[str] = Form([]),
     quartiles: list[str] = Form([]),
     sinta_levels: list[str] = Form([]),
+    categories: list[str] = Form([]),
 ):
     abstract = abstract.strip()
 
@@ -509,7 +522,7 @@ def run_search(
     results, warning, warning_rtl = _execute_unified_search(
         session, request.state.locale, abstract, concepts, strategy_label, resolved_languages,
         free_only, min_budget, max_budget, indexing, quartiles,
-        sinta_levels, max_review_weeks, resolved_strategy,
+        sinta_levels, max_review_weeks, resolved_strategy, categories=categories or None,
     )
 
     context = {**_filter_context(request.state.locale), **_results_context(session)}
@@ -565,6 +578,7 @@ def refine_with_disciplines(
         params["resolved_languages"], params["free_only"], params["min_budget"],
         params["max_budget"], params["indexing"], params["quartiles"],
         params["sinta_levels"], params["max_review_weeks"], params["resolved_strategy"],
+        categories=params.get("categories"),
     )
 
     context = {**_filter_context(request.state.locale), **_results_context(session)}
@@ -784,6 +798,7 @@ def import_sls(request: Request, file: UploadFile = File(...), session=Depends(g
         search.get("sinta_levels") or [],
         search.get("max_review_weeks"),
         STRATEGY_LABELS[strategy_label],
+        categories=search.get("categories"),
     )
 
     context = {

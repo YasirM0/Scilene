@@ -75,5 +75,21 @@
             ) }}
         </div>
 
+        <div>
+            {#
+                #79 -- subject/field names union from DOAJ's own LCC
+                categories and OpenAlex's fields (services.subject_taxonomy),
+                not a manually-authored crosswalk between the two (see
+                that module's own docstring for why forcing one would
+                misrepresent genuinely multidisciplinary categories).
+                No indexing-gating like quartile/SINTA above -- a
+                subject preference is independent of which index a
+                journal is in.
+            #}
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">{{ t("filter.subject_group_label", locale) }}</p>
+            {% from "components/multi_select_filter.html" import multi_select_filter with context %}
+            {{ multi_select_filter("categories", t("filter.category_label", locale), category_options, selected=selected_categories) }}
+        </div>
+
     </div>
 </details>

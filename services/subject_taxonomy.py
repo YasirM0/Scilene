@@ -1,12 +1,9 @@
 """
-Subject taxonomy (#79) -- foundation only, not the full issue.
+Subject taxonomy (#79).
 
 #79 envisioned "a unified subject taxonomy that maps journals, user
 queries, and extracted concepts into a consistent hierarchy... support[ing]
 semantic search, filtering, research interpretation, and recommendation."
-That full scope needs a hierarchy covering the WHOLE catalog plus real
-integration into four other subsystems -- too much to respons	ibly
-build and validate in one pass.
 
 What's genuinely real and shipped here: journals.subjects already
 carries a two-level "Category: Subcategory" structure for DOAJ-sourced
@@ -28,21 +25,36 @@ API: ~90% coverage even for SINTA/Scopus-only journals (100% in one
 15-journal Indonesian-SINTA sample).
 
 get_taxonomy_tree() (DOAJ/LCC) and get_openalex_taxonomy_tree() are
-kept as two SEPARATE trees on purpose, not merged into one flat
-namespace: DOAJ's Library-of-Congress-style categories and OpenAlex's
-Domain/Field/Subfield hierarchy are two different, independently
-coherent classification schemes with different category vocabularies
-(e.g. DOAJ's "Language and Literature" vs. OpenAlex's "Arts and
-Humanities" -> "Literature and Literary Theory") -- concatenating them
-into one column/tree would produce an incoherent mixed taxonomy, not
-a unified one. Together the two trees cover the large majority of the
-catalog; picking one to be the single authoritative scheme (or
-building a mapping between them) is a further, still-open design
-decision, not done here.
+kept as two SEPARATE trees, not merged into one flat namespace: DOAJ's
+Library-of-Congress-style categories and OpenAlex's Domain/Field/
+Subfield hierarchy are two different, independently coherent
+classification schemes with different category vocabularies (e.g.
+DOAJ's "Language and Literature" vs. OpenAlex's "Arts and Humanities"
+-> "Literature and Literary Theory") -- forcing every DOAJ category
+into exactly one OpenAlex field would misrepresent genuinely
+multidisciplinary LCC classes like "Science" (dominated by Biology,
+Mathematics, AND Computer Science subcategories at roughly similar
+weight -- no single OpenAlex field fits without discarding two of the
+three) or "Technology". Rather than force a lossy 1:1 crosswalk,
+filtering (below) unions the two vocabularies mechanically: a journal
+matches a category filter if EITHER its DOAJ category OR its OpenAlex
+field equals the selected name. Real, exact-name overlaps (verified:
+"Medicine" and "Social Sciences" appear identically in both
+vocabularies) collapse into one filter option naturally, with no
+manual mapping decision needed for those; everything else stays as
+its own distinct, honestly-labeled option -- 44 total across both
+sources (20 DOAJ + 26 OpenAlex, minus the 2 exact overlaps).
 
-NOT wired into filtering, semantic search, or the Research Interpreter
-yet -- these are the data structures #79 was missing, not the rest of
-the issue's scope.
+Wired into filtering (services.repository.filtered_journal_ids() via
+`restrict_to_ids`, both search engines -- see journal_ids_for_categories()
+below) as of #79's completion pass. NOT wired into the Research
+Interpreter: "Field of Study" was already demoted from a confident
+suggestion to plain examples earlier in #79's own history because the
+underlying vocabulary (DOAJ's subjects text) was too coarse for
+specific interdisciplinary abstracts -- adding OpenAlex's equally
+broad field-level vocabulary on top doesn't fix that coarseness, so
+wiring this taxonomy in there wouldn't add real accuracy, only the
+appearance of it.
 """
 
 from services.repository import get_connection
@@ -132,3 +144,63 @@ def get_openalex_taxonomy_tree(conn=None):
         bucket[key] = bucket.get(key, 0) + 1
 
     return tree
+
+
+_category_index_cache = None  # {category_name: set(journal_id)}
+
+
+def _category_index():
+    """
+    Built once per process (same caching approach as
+    services/field_detection.py's own _vocabulary()) -- this data
+    doesn't change without a database rebuild. Each journal contributes
+    to the index under EVERY DOAJ category it has (there can be
+    several, per parse_subjects()) plus its single OpenAlex field, if
+    any. A journal with both sources categorizes under both -- never a
+    conflict, since filtering is a union: matching either is enough.
+    """
+    global _category_index_cache
+    if _category_index_cache is not None:
+        return _category_index_cache
+
+    conn = get_connection()
+    rows = conn.execute("SELECT id, subjects, openalex_field FROM journals").fetchall()
+    conn.close()
+
+    index = {}
+    for journal_id, subjects_text, openalex_field in rows:
+        categories = {category for category, _ in parse_subjects(subjects_text)}
+        if openalex_field:
+            categories.add(openalex_field)
+        for category in categories:
+            index.setdefault(category, set()).add(journal_id)
+
+    _category_index_cache = index
+    return index
+
+
+def all_categories():
+    """
+    Every real category name available for filtering -- the union of
+    DOAJ's LCC categories and OpenAlex's fields, mechanically (see
+    module docstring for why no manual crosswalk exists). Sorted for a
+    stable, alphabetical filter UI.
+    """
+    return sorted(_category_index().keys())
+
+
+def journal_ids_for_categories(category_names):
+    """
+    Union of journal ids belonging to ANY of the given categories, from
+    EITHER taxonomy source. Empty/falsy input returns an empty set
+    (the caller's job to treat "no categories selected" as "don't
+    filter" -- this function only ever answers "which ids match what
+    was asked").
+    """
+    if not category_names:
+        return set()
+    index = _category_index()
+    result = set()
+    for name in category_names:
+        result |= index.get(name, set())
+    return result
