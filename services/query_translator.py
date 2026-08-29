@@ -11,13 +11,19 @@ Unknown terms pass through untranslated; all-MiniLM-L12-v2 still
 handles whatever's left via cross-lingual/loanword overlap, just with
 lower confidence than a matched term.
 
-Arabic translation deferred — ctranslate2/Argos exceed 512MB
-RAM budget. Arabic users should search in English for now.
-Re-enable when dyno upgraded or translation extracted to
-a separate worker service. (Quality was genuinely excellent --
-correctly translated cases Helsinki-NLP/opus-mt-ar-en mangled or
-returned empty for -- this is a deployment constraint, not a quality
-rejection.)
+Arabic: real translation via Argos Translate (#150) when its ar->en
+package is actually installed in THIS process's environment --
+detected at runtime via _argos_translate_ar_en() below, not a separate
+"desktop mode" flag. Never installed as a web dependency (see
+requirements.txt) -- Argos/ctranslate2's ~530MB+ RAM footprint is
+exactly why Arabic stays blocked on the shared Heroku deployment via
+ArabicNotSupportedOnline below. A future desktop build that bundles
+Argos gets real Arabic translation automatically, with zero code
+changes here. Quality is genuinely good but not perfect -- verified
+directly: "الذكاء الاصطناعي" ("artificial intelligence") came back as
+"Synthetic intelligence", a real, disclosed imperfection, not
+something to hide -- still a large improvement over the alternative
+(no Arabic search at all).
 """
 
 import json
@@ -86,6 +92,31 @@ def _dict_translate_id(text: str) -> str:
     return result
 
 
+def _argos_translate_ar_en(text: str):
+    """
+    Real Arabic->English translation via Argos Translate, ONLY if its
+    ar->en language package is actually installed here -- see this
+    module's docstring. Returns None (never raises) if Argos isn't
+    installed, the ar->en package specifically isn't, or translation
+    fails for any other reason -- the caller treats that identically
+    to "not available in this environment" and falls back to
+    ArabicNotSupportedOnline, exactly the pre-Argos behavior.
+    """
+    try:
+        import argostranslate.package
+        import argostranslate.translate
+    except ImportError:
+        return None
+
+    try:
+        installed = argostranslate.package.get_installed_packages()
+        if not any(p.from_code == "ar" and p.to_code == "en" for p in installed):
+            return None
+        return argostranslate.translate.translate(text, "ar", "en")
+    except Exception:
+        return None
+
+
 def translate_query(text: str) -> tuple[str, str]:
     """
     Translate a user query to English if we can do it reliably.
@@ -107,20 +138,43 @@ def translate_query(text: str) -> tuple[str, str]:
         return _dict_translate_id(text), "id"
 
     if lang == "ar":
+        translated = _argos_translate_ar_en(text)
+        if translated is not None:
+            return translated, "ar"
         raise ArabicNotSupportedOnline(ARABIC_DESKTOP_MESSAGE)
 
     # English or anything else: pass through
     return text, lang
 
 
+def _has_argos_ar_en() -> bool:
+    try:
+        import argostranslate.package
+    except ImportError:
+        return False
+    try:
+        installed = argostranslate.package.get_installed_packages()
+        return any(p.from_code == "ar" and p.to_code == "en" for p in installed)
+    except Exception:
+        return False
+
+
 def supported_languages() -> dict:
     """What translate_query() can actually do per language, for
     anything upstream (UI hints, docs) that wants to say so honestly
-    rather than imply uniform support."""
+    rather than imply uniform support. Arabic's status reflects
+    whatever's ACTUALLY installed in this process right now -- "full"
+    wherever Argos's ar->en package is present (today, that's only a
+    build that bundles it, e.g. a future desktop build), "desktop_only"
+    on a plain web deployment like this one."""
     return {
         "en": {"status": "full", "platform": "web+desktop"},
         "id": {"status": "dictionary", "platform": "web+desktop"},
-        "ar": {"status": "desktop_only", "platform": "desktop"},
+        "ar": (
+            {"status": "full", "platform": "wherever Argos is installed"}
+            if _has_argos_ar_en()
+            else {"status": "desktop_only", "platform": "desktop"}
+        ),
     }
 
 
