@@ -14,6 +14,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+RUN useradd -m -r appuser && chown -R appuser /app
+USER appuser
+
 ENV JI_HOST=0.0.0.0
 ENV JI_PORT=8000
 

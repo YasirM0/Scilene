@@ -1,0 +1,35 @@
+name: ZAP Security Scan
+
+on:
+  workflow_dispatch:          # trigger manually from GitHub Actions tab
+  schedule:
+    - cron: "0 3 1 * *"       # also runs first of each month at 03:00 UTC
+
+jobs:
+  zap-scan:
+    name: OWASP ZAP Full Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write            # lets ZAP open a GitHub issue if it finds things
+
+    steps:
+      - name: ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.12.0
+        with:
+          target: "https://scilene-25055279a542.herokuapp.com/"
+          # Rules config: fail the job only on HIGH findings; MEDIUM and
+          # LOW are flagged in the report but don't block the run.
+          rules_file_name: ".zap/rules.tsv"
+          cmd_options: >
+            -z "-config scanner.maxScanDurationInMins=30
+                -config scanner.delayInMs=500"
+
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: |
+            report_html.html
+            report_md.md

@@ -1,0 +1,58 @@
+# ZAP rules config — controls which alert IDs cause the scan to fail.
+# Format: <alertId>\t<action>   (FAIL / WARN / IGNORE)
+# Action meanings:
+#   FAIL  → job exits non-zero (blocks merge if on a required check)
+#   WARN  → printed but job still passes
+#   IGNORE → suppressed entirely
+#
+# Full rule list: https://www.zaproxy.org/docs/alerts/
+#
+# We FAIL on high-severity injection / auth issues; WARN on everything
+# else so the report is still generated without breaking CI on a first run.
+10016	WARN	# Web Browser XSS Protection header
+10017	WARN	# Cross-Domain JavaScript Source File Inclusion
+10020	WARN	# Anti-clickjacking Header (X-Frame-Options already set)
+10021	WARN	# X-Content-Type-Options missing
+10035	FAIL	# Strict-Transport-Security missing on HTTPS
+10038	WARN	# Content Security Policy missing
+10039	WARN	# X-Backend-Server Information Leak
+10040	FAIL	# Secure Pages Include Mixed Content
+10041	WARN	# HTTP to HTTPS Insecure Transition
+10045	FAIL	# Source Code Disclosure
+10054	WARN	# Cookie Without SameSite Attribute
+10055	WARN	# CSP Scanner
+10096	WARN	# Timestamp Disclosure
+10097	WARN	# Hash Disclosure
+10098	WARN	# Cross-Domain Misconfiguration
+10202	FAIL	# Absence of Anti-CSRF Tokens
+20012	FAIL	# Anti-CSRF Tokens Check
+40012	FAIL	# Cross Site Scripting (Reflected)
+40013	FAIL	# Session Fixation
+40014	FAIL	# Cross Site Scripting (Persistent)
+40016	FAIL	# Cross Site Scripting (Persistent) - Prime
+40017	FAIL	# Cross Site Scripting (Persistent) - Spider
+40018	FAIL	# SQL Injection
+40019	FAIL	# SQL Injection - MySQL
+40020	FAIL	# SQL Injection - Hypersonic SQL
+40021	FAIL	# SQL Injection - Oracle
+40022	FAIL	# SQL Injection - PostgreSQL
+40023	FAIL	# Possible Username Enumeration
+40024	FAIL	# SQL Injection - SQLite
+40025	FAIL	# Proxy Disclosure
+40026	FAIL	# Cross Site Scripting (DOM Based)
+40027	FAIL	# SQL Injection - MsSQL
+40028	FAIL	# CSRF Token
+40029	FAIL	# Trace.axd Information Leak
+40032	FAIL	# WSDL File Detection
+40034	FAIL	# .htaccess Information Leak
+40035	FAIL	# Hidden File Finder
+40036	FAIL	# HTTP Only Site
+90011	FAIL	# Charset Mismatch
+90019	FAIL	# Server Side Code Injection
+90020	FAIL	# Remote OS Command Injection
+90021	FAIL	# XPath Injection
+90022	FAIL	# Application Error Disclosure
+90025	FAIL	# Expression Language Injection
+90028	WARN	# Insecure HTTP Method
+90033	FAIL	# Loosely Scoped Cookie
+90034	FAIL	# Cloud Metadata Potentially Exposed
