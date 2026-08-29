@@ -22,6 +22,11 @@ uvicorn[standard]==0.34.0
 jinja2==3.1.6
 python-multipart==0.0.31
 pydantic-settings==2.7.1
+# Rate limiting (#146) -- IP-based per-endpoint limits on the three
+# compute-heavy endpoints (/search, /export, /import-sls). Uses
+# in-memory storage (appropriate for single-process deployments);
+# see web/rate_limit.py for the key-function and limit config.
+slowapi==0.1.10
 
 # Online metadata enrichment (#107) -- OpenAlex/Crossref clients only.
 # Never imported by services/recommender.py; the deterministic engine

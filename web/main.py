@@ -25,9 +25,12 @@ if str(ROOT) not in sys.path:
 
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from services.app_info import APP_NAME, APP_VERSION
 from web.config import get_settings
+from web.rate_limit import limiter
 from web.dependencies import SESSION_COOKIE_NAME
 from web.i18n import DEFAULT_LOCALE
 from web.routers import (
@@ -43,6 +46,9 @@ app = FastAPI(
     version=APP_VERSION,
     debug=settings.debug,
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 @app.middleware("http")

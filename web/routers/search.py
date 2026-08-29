@@ -38,6 +38,7 @@ from services.reports import generate_pdf, generate_docx, generate_xlsx, generat
 
 from web.confirmed_tags import add_confirmed_tag, confirmed_tag_values
 from web.dependencies import get_session_state, attach_session_cookie
+from web.rate_limit import limiter
 from web.i18n import t
 from web.interpreter_presentation import current_suggestions_context
 from web.filter_defaults import default_indexing, default_sinta_levels
@@ -460,6 +461,7 @@ def search_page(request: Request, mode: str = "manuscript", session=Depends(get_
 
 
 @router.post("")
+@limiter.limit("30/minute")
 def run_search(
     request: Request,
     session=Depends(get_session_state),
@@ -666,7 +668,8 @@ def _build_report_context(search_meta, results):
 
 
 @router.get("/export/{fmt}")
-def export_results(fmt: str, session=Depends(get_session_state)):
+@limiter.limit("30/minute")
+def export_results(fmt: str, request: Request, session=Depends(get_session_state)):
     results = session.get("visible_results") or []
     search_meta = session.get("search_meta") or {}
     basename = build_export_basename(search_meta.get("strategy_label") or "⚖️ Balanced (Recommended)")
@@ -723,6 +726,7 @@ def _read_capped(upload_file, max_bytes):
 
 
 @router.post("/import-sls")
+@limiter.limit("10/minute")
 def import_sls(request: Request, file: UploadFile = File(...), session=Depends(get_session_state)):
     """
     Portable Search Sessions (#91) -- the counterpart to /export/sls.
