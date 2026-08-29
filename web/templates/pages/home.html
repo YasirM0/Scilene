@@ -135,6 +135,33 @@
     </div>
 </section>
 
+<section class="py-8 border-t border-gray-200 dark:border-gray-700">
+    {#
+        Loupe promotion -- workflow complement, not an ad. Placed after
+        the feature cards so it reads as "what's next" once a user
+        understands what Scilene does, not a distraction from the main
+        CTA above. The tinted card keeps it visually separate from both
+        the feature grid and the privacy footer below it.
+    #}
+    <div class="bg-navy-50 dark:bg-gray-800 rounded-lg px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+                {{ t('home.loupe.eyebrow', locale) }}
+            </p>
+            <h3 class="text-sm font-semibold text-navy-600 dark:text-navy-300">
+                🔍 {{ t('home.loupe.heading', locale) }}
+            </h3>
+            <p class="text-xs text-gray-600 dark:text-gray-300 mt-1 max-w-lg">
+                {{ t('home.loupe.body', locale) }}
+            </p>
+        </div>
+        <a href="{{ app.loupe }}" target="_blank" rel="noopener noreferrer"
+           class="shrink-0 inline-flex items-center px-4 py-2 rounded-lg border border-navy-300 dark:border-navy-600 text-navy-600 dark:text-navy-300 text-xs font-medium hover:bg-navy-100 dark:hover:bg-gray-700 transition whitespace-nowrap">
+            {{ t('home.loupe.cta', locale) }}
+        </a>
+    </div>
+</section>
+
 <div class="text-center py-6 border-t border-gray-200 dark:border-gray-700">
     <p class="text-xs text-gray-500 dark:text-gray-400">
         {{ t('home.footer_line', locale) }}

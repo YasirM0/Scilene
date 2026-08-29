@@ -181,6 +181,27 @@ _STRINGS = {
         "id": "🔒 Mengutamakan privasi · Tanpa akun · Dibuat untuk peneliti",
     },
 
+    "home.loupe.eyebrow": {
+        "en": "From the same author",
+        "ar": "من نفس المطوّر",
+        "id": "Dari pengembang yang sama",
+    },
+    "home.loupe.heading": {
+        "en": "Loupe — Citation Verifier",
+        "ar": "Loupe — أداة التحقق من الاستشهادات",
+        "id": "Loupe — Verifikasi Kutipan",
+    },
+    "home.loupe.body": {
+        "en": "Found your journal? Use Loupe to check that your citations actually support your claims before you submit.",
+        "ar": "وجدت مجلتك؟ استخدم Loupe للتحقق من أن استشهاداتك تدعم ادعاءاتك فعلاً قبل التقديم.",
+        "id": "Sudah menemukan jurnalmu? Gunakan Loupe untuk memastikan kutipanmu benar-benar mendukung klaimmu sebelum mengirim.",
+    },
+    "home.loupe.cta": {
+        "en": "View on GitHub →",
+        "ar": "عرض على GitHub ←",
+        "id": "Lihat di GitHub →",
+    },
+
     "validation.abstract_too_short": {
         "en": "This abstract looks too short (at least {min_words} words) for Scilene to suggest relevant concepts. Please paste your full abstract.",
         "ar": "يبدو هذا الملخص قصيرًا جدًا (يلزم {min_words} كلمات على الأقل) ليتمكن Scilene من اقتراح مفاهيم ذات صلة. يرجى لصق الملخص كاملاً.",
