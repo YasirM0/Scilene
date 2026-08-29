@@ -53,6 +53,7 @@ def attach_session_cookie(response, session: dict):
         session["_session_id"],
         httponly=True,
         samesite="lax",
+        secure=True,
         max_age=SESSION_COOKIE_MAX_AGE,
     )
     return response

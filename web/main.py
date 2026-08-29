@@ -70,18 +70,43 @@ async def resolve_locale(request: Request, call_next):
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     """
-    #146 -- standard defensive headers with zero behavioral risk to
-    this app (no cross-origin embedding, no third-party frame usage,
-    no MIME-sniffing-dependent asset anywhere). Deliberately NOT
-    including Content-Security-Policy here: this app's actual inline
-    script/style usage needs a real audit before a CSP could be
-    written without risking breakage, which is a separate, more
-    careful piece of work than these three headers.
+    #146 — defensive headers. All resources (scripts, styles, images)
+    are served from the same origin, so the CSP, COOP, COEP, and CORP
+    headers below are safe without any allowlist exceptions.
+
+    CSP carries 'unsafe-inline' for script-src and style-src because:
+      - base.html has an inline <script> that sets the dark-mode class
+        before first paint (cannot defer without a flash-of-wrong-theme)
+      - nav.html has an inline <script> for the theme-toggle listener
+      - bar_list.html sets width via style="…" (dynamic %, can't be a class)
+    The other CSP directives (object-src, base-uri, form-action,
+    frame-ancestors) still provide real protection regardless.
     """
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Strict-Transport-Security"] = (
+        "max-age=31536000; includeSubDomains"
+    )
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
+    response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+    response.headers["Permissions-Policy"] = (
+        "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    )
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data:; "
+        "font-src 'self'; "
+        "connect-src 'self'; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self'; "
+        "frame-ancestors 'none'"
+    )
     return response
 
 

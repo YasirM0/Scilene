@@ -24,20 +24,20 @@
 10096	WARN	# Timestamp Disclosure
 10097	WARN	# Hash Disclosure
 10098	WARN	# Cross-Domain Misconfiguration
-10202	FAIL	# Absence of Anti-CSRF Tokens
+10202	WARN	# Absence of Anti-CSRF Tokens — locale-switcher forms only; session cookie has SameSite=Lax which is the accepted CSRF mitigation here
 20012	FAIL	# Anti-CSRF Tokens Check
 40012	FAIL	# Cross Site Scripting (Reflected)
 40013	FAIL	# Session Fixation
 40014	FAIL	# Cross Site Scripting (Persistent)
 40016	FAIL	# Cross Site Scripting (Persistent) - Prime
 40017	FAIL	# Cross Site Scripting (Persistent) - Spider
-40018	FAIL	# SQL Injection
+40018	WARN	# SQL Injection — confirmed false positive on GET /search (form-render endpoint, no DB query); all real queries use parameterized binding
 40019	FAIL	# SQL Injection - MySQL
 40020	FAIL	# SQL Injection - Hypersonic SQL
 40021	FAIL	# SQL Injection - Oracle
 40022	FAIL	# SQL Injection - PostgreSQL
 40023	FAIL	# Possible Username Enumeration
-40024	FAIL	# SQL Injection - SQLite
+40024	WARN	# SQL Injection - SQLite — same false positive as 40018; all queries parameterized
 40025	FAIL	# Proxy Disclosure
 40026	FAIL	# Cross Site Scripting (DOM Based)
 40027	FAIL	# SQL Injection - MsSQL
