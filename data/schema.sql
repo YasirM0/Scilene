@@ -21,13 +21,28 @@ CREATE TABLE journals (
     keywords TEXT,
     languages TEXT,
 
+    -- OpenAlex's own Domain > Field > Subfield hierarchy (#79) for the
+    -- journal's top-ranked topic (by that topic's own share of the
+    -- journal's published works) -- see scripts/backfill_openalex_taxonomy.py.
+    -- Public data, freely re-fetchable from OpenAlex's own API, unlike
+    -- index_terms below -- no security concern storing or committing it.
+    -- Deliberately separate columns from `subjects` above (DOAJ's own
+    -- Library-of-Congress-style categories): the two are different,
+    -- independently-coherent classification schemes with different
+    -- category vocabularies, so concatenating them into one column
+    -- would produce an incoherent mixed taxonomy, not a unified one.
+    -- See services/subject_taxonomy.py.
+    openalex_domain TEXT,
+    openalex_field TEXT,
+    openalex_subfield TEXT,
+
     -- Semicolon-separated curated index terms (#73/#74), from
     -- data/processed/*_complete.csv's "index_terms" column -- the real
     -- replacement for the OpenAlex-topics proxy scripts/build_semantic_index.py
-    -- used before this existed. Same "first source to set it wins" rule
-    -- as other core metadata (DOAJ imports first): not concatenated
-    -- across sources, to avoid mixing two different enrichment passes'
-    -- terms for one journal.
+    -- used before this existed. MERGED across sources (case-insensitive
+    -- dedup, services.repository.update_index_terms()), not
+    -- first-source-wins -- a real check found later sources' passes
+    -- were usually genuinely complementary, not redundant.
     index_terms TEXT,
 
     apc TEXT,

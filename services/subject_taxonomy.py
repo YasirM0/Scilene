@@ -18,16 +18,31 @@ This module parses that EXISTING structure rather than inventing a new
 one or calling an LLM to classify anything.
 
 Coverage: DOAJ-sourced LCC categories cover ~23,000 of the ~55,745
-journals (the ones with a DOAJ subjects value at all) -- the rest
-(SINTA-only, Scopus/SCImago-only journals) have no equivalent
-structured classification in this database today. Extending coverage
-to them would need either new curation work or an embedding-based
-classifier against these 19 categories -- unbuilt and unvalidated, a
-real next step, not done here.
+journals (the ones with a DOAJ subjects value at all). The remaining
+~32,700 (SINTA-only, Scopus/SCImago-only journals) are covered
+instead by journals.openalex_domain/field/subfield -- OpenAlex's own
+Domain > Field > Subfield hierarchy, backfilled by
+scripts/backfill_openalex_taxonomy.py for exactly the journals DOAJ's
+scheme doesn't reach. Verified by direct sampling against the live
+API: ~90% coverage even for SINTA/Scopus-only journals (100% in one
+15-journal Indonesian-SINTA sample).
+
+get_taxonomy_tree() (DOAJ/LCC) and get_openalex_taxonomy_tree() are
+kept as two SEPARATE trees on purpose, not merged into one flat
+namespace: DOAJ's Library-of-Congress-style categories and OpenAlex's
+Domain/Field/Subfield hierarchy are two different, independently
+coherent classification schemes with different category vocabularies
+(e.g. DOAJ's "Language and Literature" vs. OpenAlex's "Arts and
+Humanities" -> "Literature and Literary Theory") -- concatenating them
+into one column/tree would produce an incoherent mixed taxonomy, not
+a unified one. Together the two trees cover the large majority of the
+catalog; picking one to be the single authoritative scheme (or
+building a mapping between them) is a further, still-open design
+decision, not done here.
 
 NOT wired into filtering, semantic search, or the Research Interpreter
-yet -- this is the data structure #79 was missing, not the rest of the
-issue's scope.
+yet -- these are the data structures #79 was missing, not the rest of
+the issue's scope.
 """
 
 from services.repository import get_connection
@@ -84,5 +99,36 @@ def get_taxonomy_tree(conn=None):
             bucket = tree.setdefault(category, {})
             key = subcategory or ""
             bucket[key] = bucket.get(key, 0) + 1
+
+    return tree
+
+
+def get_openalex_taxonomy_tree(conn=None):
+    """
+    {field: {subfield: journal_count}} across every journal with an
+    OpenAlex-derived classification (scripts/backfill_openalex_taxonomy.py) --
+    the counterpart to get_taxonomy_tree() above, covering the journals
+    DOAJ's own scheme doesn't reach. Uses OpenAlex's "field" as the
+    category level (26 fields total, the closest match to DOAJ's ~20
+    top-level LCC categories in granularity) and "subfield" as the
+    subcategory level. See this module's own docstring for why this is
+    a separate tree rather than merged with get_taxonomy_tree()'s.
+    """
+    owns_conn = conn is None
+    if owns_conn:
+        conn = get_connection()
+
+    rows = conn.execute(
+        "SELECT openalex_field, openalex_subfield FROM journals WHERE openalex_field IS NOT NULL AND openalex_field != ''"
+    ).fetchall()
+
+    if owns_conn:
+        conn.close()
+
+    tree = {}
+    for field, subfield in rows:
+        bucket = tree.setdefault(field, {})
+        key = subfield or ""
+        bucket[key] = bucket.get(key, 0) + 1
 
     return tree
