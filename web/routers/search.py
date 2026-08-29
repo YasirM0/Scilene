@@ -8,13 +8,19 @@ logic (option labels, confidence colors, pagination, visible-results
 filtering) lives in web.search_presentation, not in these route
 functions or in the templates.
 
-One deliberate exception: POST /search/semantic (#143) calls
-services.semantic_search directly, bypassing search_service/the
-recommender entirely — a genuinely separate, opt-in ranking strategy,
-not a variant of the deterministic pipeline every other route here
-goes through.
+One deliberate exception: POST /search (run_search(), via
+_execute_unified_search()) tries services.semantic_search directly
+first, bypassing search_service/the recommender entirely, and only
+falls back to the deterministic pipeline every other route here goes
+through if semantic search errors out or genuinely finds nothing —
+see _execute_unified_search()'s own docstring. Originally (#143) this
+was a second, separate "try AI search" button/route
+(POST /search/semantic); merged into one action once real curated
+index terms (#73/#74) made semantic search good enough to be the
+default rather than an opt-in experiment.
 """
 
+import logging
 from datetime import datetime, timezone
 from io import BytesIO
 
@@ -52,6 +58,8 @@ from web.search_presentation import (
     build_export_basename,
 )
 from web.templating import templates
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/search")
 
@@ -317,80 +325,99 @@ def _execute_semantic_search(session, query_text, display_label, languages=None,
     return results
 
 
-@router.post("/semantic")
-def run_semantic_search(
-    request: Request,
-    session=Depends(get_session_state),
-    abstract: str = Form(""),
-    languages: list[str] = Form([]),
-    budget_choice: str = Form("Any"),
-    review_time_choice: str = Form("Any"),
-    indexing: list[str] = Form([]),
-    quartiles: list[str] = Form([]),
-    sinta_levels: list[str] = Form([]),
-):
+def _execute_unified_search(session, locale, abstract, concepts, strategy_label, resolved_languages,
+                             free_only, min_budget, max_budget, indexing, quartiles,
+                             sinta_levels, max_review_weeks, resolved_strategy):
     """
-    #143 -- the opt-in "✨ Try AI Semantic Search" path
-    (web/templates/pages/search.html), a second submit button in the
-    same form with its own hx-post overriding the form's default.
-    Reads the same abstract field and Search Concepts tags every other
-    search route does; the actual ranking comes from
-    services/semantic_search.py instead of the recommender.
+    The one search action both run_search() and refine_with_disciplines()
+    (#102) call -- tries AI Semantic Search first; automatically falls
+    back to the deterministic engine (services/recommender.py) if
+    semantic search errors out OR genuinely finds nothing, rather than
+    requiring a second, separate "try AI search" button (#143's
+    original opt-in design). Either way, the results panel gets told
+    plainly which engine actually produced what's shown, via the
+    returned warning text, instead of silently guessing on the user's
+    behalf. Callers are expected to have already confirmed `indexing`
+    is non-empty (run_search()'s own check; refine_with_disciplines()
+    replays a previous search's already-validated params) -- so unlike
+    the old, standalone /search/semantic route, there's no "AI failed
+    AND no indexing to fall back with" case to handle here.
 
-    #144 -- reads the SAME filter fields the button's enclosing <form>
-    already carries for the deterministic /search route (this button
-    has no hx-include of its own, so htmx's default "closest form"
-    inclusion already sends them; they were just ignored here before).
-    Unlike /search, an empty `indexing` is NOT treated as an invalid
-    submission -- filters are optional narrowing on top of semantic
-    ranking, not a required selection the way the deterministic path
-    requires at least one indexing source.
+    Always leaves session["last_search_params"] populated with these
+    raw parameters afterward, even after an AI win -- unlike the old
+    _execute_semantic_search()'s standalone behavior of clearing it --
+    so #102's "refine with detected disciplines" stays available
+    regardless of which engine actually answered the previous search;
+    a refine re-runs through this same function with the expanded
+    concept list, rather than assuming whichever engine won last time.
+
+    Returns (results, warning_text_or_None, warning_is_rtl).
     """
-    abstract = abstract.strip()
-    concepts = confirmed_tag_values(session)
-
-    if not abstract and len(concepts) < MIN_FALLBACK_TAGS:
-        context = {
-            **_filter_context(request.state.locale),
-            **_results_context(session),
-            **_interpreter_form_context(session),
-            "warning": t(
-                "warning.abstract_or_tags_required", request.state.locale,
-                count=len(concepts), min=MIN_FALLBACK_TAGS,
-            ),
-        }
-        return _render(request, "partials/search_results.html", context, session)
-
+    display_label = _display_label(abstract, concepts)
     query_text = abstract
     if concepts:
         query_text = f"{abstract} {', '.join(concepts)}".strip()
 
     try:
-        query_text, _ = translate_query(query_text)
+        translated_query, _ = translate_query(query_text)
     except ArabicNotSupportedOnline as e:
-        context = {
-            **_filter_context(request.state.locale),
-            **_results_context(session),
-            "warning": str(e),
-            "warning_rtl": True,
+        session["current_results"] = None
+        session["visible_results"] = None
+        session["search_meta"] = None
+        session["last_search_params"] = None
+        return [], str(e), True
+
+    semantic_results = None
+    technical_failure = False
+    try:
+        semantic_results = semantic_search.search(
+            translated_query, top_n=SEMANTIC_TOP_N, languages=resolved_languages, free_only=free_only,
+            min_budget=min_budget, max_budget=max_budget, indexing=indexing or None,
+            quartiles=quartiles or None, sinta_levels=sinta_levels or None, max_review_weeks=max_review_weeks,
+        )
+    except Exception:
+        # A genuine technical failure (missing/corrupt model or corpus
+        # files -- services.semantic_search._get_corpus()'s RuntimeError,
+        # or anything from the onnxruntime session) -- NOT the "found
+        # nothing" case below, which is a normal, successful search.
+        logger.exception("AI Semantic Search failed; falling back to deterministic keyword search")
+        technical_failure = True
+
+    if semantic_results:
+        results = _execute_semantic_search(
+            session, translated_query, display_label, languages=resolved_languages, free_only=free_only,
+            min_budget=min_budget, max_budget=max_budget, indexing=indexing, quartiles=quartiles,
+            sinta_levels=sinta_levels, max_review_weeks=max_review_weeks,
+        )
+        # Overrides _execute_semantic_search()'s own last_search_params=None
+        # -- see this function's own docstring for why.
+        session["last_search_params"] = {
+            "abstract": abstract, "strategy_label": strategy_label, "resolved_languages": resolved_languages,
+            "free_only": free_only, "min_budget": min_budget, "max_budget": max_budget, "indexing": indexing,
+            "quartiles": quartiles, "sinta_levels": sinta_levels, "max_review_weeks": max_review_weeks,
+            "resolved_strategy": resolved_strategy,
         }
-        return _render(request, "partials/search_results.html", context, session)
+        return results, None, False
 
-    resolved_languages = languages or None
-    free_only, min_budget, max_budget = budget_to_range(budget_choice)
-    max_review_weeks = REVIEW_TIME_BANDS[review_time_choice]
-
-    results = _execute_semantic_search(
-        session, query_text, _display_label(abstract, concepts), languages=resolved_languages,
-        free_only=free_only, min_budget=min_budget, max_budget=max_budget, indexing=indexing or None,
-        quartiles=quartiles or None, sinta_levels=sinta_levels or None, max_review_weeks=max_review_weeks,
+    results = _execute_search(
+        session, abstract, concepts, strategy_label, resolved_languages,
+        free_only, min_budget, max_budget, indexing, quartiles,
+        sinta_levels, max_review_weeks, resolved_strategy,
     )
 
-    context = {**_filter_context(request.state.locale), **_results_context(session)}
-    if not results:
-        context["warning"] = t("warning.no_results", request.state.locale)
+    warning = None
+    if results:
+        # Worth saying which engine actually produced these -- but only
+        # when there's something to attribute; a genuine double-empty
+        # result (semantic AND keyword both found nothing) is left to
+        # the caller's plain "no results" message instead of stacking
+        # an "AI unavailable" note on top of it.
+        warning = (
+            t("warning.semantic_unavailable_fallback", locale) if technical_failure
+            else t("warning.semantic_no_matches_fallback", locale, strategy=strategy_label)
+        )
 
-    return _render(request, "partials/search_results.html", context, session)
+    return results, warning, False
 
 
 @router.get("")
@@ -479,14 +506,21 @@ def run_search(
     max_review_weeks = REVIEW_TIME_BANDS[review_time_choice]
     resolved_strategy = STRATEGY_LABELS[strategy_label]
 
-    results = _execute_search(
-        session, abstract, concepts, strategy_label, resolved_languages,
+    results, warning, warning_rtl = _execute_unified_search(
+        session, request.state.locale, abstract, concepts, strategy_label, resolved_languages,
         free_only, min_budget, max_budget, indexing, quartiles,
         sinta_levels, max_review_weeks, resolved_strategy,
     )
 
     context = {**_filter_context(request.state.locale), **_results_context(session)}
-    if not results:
+    if warning:
+        # Takes priority over the generic "no results" message below --
+        # covers both the Arabic-blocked case (results empty, a specific
+        # RTL message already explains why) and the "here's which
+        # engine actually answered" note (results non-empty).
+        context["warning"] = warning
+        context["warning_rtl"] = warning_rtl
+    elif not results:
         context["warning"] = t("warning.no_results", request.state.locale)
 
     return _render(request, "partials/search_results.html", context, session)
@@ -526,15 +560,18 @@ def refine_with_disciplines(
 
     concepts = confirmed_tag_values(session)  # same values run_search's own concepts computation would produce
 
-    results = _execute_search(
-        session, params["abstract"], concepts, params["strategy_label"],
+    results, warning, warning_rtl = _execute_unified_search(
+        session, request.state.locale, params["abstract"], concepts, params["strategy_label"],
         params["resolved_languages"], params["free_only"], params["min_budget"],
         params["max_budget"], params["indexing"], params["quartiles"],
         params["sinta_levels"], params["max_review_weeks"], params["resolved_strategy"],
     )
 
     context = {**_filter_context(request.state.locale), **_results_context(session)}
-    if not results:
+    if warning:
+        context["warning"] = warning
+        context["warning_rtl"] = warning_rtl
+    elif not results:
         context["warning"] = t("warning.no_results", request.state.locale)
 
     return _render(request, "partials/search_results.html", context, session)

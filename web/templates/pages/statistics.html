@@ -39,7 +39,19 @@
 
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
     {{ bar_list(t("statistics.chart.open_access_cost", locale), stats.free_vs_paid, "💰") }}
+    {% if stats.semantic_coverage %}
+    {{ bar_list(t("statistics.chart.semantic_coverage", locale), {
+        t("statistics.semantic_coverage.curated", locale): stats.semantic_coverage.curated_index_terms,
+        t("statistics.semantic_coverage.baseline", locale): stats.semantic_coverage.total_journals - stats.semantic_coverage.curated_index_terms,
+    }, "🔎") }}
+    {% endif %}
 </div>
+
+{% if stats.semantic_coverage %}
+<p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
+    {{ t("statistics.semantic_coverage.footnote", locale) }}
+</p>
+{% endif %}
 
 <p class="text-xs text-gray-500 dark:text-gray-400 mt-6">
     {{ t("statistics.footnote", locale) }}

@@ -1,17 +1,16 @@
 """
-Documentation has no Streamlit equivalent to port — see
-docs/WEB_MIGRATION.md for why it stays a placeholder rather than
-getting invented content. (Publication Academy used to live here too;
-removed in v0.2.5 -- see docs/WEB_MIGRATION.md's update note.)
+Publication Academy used to live here too; removed in v0.2.5 -- see
+docs/WEB_MIGRATION.md's update note. The Documentation placeholder
+route that used to live here was removed once real documentation
+(README, docs/) became the answer -- see nav_links in
+web/templating.py.
 """
 
 import logging
 
 from fastapi import APIRouter, Request
 
-from services.app_info import APP_NAME
 from services.search_service import get_dashboard_stats
-from web.i18n import t
 from web.templating import templates
 
 logger = logging.getLogger(__name__)
@@ -34,16 +33,3 @@ def statistics(request: Request):
         stats = None
 
     return templates.TemplateResponse(request=request, name="pages/statistics.html", context={"stats": stats})
-
-
-@router.get("/documentation")
-def documentation_placeholder(request: Request):
-    locale = request.state.locale
-    return templates.TemplateResponse(
-        request=request,
-        name="pages/coming_soon.html",
-        context={
-            "page_title": t("documentation.title", locale),
-            "page_description": t("documentation.description", locale, app_name=APP_NAME),
-        },
-    )

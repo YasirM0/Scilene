@@ -61,6 +61,7 @@ from services.semantic_search import embed, MODEL_DIR
 DATA_DIR = MODEL_DIR / "data"
 CORPUS_EMBEDDINGS_PATH = DATA_DIR / "corpus_embeddings.f16.npy"
 CORPUS_IDS_PATH = DATA_DIR / "corpus_ids.json"
+CORPUS_META_PATH = DATA_DIR / "corpus_meta.json"
 
 MAX_CHARS = 400  # same cap used throughout benchmark/ -- keeps worst-case
                   # batch memory bounded regardless of what's in the DB
@@ -86,13 +87,13 @@ def _build_index_terms_corpus(conn, baseline_corpus):
             corpus[jid] = base_text
     print(f"index_terms corpus: {matched}/{len(baseline_corpus)} journals used real curated index "
           f"terms ({len(baseline_corpus) - matched} fell back to baseline text)")
-    return corpus
+    return corpus, matched
 
 
 def run():
     conn = get_connection()
     baseline_corpus = build_journal_corpus(conn)
-    combined = _build_index_terms_corpus(conn, baseline_corpus)
+    combined, curated_count = _build_index_terms_corpus(conn, baseline_corpus)
     print(f"Loaded baseline text for {len(baseline_corpus)} journals", flush=True)
 
     journal_ids = list(combined.keys())
@@ -113,8 +114,18 @@ def run():
     with open(CORPUS_IDS_PATH, "w") as f:
         json.dump(journal_ids, f)
 
+    # Counts only, never the terms themselves -- safe to sit next to
+    # the embeddings in the committed repo, unlike journals.index_terms
+    # (see module docstring's SECURITY note). Lets the Statistics
+    # dashboard (services/search_service.py's get_dashboard_stats)
+    # show real curated-coverage numbers without the app ever reading
+    # index_terms text again after this script wipes it below.
+    with open(CORPUS_META_PATH, "w") as f:
+        json.dump({"total_journals": len(journal_ids), "curated_index_terms": curated_count}, f)
+
     print(f"Saved {embeddings.shape} embeddings -> {CORPUS_EMBEDDINGS_PATH}")
     print(f"Saved {len(journal_ids)} journal IDs -> {CORPUS_IDS_PATH}")
+    print(f"Saved coverage counts -> {CORPUS_META_PATH}")
 
     # See module docstring's SECURITY note -- embeddings are already
     # safely on disk above, so wiping the source text here costs

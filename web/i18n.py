@@ -45,7 +45,6 @@ _STRINGS = {
     "nav.search": {"en": "Submission Search", "ar": "بحث المخطوطات", "id": "Pencarian Naskah"},
     "nav.statistics": {"en": "Statistics", "ar": "الإحصائيات", "id": "Statistik"},
     "nav.about": {"en": "About", "ar": "حول", "id": "Tentang"},
-    "nav.documentation": {"en": "Documentation", "ar": "التوثيق", "id": "Dokumentasi"},
     "nav.language": {"en": "Language", "ar": "اللغة", "id": "Bahasa"},
 
     "footer.data_label": {"en": "Data:", "ar": "البيانات:", "id": "Data:"},
@@ -281,14 +280,14 @@ _STRINGS = {
         "id": "Mengapa AI bersifat opsional?",
     },
     "about.section.ai_optional.body": {
-        "en": "Scilene's recommendations come from a deterministic, explainable ranking engine, not a black box. Where AI is introduced, it's meant to enrich and assist that process, never to replace it.",
-        "ar": "تنبثق توصيات Scilene من محرك ترتيب حتمي وقابل للتفسير، وليس صندوقاً أسود. وحيثما يُستخدم الذكاء الاصطناعي، فالغرض منه إثراء هذه العملية ومساعدتها، لا استبدالها.",
-        "id": "Rekomendasi Scilene berasal dari mesin peringkat yang deterministik dan dapat dijelaskan, bukan kotak hitam. Jika AI digunakan, tujuannya adalah memperkaya dan membantu proses tersebut, bukan menggantikannya.",
+        "en": "Scilene's core recommendations come from a deterministic, explainable ranking engine, not a black box. An opt-in AI Semantic Search mode is also available — it ranks journals by embedding similarity between your text and each journal's profile instead of keyword matches, and can surface different results. It's always a separate, clearly-labeled choice, never a hidden influence on the default search.",
+        "ar": "تنبثق توصيات Scilene الأساسية من محرك ترتيب حتمي وقابل للتفسير، وليس صندوقاً أسود. تتوفر أيضاً وضعية اختيارية للبحث الدلالي بالذكاء الاصطناعي — تُرتّب المجلات بحسب التشابه بين تضمين نصك وملف كل مجلة بدلاً من تطابق الكلمات المفتاحية، وقد تُظهر نتائج مختلفة. وهي دائماً خيار منفصل وواضح المعالم، لا تأثير خفي على البحث الافتراضي.",
+        "id": "Rekomendasi inti Scilene berasal dari mesin peringkat yang deterministik dan dapat dijelaskan, bukan kotak hitam. Mode Pencarian Semantik AI yang bersifat opsional juga tersedia — mode ini memberi peringkat jurnal berdasarkan kemiripan embedding antara teks Anda dan profil setiap jurnal, bukan kecocokan kata kunci, dan dapat menampilkan hasil yang berbeda. Ini selalu merupakan pilihan terpisah yang jelas, bukan pengaruh tersembunyi pada pencarian default.",
     },
     "about.section.ai_optional.callout": {
-        "en": "In practice: turning AI features off never changes which journals get recommended — only how much help you get finding the right words to search with.",
-        "ar": "من الناحية العملية: إيقاف ميزات الذكاء الاصطناعي لا يغيّر أبداً المجلات التي تتم التوصية بها — بل يؤثر فقط في مقدار المساعدة التي تحصل عليها لإيجاد الكلمات المناسبة للبحث.",
-        "id": "Dalam praktiknya: menonaktifkan fitur AI tidak pernah mengubah jurnal mana yang direkomendasikan — hanya memengaruhi seberapa banyak bantuan yang Anda dapatkan untuk menemukan kata yang tepat untuk pencarian.",
+        "en": "In practice: the deterministic search's results never change based on AI. Switching to AI Semantic Search is a deliberate choice to try a different ranking approach — not a silent enhancement to the default one.",
+        "ar": "من الناحية العملية: نتائج البحث الحتمي لا تتغير أبداً بسبب الذكاء الاصطناعي. التحول إلى البحث الدلالي بالذكاء الاصطناعي هو اختيار متعمد لتجربة نهج ترتيب مختلف — وليس تحسيناً صامتاً للبحث الافتراضي.",
+        "id": "Dalam praktiknya: hasil pencarian deterministik tidak pernah berubah karena AI. Beralih ke Pencarian Semantik AI adalah pilihan yang disengaja untuk mencoba pendekatan peringkat yang berbeda — bukan peningkatan diam-diam pada pencarian default.",
     },
     "about.section.open_source.title": {
         "en": "Why open source?",
@@ -391,9 +390,9 @@ _STRINGS = {
     "statistics.title": {"en": "Statistics", "ar": "الإحصائيات", "id": "Statistik"},
     "statistics.heading": {"en": "Statistics Dashboard", "ar": "لوحة الإحصائيات", "id": "Dasbor Statistik"},
     "statistics.subtitle": {
-        "en": "A snapshot of the journal database and recommendation engine's coverage.",
-        "ar": "لمحة عن قاعدة بيانات المجلات ونطاق تغطية محرك التوصيات.",
-        "id": "Gambaran singkat basis data jurnal dan cakupan mesin rekomendasi.",
+        "en": "A snapshot of the journal database and both search engines' coverage.",
+        "ar": "لمحة عن قاعدة بيانات المجلات ونطاق تغطية محركي البحث.",
+        "id": "Gambaran singkat basis data jurnal dan cakupan kedua mesin pencarian.",
     },
     "statistics.empty": {
         "en": "Statistics are unavailable right now — the database couldn't be reached.",
@@ -401,6 +400,36 @@ _STRINGS = {
         "id": "Statistik saat ini tidak tersedia — basis data tidak dapat dijangkau.",
     },
     "statistics.stat.total_journals": {"en": "Total Journals", "ar": "إجمالي المجلات", "id": "Total Jurnal"},
+    "warning.semantic_unavailable_fallback": {
+        "en": "AI Semantic Search is temporarily unavailable — showing keyword-based results instead.",
+        "ar": "البحث الدلالي بالذكاء الاصطناعي غير متاح مؤقتاً — تُعرض بدلاً منه نتائج قائمة على الكلمات المفتاحية.",
+        "id": "Pencarian Semantik AI untuk sementara tidak tersedia — menampilkan hasil berbasis kata kunci sebagai gantinya.",
+    },
+    "warning.semantic_no_matches_fallback": {
+        "en": "AI Semantic Search found no matches for this query — showing {strategy} keyword results instead.",
+        "ar": "لم يجد البحث الدلالي بالذكاء الاصطناعي أي تطابق لهذا الاستعلام — تُعرض بدلاً منه نتائج الكلمات المفتاحية بأسلوب {strategy}.",
+        "id": "Pencarian Semantik AI tidak menemukan kecocokan untuk kueri ini — menampilkan hasil kata kunci dengan strategi {strategy} sebagai gantinya.",
+    },
+    "statistics.chart.semantic_coverage": {
+        "en": "AI Semantic Search Coverage",
+        "ar": "تغطية البحث الدلالي بالذكاء الاصطناعي",
+        "id": "Cakupan Pencarian Semantik AI",
+    },
+    "statistics.semantic_coverage.curated": {
+        "en": "Curated index terms",
+        "ar": "مصطلحات الفهرسة المنسّقة",
+        "id": "Istilah indeks terkurasi",
+    },
+    "statistics.semantic_coverage.baseline": {
+        "en": "Title/subject/keyword fallback",
+        "ar": "الاحتياطي من العنوان/الموضوع/الكلمات المفتاحية",
+        "id": "Cadangan judul/subjek/kata kunci",
+    },
+    "statistics.semantic_coverage.footnote": {
+        "en": "Every journal is searchable via AI Semantic Search. \"Curated\" journals were additionally hand-enriched with index terms (see About); the rest fall back to title, subject, and keyword text. The terms themselves are never stored in this database, only their embeddings.",
+        "ar": "كل مجلة قابلة للبحث عبر البحث الدلالي بالذكاء الاصطناعي. المجلات \"المنسّقة\" أُثريت يدوياً بمصطلحات فهرسة إضافية (انظر صفحة حول)؛ أما البقية فتعتمد على نص العنوان والموضوع والكلمات المفتاحية. هذه المصطلحات نفسها لا تُخزَّن أبداً في قاعدة البيانات هذه، بل تضميناتها الرقمية فقط.",
+        "id": "Setiap jurnal dapat dicari melalui Pencarian Semantik AI. Jurnal yang \"terkurasi\" diperkaya lebih lanjut secara manual dengan istilah indeks (lihat halaman Tentang); sisanya menggunakan cadangan teks judul, subjek, dan kata kunci. Istilah itu sendiri tidak pernah disimpan di basis data ini, hanya embedding-nya.",
+    },
     "statistics.chart.indexing_sources": {"en": "Indexing Sources", "ar": "مصادر الفهرسة", "id": "Sumber Pengindeksan"},
     "statistics.chart.metadata_enrichment": {"en": "Metadata Enrichment", "ar": "إثراء البيانات الوصفية", "id": "Pengayaan Metadata"},
     "statistics.chart.top_countries": {"en": "Top Countries", "ar": "أبرز الدول", "id": "Negara Teratas"},
@@ -433,15 +462,10 @@ _STRINGS = {
         "id": "Menjalankan ulang pencarian tersimpan secara langsung terhadap basis data saat ini — rekomendasi selalu dibuat ulang, tidak pernah diputar ulang dari file.",
     },
     "search.find_button": {"en": "Find Best Matching Journals", "ar": "ابحث عن أفضل المجلات المطابقة", "id": "Temukan Jurnal yang Paling Cocok"},
-    "search.semantic_find_button": {
-        "en": "Try AI Semantic Search (Experimental)",
-        "ar": "جرّب البحث الدلالي بالذكاء الاصطناعي (تجريبي)",
-        "id": "Coba Pencarian Semantik AI (Eksperimental)",
-    },
-    "search.semantic_find_helper": {
-        "en": "Ranks journals by AI-matched meaning instead of keyword overlap — doesn't use the filters above yet.",
-        "ar": "يرتّب المجلات حسب التطابق الدلالي بالذكاء الاصطناعي بدلاً من تطابق الكلمات المفتاحية — لا يستخدم عوامل التصفية أعلاه بعد.",
-        "id": "Mengurutkan jurnal berdasarkan kecocokan makna oleh AI, bukan kecocokan kata kunci — belum menggunakan filter di atas.",
+    "search.find_button_helper": {
+        "en": "Ranks by AI-matched meaning first; automatically falls back to keyword matching (using the strategy and filters above) if that finds nothing.",
+        "ar": "يرتّب النتائج أولاً حسب التطابق الدلالي بالذكاء الاصطناعي، ويعود تلقائياً إلى المطابقة بالكلمات المفتاحية (باستخدام الاستراتيجية والمرشحات أعلاه) إن لم يجد شيئاً.",
+        "id": "Mengurutkan hasil terlebih dahulu berdasarkan kecocokan makna oleh AI; secara otomatis beralih ke pencocokan kata kunci (menggunakan strategi dan filter di atas) jika tidak menemukan apa pun.",
     },
 
     # -- Search form (#129) -----------------------------------------------
@@ -683,8 +707,6 @@ _STRINGS = {
 
     "index_badge.journals_suffix": {"en": "{count} journals", "ar": "{count} مجلة", "id": "{count} jurnal"},
 
-    "coming_soon.label": {"en": "Coming soon", "ar": "قريباً", "id": "Segera hadir"},
-    "coming_soon.back_to_home": {"en": "← Back to Home", "ar": "← العودة إلى الرئيسية", "id": "← Kembali ke Beranda"},
 
     # -- Backend-supplied warnings/errors (#129) -----------------------------
     "warning.abstract_or_tags_required": {
@@ -747,12 +769,6 @@ _STRINGS = {
     "ai_error.Provider response did not match the expected contract.": {"en": "Provider response did not match the expected contract.", "ar": "لم تتطابق استجابة المزوّد مع الصيغة المتوقعة.", "id": "Respons penyedia tidak sesuai dengan kontrak yang diharapkan."},
 
     # -- Documentation placeholder page (#129) -------------------------------
-    "documentation.title": {"en": "Documentation", "ar": "التوثيق", "id": "Dokumentasi"},
-    "documentation.description": {
-        "en": "User-facing documentation for {app_name} is planned for a future milestone.",
-        "ar": "التوثيق الموجّه للمستخدمين الخاص بـ {app_name} مخطط له في مرحلة مستقبلية.",
-        "id": "Dokumentasi untuk pengguna {app_name} direncanakan untuk milestone mendatang.",
-    },
 
     # -- Stragglers caught by the #129 completeness audit --------------------
     "nav.theme_toggle_aria": {

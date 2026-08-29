@@ -54,5 +54,4 @@ templates.env.globals["nav_links"] = [
     {"key": "nav.search", "href": "/search"},
     {"key": "nav.statistics", "href": "/statistics"},
     {"key": "nav.about", "href": "/about"},
-    {"key": "nav.documentation", "href": "/documentation"},
 ]

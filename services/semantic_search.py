@@ -54,6 +54,7 @@ from utils.publication_types import format_publication_type_badge
 MODEL_DIR = Path(__file__).resolve().parent.parent / "models" / "all-MiniLM-L12-v2-onnx"
 CORPUS_EMBEDDINGS_PATH = MODEL_DIR / "data" / "corpus_embeddings.f16.npy"
 CORPUS_IDS_PATH = MODEL_DIR / "data" / "corpus_ids.json"
+CORPUS_META_PATH = MODEL_DIR / "data" / "corpus_meta.json"
 
 # Symmetric model -- no query/document instruction prefix, unlike
 # bge-small/e5 (both asymmetric retrieval models used previously).
@@ -179,6 +180,23 @@ def _assign_confidence(results):
 
 
 _EXPLANATION = "matched by AI semantic similarity between your text and this journal's profile, not a specific keyword match"
+
+
+def corpus_coverage():
+    """
+    Journal counts for the Statistics dashboard (#60 follow-up) --
+    {"total_journals": ..., "curated_index_terms": ...} written by
+    scripts/build_semantic_index.py alongside the embeddings. Counts
+    only, never the terms themselves -- safe to read even though
+    journals.index_terms itself is wiped from the database (see this
+    module's docstring). Returns None if the corpus hasn't been built
+    yet (dev checkout without the model data, or a build that predates
+    this file), so the dashboard can just omit the stat rather than error.
+    """
+    if not CORPUS_META_PATH.exists():
+        return None
+    with open(CORPUS_META_PATH) as f:
+        return json.load(f)
 
 
 def search(query_text: str, top_n: int = 40, languages=None, free_only=False, min_budget=None,

@@ -14,6 +14,7 @@ interfaces.
 """
 
 from services.recommender import JournalRecommender, STRATEGIES, CONFIDENCE_LEVELS
+from services.semantic_search import corpus_coverage
 from services.export import export_to_csv
 from services.repository import (
     count_journals,
@@ -94,6 +95,11 @@ def get_dashboard_stats():
     lightweight homepage) since count_by_subject() scans every
     journal's subject text and isn't worth paying on every homepage
     load for a page that doesn't show it.
+
+    `semantic_coverage` comes from corpus_coverage() (counts only,
+    never index_terms text -- see that function's docstring) rather
+    than a repository count_by_*(), since journals.index_terms is
+    wiped from the database itself after the embeddings are built.
     """
     return {
         "total_journals": count_journals(),
@@ -106,4 +112,5 @@ def get_dashboard_stats():
         "by_sinta_accreditation": count_by_sinta_accreditation(),
         "by_publication_type": count_by_publication_type(),
         "free_vs_paid": count_free_vs_paid(),
+        "semantic_coverage": corpus_coverage(),
     }
