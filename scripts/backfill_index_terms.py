@@ -40,6 +40,7 @@ from pathlib import Path
 import pandas as pd
 
 from services.dedup import JournalIndex
+from services.index_terms_dedup import run_embedding_dedup
 from services.repository import get_connection, update_index_terms
 from utils.issn import extract_issns, normalize_issn
 
@@ -119,6 +120,18 @@ def run():
         matched, unmatched = fn(index, conn)
         conn.commit()
         print(f"{label:16} matched: {matched:6}  unmatched (no existing journal found): {unmatched:6}")
+
+    # #121 -- embedding-similarity dedup within each journal's own merged
+    # list, on top of update_index_terms()'s own cross-source exact-match
+    # dedup above. See services/index_terms_dedup.py's own docstring for
+    # why this threshold still needs a manual spot-check before #121 is
+    # fully closed.
+    print()
+    print("Running embedding-based dedup (#121) ...", flush=True)
+    journals_changed, terms_dropped = run_embedding_dedup(conn)
+    conn.commit()
+    print(f"Embedding dedup: {journals_changed} journals had near-duplicate terms merged "
+          f"({terms_dropped} terms dropped as semantic duplicates).")
 
     total = conn.execute("SELECT COUNT(*) FROM journals").fetchone()[0]
     with_terms = conn.execute(
