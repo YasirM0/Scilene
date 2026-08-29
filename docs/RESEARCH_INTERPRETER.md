@@ -1,11 +1,23 @@
 # Research Interpreter (UI scaffolding)
 
-**Status:** Partially real. "Field of Study" is genuine as of #53
-(`services/field_detection.py` matches the abstract against the
-database's own subject vocabulary, deterministic, not a fake AI call).
-"Key Research Focus" is still a hardcoded placeholder pool — no real
-analysis of that slot happens yet. This document describes the
-architecture the fully-real interpreter will plug into.
+**Status:** "Key Research Focus" is real and interactive (accept/
+suggest-another/edit) as of #113's follow-up (`services/focus_detection.py`
+matches the abstract against `journals.keywords`, deterministic, not a
+fake AI call). "Field of Study" (`services/field_detection.py`,
+matching `journals.subjects` -- #53) was tried the same way and found
+NOT accurate enough for that treatment: tested directly against a real
+abstract about internet access and social stratification in Indonesia,
+it suggested "Computer Science", then "Environmental Science", then
+"Public Health" on retries. An embedding-similarity alternative was
+tried too and didn't fix it either (ranked "Technology" above "Social
+Sciences" for the same abstract). The underlying vocabulary is only
+~20-44 broad category names, too coarse for a specific interdisciplinary
+topic -- a structural limit, not a bug either technique fixes. So Field
+of Study is now non-interactive "e.g." example text next to the tag
+box (`services/research_interpreter.py::field_of_study_examples()`),
+never presented as a detected/confident claim the way Key Research
+Focus is. This document describes the architecture the interpreter
+plugs into either way.
 
 ---
 

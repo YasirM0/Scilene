@@ -532,7 +532,6 @@ _STRINGS = {
 
     # -- Research Interpreter panel (#129) ---------------------------------
     "interpreter.analyzing": {"en": "Analyzing your abstract...", "ar": "جارٍ تحليل ملخصك...", "id": "Menganalisis abstrak Anda..."},
-    "interpreter.field_identified": {"en": "✓ Field of Study identified", "ar": "✓ تم تحديد مجال الدراسة", "id": "✓ Bidang studi teridentifikasi"},
     "interpreter.focus_identified": {"en": "✓ Key Research Focus identified", "ar": "✓ تم تحديد التركيز البحثي الرئيسي", "id": "✓ Fokus riset utama teridentifikasi"},
     "interpreter.changed_notice": {"en": "Your abstract has changed.", "ar": "لقد تغيّر ملخصك.", "id": "Abstrak Anda telah berubah."},
     "interpreter.refresh_button": {"en": "↻ Refresh suggested tags", "ar": "↻ تحديث الوسوم المقترحة", "id": "↻ Segarkan tag yang disarankan"},
@@ -544,7 +543,6 @@ _STRINGS = {
     "interpreter.suggest_another_aria": {"en": "Suggest another for {label}", "ar": "اقترح بديلاً لـ {label}", "id": "Sarankan yang lain untuk {label}"},
     "interpreter.edit_aria": {"en": "Edit {label}", "ar": "تعديل {label}", "id": "Ubah {label}"},
     "interpreter.remove_aria": {"en": "Remove {label} suggestion", "ar": "إزالة اقتراح {label}", "id": "Hapus saran {label}"},
-    "interpreter.category.field_of_study": {"en": "Field of Study", "ar": "مجال الدراسة", "id": "Bidang Studi"},
     "interpreter.category.key_focus": {"en": "Key Research Focus", "ar": "التركيز البحثي الرئيسي", "id": "Fokus Riset Utama"},
 
     # -- Confirmed tags (#129) ---------------------------------------------
@@ -557,6 +555,16 @@ _STRINGS = {
         "id": "Belum ada konsep yang dikonfirmasi — terima saran di bawah atau tambahkan tag Anda sendiri.",
     },
     "add_tag.placeholder": {"en": "Add a tag...", "ar": "أضف وسماً...", "id": "Tambahkan tag..."},
+    "search_concepts_section.tag_sources_helper": {
+        "en": "Add tags from your own research keywords and/or the suggested Key Research Focus above. Press Enter after each one.",
+        "ar": "أضف وسوماً من كلماتك المفتاحية البحثية و/أو التركيز البحثي الرئيسي المقترح أعلاه. اضغط Enter بعد كل وسم.",
+        "id": "Tambahkan tag dari kata kunci riset Anda sendiri dan/atau Fokus Riset Utama yang disarankan di atas. Tekan Enter setelah setiap tag.",
+    },
+    "search_concepts_section.tag_sources_helper_with_examples": {
+        "en": "Add tags from your own research keywords, the suggested Key Research Focus above, and/or your field or subfield — e.g. {examples}. Press Enter after each one.",
+        "ar": "أضف وسوماً من كلماتك المفتاحية البحثية، أو التركيز البحثي الرئيسي المقترح أعلاه، و/أو مجالك أو مجالك الفرعي — مثلاً: {examples}. اضغط Enter بعد كل وسم.",
+        "id": "Tambahkan tag dari kata kunci riset Anda sendiri, Fokus Riset Utama yang disarankan di atas, dan/atau bidang atau subbidang Anda — misalnya: {examples}. Tekan Enter setelah setiap tag.",
+    },
 
     # -- Export panel (#129) -------------------------------------------------
     "export.heading": {"en": "Export Results", "ar": "تصدير النتائج", "id": "Ekspor Hasil"},

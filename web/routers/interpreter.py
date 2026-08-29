@@ -33,6 +33,7 @@ def _render_panel(request, session, extra_context=None, has_abstract=None):
         context["concepts_section_oob"] = {
             "visible": has_abstract or bool(session.get("confirmed_tags")),
             "confirmed_tags": session.get("confirmed_tags", []),
+            "field_examples": context.get("field_examples", []),
         }
     response = templates.TemplateResponse(
         request=request, name="partials/interpreter_panel.html", context=context
@@ -123,7 +124,15 @@ def interpret(request: Request, abstract: str = Form(""), session=Depends(get_se
 
 @router.get("/interpret/reveal")
 def interpret_reveal(request: Request, session=Depends(get_session_state)):
-    return _render_panel(request, session, current_suggestions_context(session))
+    # has_abstract=True -- this route only ever runs as the "analyzing"
+    # state's own auto-follow-up (interpreter_panel.html's hx-trigger),
+    # which only fires when an abstract was actually submitted. Needs
+    # to refresh the tag-box's OOB section too, not just this panel --
+    # the "analyzing" state's own render couldn't yet know
+    # field_of_study_examples()'s real result (detection hadn't run),
+    # so it rendered the no-examples helper text; this is the first
+    # response that can show the real one.
+    return _render_panel(request, session, current_suggestions_context(session), has_abstract=True)
 
 
 @router.post("/interpret/refresh")

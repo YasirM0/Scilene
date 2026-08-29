@@ -28,7 +28,6 @@
      hx-swap="innerHTML"
 >
     <p class="font-medium mb-1">{{ t("interpreter.analyzing", locale) }}</p>
-    <p>{{ t("interpreter.field_identified", locale) }}</p>
     <p>{{ t("interpreter.focus_identified", locale) }}</p>
 </div>
 
@@ -182,5 +181,5 @@
     just because the abstract was since cleared).
 #}
 {% from "components/search_concepts_section.html" import search_concepts_section with context %}
-{{ search_concepts_section(concepts_section_oob.confirmed_tags, concepts_section_oob.visible, oob=True) }}
+{{ search_concepts_section(concepts_section_oob.confirmed_tags, concepts_section_oob.visible, field_examples=concepts_section_oob.field_examples, oob=True) }}
 {% endif %}

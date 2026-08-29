@@ -60,6 +60,6 @@
         {% endif %}
 
         {% from "components/search_concepts_section.html" import search_concepts_section with context %}
-        {{ search_concepts_section(confirmed_tags, visible=(mode == "idea" or confirmed_tags), mode=mode, min_tags=min_tags) }}
+        {{ search_concepts_section(confirmed_tags, visible=(mode == "idea" or confirmed_tags), mode=mode, min_tags=min_tags, field_examples=field_examples) }}
     </div>
 </div>
