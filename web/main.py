@@ -62,6 +62,24 @@ async def resolve_locale(request: Request, call_next):
 
 
 @app.middleware("http")
+async def security_headers(request: Request, call_next):
+    """
+    #146 -- standard defensive headers with zero behavioral risk to
+    this app (no cross-origin embedding, no third-party frame usage,
+    no MIME-sniffing-dependent asset anywhere). Deliberately NOT
+    including Content-Security-Policy here: this app's actual inline
+    script/style usage needs a real audit before a CSP could be
+    written without risking breakage, which is a separate, more
+    careful piece of work than these three headers.
+    """
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+
+@app.middleware("http")
 async def cache_versioned_static(request: Request, call_next):
     """
     Every /static/* URL is now requested with a ?v=<mtime> query string

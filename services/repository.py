@@ -244,36 +244,6 @@ def search_by_title(title):
     return result
 
 
-def search_journals(**filters):
-    """Search journals using any combination of filters."""
-
-    conn = get_connection()
-
-    query = "SELECT * FROM journals"
-
-    conditions = []
-    params = []
-
-    for column, value in filters.items():
-        conditions.append(f"{column} LIKE ?")
-        params.append(f"%{value}%")
-
-    if conditions:
-        query += " WHERE " + " AND ".join(conditions)
-
-    dataframe = pd.read_sql_query(
-        query,
-        conn,
-        params=params
-    )
-
-    result = _rows_to_journals(dataframe, conn=conn)
-
-    conn.close()
-
-    return result
-
-
 def search_by_keywords(keywords):
     """
     Search journals matching any keyword in the title,
