@@ -203,8 +203,10 @@ Done (scaffolding only, no real model anywhere):
   "just don't show the enrichment" rather than an error.
 - `services/ai_provider.py` (#88) — the `AIProvider` interface this
   document's "Future-proofing" section asks for, plus two concrete
-  providers: `PlaceholderProvider` (wraps the existing hardcoded
-  research_interpreter.py logic) and `CloudAIProvider` (#87 — a real
+  providers: `PlaceholderProvider` (wraps research_interpreter.py's
+  logic -- deterministic keyword-vocabulary matching as of #113's
+  follow-up, no longer a hardcoded pool, see the correction note at
+  the end of this document) and `CloudAIProvider` (#87 — a real
   HTTP client against the request/response contract above, not
   pointed at any actual paid vendor). No local-model provider yet.
 - `services/discipline_detection.py` (#102) — "Detected Research
@@ -260,18 +262,42 @@ Done (scaffolding only, no real model anywhere):
 
 Not done:
 
-- No model selected, benchmarked, downloaded, or called anywhere.
 - No installer/download workflow (there's no desktop app to install
   into yet — see `docs/ARCHITECTURE_DECISIONS.md`).
 - No JSON schema validation/retry pipeline for real AI output (nothing
-  produces real AI output yet).
+  in THIS document's scope -- the Research Interpreter/Research Idea
+  generative-model question -- produces real AI output yet; see the
+  correction above about what "Scilene AI" actually turned out to mean).
 - The Scilene AI benchmark dataset (distinct from `docs/BENCHMARK.md`'s
   recommendation-quality benchmark).
 - The public-facing name decision.
 
 ---
 
-**Document Version:** 0.1
+**IMPORTANT CORRECTION (added after AI Semantic Search shipped):**
+Everything above describes a hypothetical future LLM/local-model
+feature for the Research Interpreter and Research Idea Assistant --
+that feature was never built this way. `PlaceholderProvider` and
+`research_interpreter.py` are no longer "hardcoded placeholder logic"
+either: "Field of Study" (`services/field_detection.py`, #53) and "Key
+Research Focus" (`services/focus_detection.py`) are both real,
+deterministic keyword-vocabulary matching against the database's own
+`journals.subjects`/`journals.keywords` -- no LLM, no model call,
+tested directly against real abstracts. Separately, and completely
+outside this document's scope, **AI Semantic Search** shipped as a
+real, working feature: `sentence-transformers/all-MiniLM-L12-v2` run
+locally via ONNX Runtime, ranking journals by embedding similarity
+over curated index terms, now the DEFAULT search path (automatic
+keyword-engine fallback if it errors or finds nothing) -- see
+`services/semantic_search.py`, `services/query_translator.py`, and
+`docs/QUERY_PIPELINE.md`'s own correction note. That is a completely
+different mechanism (embeddings, not a generative model) than
+anything this document envisioned, which is why it isn't described
+here.
+
+---
+
+**Document Version:** 0.1 (see correction above)
 
 **Last Updated:** August 2026
 

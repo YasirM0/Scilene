@@ -16,6 +16,20 @@ strings, a language name — that flows into the exact same `recommend()`
 parameters a manually-typed search already uses. There is no second,
 AI-influenced scoring path.
 
+**Correction:** that rule holds for everything this document
+describes (Research Interpreter, Research Idea Assistant, Discipline
+Detection) -- all deterministic, all feeding `recommend()`'s plain
+parameters. **AI Semantic Search** (`services/semantic_search.py`) is
+a genuinely different, separate thing this document doesn't cover: it
+IS a second ranking path -- embedding similarity, not
+`recommend()`'s keyword-hit scoring -- and it's now the DEFAULT one,
+with automatic fallback to the deterministic engine if it errors or
+finds nothing (`web/routers/search.py::_execute_unified_search()`).
+The "never a second scoring path" framing above was written before
+that shipped; it's accurate for query PREPARATION (nothing here
+influences either engine's actual ranking math), just not a complete
+description of how many ranking paths exist today.
+
 ---
 
 ## The pipeline, stage by stage
@@ -59,17 +73,28 @@ above implies detection feeds translation; today it feeds a filter
 instead. Both are legitimate uses of the same detection call, and nothing
 prevents wiring it into translation later — but it isn't today.
 
-### Translation — not implemented
+### Translation — real, since `services/query_translator.py`
 
-No translation of any kind exists in this codebase. Building it
-honestly requires either a real translation model/API (a genuine
-AI dependency, not something to fake with a dictionary) or accepting
-that non-English abstracts are only matched via whatever English
-loanwords/technical terms happen to overlap with journal metadata —
-which is exactly what happens today, silently, as a side effect of
-`recommend()`'s plain substring matching. See "AI fallback behavior"
-below for why that silent behavior is actually the correct fallback,
-not a bug to hide.
+**Correction:** translation now exists and runs before every search
+(both the deterministic path and AI Semantic Search). English passes
+through unchanged. Indonesian is translated via a 913-term dictionary
+(`data/indonesian_academic_dict.json`, built from this project's own
+real index terms, word-boundary matching, longest-match-first --
+unmatched terms pass through, since `all-MiniLM-L12-v2` still handles
+loanword/cross-lingual overlap for those). Arabic detects whether
+Argos Translate's `ar->en` package is actually installed in the
+current process at runtime: real translation if so (verified quality
+is good but not perfect -- disclosed directly in that module's
+docstring), otherwise `ArabicNotSupportedOnline` is raised with an
+Arabic-language message pointing to the desktop app, since
+Argos/ctranslate2's ~530MB+ RAM footprint is never installed on the
+shared web deployment. This is NOT a "fake it with a dictionary"
+shortcut for Arabic specifically -- Indonesian genuinely is
+dictionary-based (a deliberate, disclosed design choice after testing
+showed it beat heavier models for this project's actual query
+patterns), Arabic genuinely is real MT, just conditionally available.
+See `docs/experiments/embedding_benchmarks.md` for the full model
+comparison history.
 
 ### Query Normalization — partial, informal
 

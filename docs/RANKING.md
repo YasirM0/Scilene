@@ -1,5 +1,17 @@
 # Ranking System
 
+**Status (added retroactively, #149):** early Version 0.1 design doc,
+not updated as the real implementation diverged. What actually shipped
+is TWO separate ranking engines, not the five-stage pipeline below in
+one system: `services/recommender.py` (deterministic keyword-hit
+scoring -- no semantic similarity anywhere in it) and
+`services/semantic_search.py` (AI Semantic Search -- embedding
+similarity, now the default, falling back to the deterministic engine
+automatically if it errors or finds nothing). "Stage 1: Semantic
+Similarity" below describes what AI Semantic Search does, not the
+deterministic engine, which never compares embeddings at all. See
+`docs/QUERY_PIPELINE.md`'s own correction note for how the two relate.
+
 ## Purpose
 
 The Ranking Engine determines the order in which journals are recommended to researchers.
@@ -75,7 +87,9 @@ The user's manuscript title and abstract are compared against each journal's aim
 
 This stage determines topical relevance.
 
-Semantic similarity is the primary factor in Version 0.1.
+Semantic similarity is the primary factor in AI Semantic Search
+specifically (see this document's Status note) -- the deterministic
+engine uses keyword-hit scoring instead, never embeddings.
 
 ---
 
