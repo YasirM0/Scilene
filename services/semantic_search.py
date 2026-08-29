@@ -48,7 +48,7 @@ import onnxruntime as ort
 from tokenizers import Tokenizer
 
 from services.recommender import parse_usd_amount
-from services.repository import get_journals_by_ids
+from services.repository import get_journals_by_ids, filtered_journal_ids
 from utils.publication_types import format_publication_type_badge
 
 MODEL_DIR = Path(__file__).resolve().parent.parent / "models" / "all-MiniLM-L12-v2-onnx"
@@ -181,7 +181,8 @@ def _assign_confidence(results):
 _EXPLANATION = "matched by AI semantic similarity between your text and this journal's profile, not a specific keyword match"
 
 
-def search(query_text: str, top_n: int = 40) -> list[dict]:
+def search(query_text: str, top_n: int = 40, languages=None, free_only=False, min_budget=None,
+           max_budget=None, indexing=None, quartiles=None, sinta_levels=None, max_review_weeks=None) -> list[dict]:
     """
     Semantic search over the precomputed corpus -- embeds query_text,
     ranks every journal by cosine similarity, and returns the top_n as
@@ -198,19 +199,35 @@ def search(query_text: str, top_n: int = 40) -> list[dict]:
     see services/query_translator.py -- this function assumes
     query_text is English.
 
-    No filter parameters (indexing/budget/quartile/languages/review
-    time) yet -- this is the first, deliberately minimal version of
-    this opt-in path (#143 follow-up); those can layer on as a
-    follow-up once this core path is proven, without changing this
-    function's shape.
+    Filters (#144) mask the corpus BEFORE ranking, not the results
+    after -- so top_n always returns up to top_n *eligible* journals,
+    never fewer because some of a fixed-size ranked slate got filtered
+    out afterward. services.repository.filtered_journal_ids() reuses
+    the exact same filter dimensions/SQL patterns
+    services.repository.search_candidates() (the deterministic path)
+    already uses, so "Q1 only" or "free only" means the same thing on
+    either search strategy.
     """
     corpus_embeddings, corpus_ids = _get_corpus()
     query_vec = embed_query(query_text)
 
+    allowed_ids = filtered_journal_ids(
+        languages=languages, free_only=free_only, min_budget=min_budget, max_budget=max_budget,
+        indexing=indexing, quartiles=quartiles, sinta_levels=sinta_levels, max_review_weeks=max_review_weeks,
+    )
+
     scores = corpus_embeddings @ query_vec
+    if allowed_ids is not None:
+        mask = np.array([cid in allowed_ids for cid in corpus_ids])
+        scores = np.where(mask, scores, -np.inf)
+
     top_n = min(top_n, len(corpus_ids))
     top_indices = np.argpartition(-scores, top_n - 1)[:top_n]
     top_indices = top_indices[np.argsort(-scores[top_indices])]
+    # -inf-scored (filtered-out) slots can still land in the raw
+    # top_n if fewer than top_n journals pass the filter -- drop them
+    # rather than return a journal the filter explicitly excluded.
+    top_indices = [i for i in top_indices if scores[i] != -np.inf]
 
     ranked_ids = [corpus_ids[i] for i in top_indices]
     ranked_scores = {corpus_ids[i]: float(scores[i]) for i in top_indices}

@@ -448,6 +448,76 @@ def search_candidates(keywords, languages=None, free_only=False, indexing=None,
     return result
 
 
+def filtered_journal_ids(languages=None, free_only=False, min_budget=None, max_budget=None,
+                          indexing=None, quartiles=None, sinta_levels=None, max_review_weeks=None):
+    """
+    Returns the set of journal ids matching the given filters -- same
+    filter dimensions and SQL condition pattern as search_candidates()
+    above (#144), minus the keyword condition (semantic_search.py's
+    own cosine-similarity ranking already handles relevance -- this
+    only narrows WHICH journals are eligible to rank at all) and plus
+    a budget range, which search_candidates() deliberately leaves to
+    the recommender (its own docstring: "budget filtering is NOT done
+    here"). Returns bare ids, not hydrated Journal objects, since the
+    caller (semantic_search.search()) only needs this set to mask its
+    corpus array before ranking -- hydrating tens of thousands of full
+    rows here would be wasted work.
+    """
+    conn = get_connection()
+
+    conditions = []
+    params = []
+
+    if languages:
+        language_conditions = " OR ".join("languages LIKE ?" for _ in languages)
+        conditions.append(f"({language_conditions})")
+        params.extend(f"%{lang}%" for lang in languages)
+
+    if free_only:
+        conditions.append("apc = 'No'")
+    else:
+        if min_budget is not None:
+            conditions.append("apc_amount IS NOT NULL AND apc_amount >= ?")
+            params.append(min_budget)
+        if max_budget is not None:
+            conditions.append("apc_amount IS NOT NULL AND apc_amount <= ?")
+            params.append(max_budget)
+
+    if indexing:
+        placeholders = ",".join("?" for _ in indexing)
+        conditions.append(
+            f"id IN (SELECT journal_id FROM journal_sources WHERE source IN ({placeholders}))"
+        )
+        params.extend(indexing)
+
+    if quartiles:
+        placeholders = ",".join("?" for _ in quartiles)
+        conditions.append(
+            f"id IN (SELECT journal_id FROM journal_sources WHERE quartile IN ({placeholders}))"
+        )
+        params.extend(quartiles)
+
+    if sinta_levels:
+        placeholders = ",".join("?" for _ in sinta_levels)
+        conditions.append(
+            f"id IN (SELECT journal_id FROM journal_sources WHERE accreditation IN ({placeholders}))"
+        )
+        params.extend(sinta_levels)
+
+    if max_review_weeks is not None:
+        conditions.append("review_weeks IS NOT NULL AND review_weeks <= ?")
+        params.append(max_review_weeks)
+
+    if not conditions:
+        conn.close()
+        return None  # no filters active -- caller skips masking entirely
+
+    query = "SELECT id FROM journals WHERE " + " AND ".join(conditions)
+    ids = {row[0] for row in conn.execute(query, params).fetchall()}
+    conn.close()
+    return ids
+
+
 def count_journals():
     """
     Return the number of journals stored in the database.

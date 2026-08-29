@@ -264,7 +264,9 @@ def _execute_search(session, abstract, concepts, strategy_label, resolved_langua
 SEMANTIC_TOP_N = 40
 
 
-def _execute_semantic_search(session, query_text, display_label):
+def _execute_semantic_search(session, query_text, display_label, languages=None, free_only=False,
+                              min_budget=None, max_budget=None, indexing=None, quartiles=None,
+                              sinta_levels=None, max_review_weeks=None):
     """
     services/semantic_search.py's counterpart to _execute_search()
     above -- same session-state contract (current_results/search_meta/
@@ -275,15 +277,27 @@ def _execute_semantic_search(session, query_text, display_label):
     re-runs a search by replaying recommender-specific parameters this
     path doesn't have, so that feature is simply unavailable on a
     semantic-search results set rather than faked.
+
+    Filters (#144) use the exact same parameters/semantics as
+    _execute_search()'s own filters -- see services.semantic_search
+    .search()'s own docstring for how they're applied (masking the
+    corpus before ranking, not the results after).
     """
-    results = semantic_search.search(query_text, top_n=SEMANTIC_TOP_N)
+    results = semantic_search.search(
+        query_text, top_n=SEMANTIC_TOP_N, languages=languages, free_only=free_only,
+        min_budget=min_budget, max_budget=max_budget, indexing=indexing,
+        quartiles=quartiles, sinta_levels=sinta_levels, max_review_weeks=max_review_weeks,
+    )
 
     search_meta = {
         "display_label": display_label,
         "abstract": query_text,
         "keywords": [],
         "strategy_label": "✨ AI Semantic Match (Experimental)",
-        "filters_summary": [],
+        "filters_summary": build_filters_summary(
+            languages=languages, free_only=free_only, min_budget=min_budget, max_budget=max_budget,
+            indexing=indexing, quartiles=quartiles, sinta_levels=sinta_levels, max_review_weeks=max_review_weeks,
+        ),
     }
 
     session["current_results"] = results
@@ -304,7 +318,17 @@ def _execute_semantic_search(session, query_text, display_label):
 
 
 @router.post("/semantic")
-def run_semantic_search(request: Request, session=Depends(get_session_state), abstract: str = Form("")):
+def run_semantic_search(
+    request: Request,
+    session=Depends(get_session_state),
+    abstract: str = Form(""),
+    languages: list[str] = Form([]),
+    budget_choice: str = Form("Any"),
+    review_time_choice: str = Form("Any"),
+    indexing: list[str] = Form([]),
+    quartiles: list[str] = Form([]),
+    sinta_levels: list[str] = Form([]),
+):
     """
     #143 -- the opt-in "✨ Try AI Semantic Search" path
     (web/templates/pages/search.html), a second submit button in the
@@ -312,6 +336,15 @@ def run_semantic_search(request: Request, session=Depends(get_session_state), ab
     Reads the same abstract field and Search Concepts tags every other
     search route does; the actual ranking comes from
     services/semantic_search.py instead of the recommender.
+
+    #144 -- reads the SAME filter fields the button's enclosing <form>
+    already carries for the deterministic /search route (this button
+    has no hx-include of its own, so htmx's default "closest form"
+    inclusion already sends them; they were just ignored here before).
+    Unlike /search, an empty `indexing` is NOT treated as an invalid
+    submission -- filters are optional narrowing on top of semantic
+    ranking, not a required selection the way the deterministic path
+    requires at least one indexing source.
     """
     abstract = abstract.strip()
     concepts = confirmed_tag_values(session)
@@ -343,7 +376,15 @@ def run_semantic_search(request: Request, session=Depends(get_session_state), ab
         }
         return _render(request, "partials/search_results.html", context, session)
 
-    results = _execute_semantic_search(session, query_text, _display_label(abstract, concepts))
+    resolved_languages = languages or None
+    free_only, min_budget, max_budget = budget_to_range(budget_choice)
+    max_review_weeks = REVIEW_TIME_BANDS[review_time_choice]
+
+    results = _execute_semantic_search(
+        session, query_text, _display_label(abstract, concepts), languages=resolved_languages,
+        free_only=free_only, min_budget=min_budget, max_budget=max_budget, indexing=indexing or None,
+        quartiles=quartiles or None, sinta_levels=sinta_levels or None, max_review_weeks=max_review_weeks,
+    )
 
     context = {**_filter_context(request.state.locale), **_results_context(session)}
     if not results:
