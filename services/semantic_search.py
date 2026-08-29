@@ -236,19 +236,32 @@ def _explanation_for(query_text, subjects):
 
 def corpus_coverage():
     """
-    Journal counts for the Statistics dashboard (#60 follow-up) --
-    {"total_journals": ..., "curated_index_terms": ...} written by
-    scripts/build_semantic_index.py alongside the embeddings. Counts
-    only, never the terms themselves -- safe to read even though
-    journals.index_terms itself is wiped from the database (see this
-    module's docstring). Returns None if the corpus hasn't been built
-    yet (dev checkout without the model data, or a build that predates
-    this file), so the dashboard can just omit the stat rather than error.
+    Journal counts for the Statistics dashboard (#60 follow-up).
+    `total_journals` is derivable from corpus_ids.json alone (just IDs,
+    no security concern) the moment ANY corpus has been built at all.
+    `curated_index_terms` additionally needs corpus_meta.json, written
+    by scripts/build_semantic_index.py alongside the embeddings -- a
+    corpus built before that file existed (true of the database
+    currently shipped, built before this feature) won't have it, so
+    it's None here rather than making the whole stat unavailable over
+    one missing number. Counts only, never the terms themselves --
+    safe to read even though journals.index_terms itself is wiped from
+    the database (see this module's docstring). Returns None only if
+    no corpus has been built at all (dev checkout without the model
+    data), so the dashboard can omit the stat entirely in that case.
     """
-    if not CORPUS_META_PATH.exists():
+    if not CORPUS_IDS_PATH.exists():
         return None
-    with open(CORPUS_META_PATH) as f:
-        return json.load(f)
+
+    with open(CORPUS_IDS_PATH) as f:
+        total_journals = len(json.load(f))
+
+    curated_index_terms = None
+    if CORPUS_META_PATH.exists():
+        with open(CORPUS_META_PATH) as f:
+            curated_index_terms = json.load(f).get("curated_index_terms")
+
+    return {"total_journals": total_journals, "curated_index_terms": curated_index_terms}
 
 
 def search(query_text: str, top_n: int = 40, languages=None, free_only=False, min_budget=None,

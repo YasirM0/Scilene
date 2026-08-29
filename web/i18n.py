@@ -400,6 +400,11 @@ _STRINGS = {
         "id": "Statistik saat ini tidak tersedia — basis data tidak dapat dijangkau.",
     },
     "statistics.stat.total_journals": {"en": "Total Journals", "ar": "إجمالي المجلات", "id": "Total Jurnal"},
+    "statistics.stat.semantic_coverage": {
+        "en": "AI Semantic Search Coverage",
+        "ar": "تغطية البحث الدلالي بالذكاء الاصطناعي",
+        "id": "Cakupan Pencarian Semantik AI",
+    },
     "warning.semantic_unavailable_fallback": {
         "en": "AI Semantic Search is temporarily unavailable — showing keyword-based results instead.",
         "ar": "البحث الدلالي بالذكاء الاصطناعي غير متاح مؤقتاً — تُعرض بدلاً منه نتائج قائمة على الكلمات المفتاحية.",
@@ -429,6 +434,11 @@ _STRINGS = {
         "en": "Every journal is searchable via AI Semantic Search. \"Curated\" journals were additionally hand-enriched with index terms (see About); the rest fall back to title, subject, and keyword text. The terms themselves are never stored in this database, only their embeddings.",
         "ar": "كل مجلة قابلة للبحث عبر البحث الدلالي بالذكاء الاصطناعي. المجلات \"المنسّقة\" أُثريت يدوياً بمصطلحات فهرسة إضافية (انظر صفحة حول)؛ أما البقية فتعتمد على نص العنوان والموضوع والكلمات المفتاحية. هذه المصطلحات نفسها لا تُخزَّن أبداً في قاعدة البيانات هذه، بل تضميناتها الرقمية فقط.",
         "id": "Setiap jurnal dapat dicari melalui Pencarian Semantik AI. Jurnal yang \"terkurasi\" diperkaya lebih lanjut secara manual dengan istilah indeks (lihat halaman Tentang); sisanya menggunakan cadangan teks judul, subjek, dan kata kunci. Istilah itu sendiri tidak pernah disimpan di basis data ini, hanya embedding-nya.",
+    },
+    "statistics.semantic_coverage.pending_breakdown": {
+        "en": "A curated-vs-baseline breakdown will appear here after the next AI Semantic Search index rebuild.",
+        "ar": "سيظهر هنا تفصيل بين المصطلحات المنسّقة والاحتياطية بعد إعادة بناء فهرس البحث الدلالي بالذكاء الاصطناعي القادمة.",
+        "id": "Rincian antara terkurasi dan cadangan akan muncul di sini setelah pembangunan ulang indeks Pencarian Semantik AI berikutnya.",
     },
     "statistics.chart.indexing_sources": {"en": "Indexing Sources", "ar": "مصادر الفهرسة", "id": "Sumber Pengindeksan"},
     "statistics.chart.metadata_enrichment": {"en": "Metadata Enrichment", "ar": "إثراء البيانات الوصفية", "id": "Pengayaan Metadata"},
