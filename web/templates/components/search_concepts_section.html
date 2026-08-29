@@ -22,13 +22,18 @@
     {% from "components/add_tag_input.html" import add_tag_input with context %}
     <div class="mt-2">{{ add_tag_input() }}</div>
     {#
-        Field/subfield are deliberately plain "e.g." inspiration text
-        here, not an accept/reject suggestion like Key Research Focus
-        above -- see services/research_interpreter.py's module
-        docstring for why: tested directly, the field-of-study
-        detector wasn't accurate enough to present as a confident
-        claim, so it's offered as one of several idea sources instead.
+        Manuscript mode only -- idea mode's own idea_mode_helper above
+        already covers tag-adding guidance for that mode (there's no
+        abstract, so no Key Research Focus suggestion or field/subfield
+        examples exist to point to here). Field/subfield are
+        deliberately plain "e.g." inspiration text, not an accept/
+        reject suggestion like Key Research Focus above -- see
+        services/research_interpreter.py's module docstring for why:
+        tested directly, the field-of-study detector wasn't accurate
+        enough to present as a confident claim, so it's offered as one
+        of several idea sources instead.
     #}
+    {% if mode != "idea" %}
     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
         {% if field_examples %}
         {{ t("search_concepts_section.tag_sources_helper_with_examples", locale, examples=field_examples | join(", ")) }}
@@ -36,5 +41,6 @@
         {{ t("search_concepts_section.tag_sources_helper", locale) }}
         {% endif %}
     </p>
+    {% endif %}
 </div>
 {% endmacro %}

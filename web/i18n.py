@@ -476,10 +476,20 @@ _STRINGS = {
         "ar": "الصق ملخص مخطوطتك هنا...",
         "id": "Tempel abstrak naskah Anda di sini...",
     },
+    "search_form.switch_to_idea": {
+        "en": "Don't have a full abstract yet? Start from a research idea instead →",
+        "ar": "ليس لديك ملخص كامل بعد؟ ابدأ بدلاً من ذلك بفكرة بحثية ←",
+        "id": "Belum punya abstrak lengkap? Mulai dari ide riset saja →",
+    },
+    "search_form.switch_to_manuscript": {
+        "en": "Already have a full abstract? Paste it directly instead →",
+        "ar": "لديك ملخص كامل بالفعل؟ الصقه مباشرة بدلاً من ذلك ←",
+        "id": "Sudah punya abstrak lengkap? Tempel langsung saja →",
+    },
     "search_form.abstract_helper": {
-        "en": "Scilene will suggest a field of study and a key research focus from your abstract.",
-        "ar": "سيقترح Scilene مجال دراسة وتركيزاً بحثياً رئيسياً بناءً على ملخصك.",
-        "id": "Scilene akan menyarankan bidang studi dan fokus riset utama dari abstrak Anda.",
+        "en": "Scilene will suggest a key research focus, plus field/subfield examples, from your abstract.",
+        "ar": "سيقترح Scilene تركيزاً بحثياً رئيسياً، إضافة إلى أمثلة على المجال/المجال الفرعي، بناءً على ملخصك.",
+        "id": "Scilene akan menyarankan fokus riset utama, ditambah contoh bidang/subbidang, dari abstrak Anda.",
     },
     "search_form.concepts_label": {"en": "Search Concepts", "ar": "مفاهيم البحث", "id": "Konsep Pencarian"},
     "search_form.idea_mode_helper": {
@@ -525,9 +535,9 @@ _STRINGS = {
 
     "language_filter.label": {"en": "Journal Languages", "ar": "لغات المجلة", "id": "Bahasa Jurnal"},
     "language_filter.detected_hint": {
-        "en": "✓ Detected {language} from your manuscript. Select additional journal languages to broaden your search.",
-        "ar": "✓ تم اكتشاف {language} من مخطوطتك. اختر لغات مجلات إضافية لتوسيع نطاق بحثك.",
-        "id": "✓ Terdeteksi {language} dari naskah Anda. Pilih bahasa jurnal tambahan untuk memperluas pencarian Anda.",
+        "en": "✓ Detected {language} — showing journals that accept manuscripts in {language}. Check more languages too if you could also submit in them.",
+        "ar": "✓ تم اكتشاف {language} — تُعرض المجلات التي تقبل مخطوطات بلغة {language}. حدد لغات أخرى أيضاً إذا كان بإمكانك تقديم بحثك بها كذلك.",
+        "id": "✓ Terdeteksi {language} — menampilkan jurnal yang menerima naskah berbahasa {language}. Pilih bahasa lain juga jika Anda bisa mengirimkan naskah dalam bahasa tersebut.",
     },
 
     # -- Research Interpreter panel (#129) ---------------------------------
@@ -556,14 +566,14 @@ _STRINGS = {
     },
     "add_tag.placeholder": {"en": "Add a tag...", "ar": "أضف وسماً...", "id": "Tambahkan tag..."},
     "search_concepts_section.tag_sources_helper": {
-        "en": "Add tags from your own research keywords and/or the suggested Key Research Focus above. Press Enter after each one.",
-        "ar": "أضف وسوماً من كلماتك المفتاحية البحثية و/أو التركيز البحثي الرئيسي المقترح أعلاه. اضغط Enter بعد كل وسم.",
-        "id": "Tambahkan tag dari kata kunci riset Anda sendiri dan/atau Fokus Riset Utama yang disarankan di atas. Tekan Enter setelah setiap tag.",
+        "en": "Press Enter to add a tag — try your own keywords or the Key Research Focus above.",
+        "ar": "اضغط Enter لإضافة وسم — جرّب كلماتك المفتاحية أو التركيز البحثي الرئيسي أعلاه.",
+        "id": "Tekan Enter untuk menambahkan tag — coba kata kunci Anda sendiri atau Fokus Riset Utama di atas.",
     },
     "search_concepts_section.tag_sources_helper_with_examples": {
-        "en": "Add tags from your own research keywords, the suggested Key Research Focus above, and/or your field or subfield — e.g. {examples}. Press Enter after each one.",
-        "ar": "أضف وسوماً من كلماتك المفتاحية البحثية، أو التركيز البحثي الرئيسي المقترح أعلاه، و/أو مجالك أو مجالك الفرعي — مثلاً: {examples}. اضغط Enter بعد كل وسم.",
-        "id": "Tambahkan tag dari kata kunci riset Anda sendiri, Fokus Riset Utama yang disarankan di atas, dan/atau bidang atau subbidang Anda — misalnya: {examples}. Tekan Enter setelah setiap tag.",
+        "en": "Press Enter to add a tag — try your own keywords, the Key Research Focus above, or e.g. {examples}.",
+        "ar": "اضغط Enter لإضافة وسم — جرّب كلماتك المفتاحية، أو التركيز البحثي الرئيسي أعلاه، أو مثلاً: {examples}.",
+        "id": "Tekan Enter untuk menambahkan tag — coba kata kunci Anda sendiri, Fokus Riset Utama di atas, atau misalnya: {examples}.",
     },
 
     # -- Export panel (#129) -------------------------------------------------

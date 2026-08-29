@@ -23,7 +23,23 @@
     directly inside this page.
 #}
 <div>
-    <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100 mb-3">📄 {{ t("search_form.heading", locale) }}</h2>
+    <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100 mb-1">📄 {{ t("search_form.heading", locale) }}</h2>
+    {#
+        Reciprocal mode switch, same idea as a login/signup page's
+        "Already have an account?" link -- a plain GET link (`mode` is
+        a page-load param, not session state, see search_page()), so
+        switching pages is consistent with how the homepage's own two
+        entry buttons already work. Loses any not-yet-confirmed
+        abstract text/tags in progress, same as navigating away to any
+        other page already would -- not a new behavior this introduces.
+    #}
+    <p class="text-xs mb-3">
+        {% if mode == "idea" %}
+        <a href="/search" class="text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 underline">{{ t("search_form.switch_to_manuscript", locale) }}</a>
+        {% else %}
+        <a href="/search?mode=idea" class="text-navy-600 dark:text-navy-300 hover:text-horizon-600 dark:hover:text-horizon-500 underline">{{ t("search_form.switch_to_idea", locale) }}</a>
+        {% endif %}
+    </p>
 
     <div class="space-y-4">
         {% if mode == "idea" %}
