@@ -49,6 +49,7 @@ from tokenizers import Tokenizer
 
 from services.recommender import parse_usd_amount
 from services.repository import get_journals_by_ids, filtered_journal_ids
+from services.stopwords import filter_stopwords
 from utils.publication_types import format_publication_type_badge
 
 MODEL_DIR = Path(__file__).resolve().parent.parent / "models" / "all-MiniLM-L12-v2-onnx"
@@ -182,6 +183,57 @@ def _assign_confidence(results):
 _EXPLANATION = "matched by AI semantic similarity between your text and this journal's profile, not a specific keyword match"
 
 
+def _query_terms(query_text):
+    """
+    Same tokenization services/recommender.py uses for its own
+    title+abstract fallback -- plain word splitting, stopwords
+    removed, >3 chars -- so #81's "shares these subjects" note below
+    uses the same notion of "a real word from your query" the
+    deterministic engine already does, not a new one invented here.
+    """
+    words = filter_stopwords([
+        word.strip(".,;:()").lower()
+        for word in query_text.split()
+        if len(word.strip(".,;:()")) > 3
+    ])
+    seen = set()
+    terms = []
+    for word in words:
+        if word not in seen:
+            seen.add(word)
+            terms.append(word)
+    return terms
+
+
+def _join_terms(terms):
+    if len(terms) == 1:
+        return terms[0]
+    if len(terms) == 2:
+        return f"{terms[0]} and {terms[1]}"
+    return ", ".join(terms[:-1]) + f", and {terms[-1]}"
+
+
+def _explanation_for(query_text, subjects):
+    """
+    #81 ("Recommendation Explanations from Scope & Focus") landed on
+    this as its redefinition: journals.index_terms only ever exists as
+    an embedding, never as retrievable text (see this module's own
+    SECURITY note), so an explanation can't quote the terms that
+    actually drove the ranking. This surfaces overlap with a journal's
+    PUBLIC subjects field instead -- purely additive to _EXPLANATION,
+    never a substitute for it. The ranking itself came from embedding
+    similarity, not these specific word hits, so this never claims
+    otherwise; it's supplementary context on data already shown
+    elsewhere on the card, not a description of how the AI ranked it.
+    """
+    if not subjects:
+        return _EXPLANATION
+    terms = [t for t in _query_terms(query_text) if t in subjects.lower()][:5]
+    if not terms:
+        return _EXPLANATION
+    return f"{_EXPLANATION}. It also lists {_join_terms(terms)} among its subjects."
+
+
 def corpus_coverage():
     """
     Journal counts for the Statistics dashboard (#60 follow-up) --
@@ -281,7 +333,7 @@ def search(query_text: str, top_n: int = 40, languages=None, free_only=False, mi
             "publication_type_badge": format_publication_type_badge(journal),
             "score": score,
             "normalized_score": (score + 1) / 2,  # cosine similarity [-1,1] -> [0,1], for display parity only
-            "explanation": _EXPLANATION,
+            "explanation": _explanation_for(query_text, journal.subjects),
         })
 
     _assign_confidence(results)
