@@ -51,20 +51,41 @@ DEFAULT_WORKERS = 10
 SAVE_EVERY = 200
 
 
+MAX_RETRIES = 4
+RETRY_BACKOFF_SECONDS = 1.0  # doubles each retry: 1s, 2s, 4s, 8s
+
+
 def _fetch_top_topic(session, issn, mailto):
+    """
+    Returns (domain, field, subfield) on a genuine match, None on a
+    genuine "OpenAlex has no source for this ISSN" (404), or raises
+    _Retryable for anything else (429 rate-limit, 5xx, a network
+    error, unparseable JSON) so the caller can back off and retry
+    rather than silently recording a false negative.
+
+    An earlier version of this script treated ANY non-200 response as
+    "no data" -- at full scale (32k+ journals, 15 concurrent workers,
+    no --mailto) that meant real 429s from OpenAlex got recorded as
+    genuine misses. Caught after the first full run: "Marketing
+    Science" and 17 other obviously-major journals came back False,
+    and a direct, unhurried re-check confirmed OpenAlex has full data
+    for all of them. This is the fix.
+    """
     params = {"mailto": mailto} if mailto else {}
     try:
         response = session.get(OPENALEX_SOURCES_URL.format(issn=issn), params=params, timeout=REQUEST_TIMEOUT)
     except requests.RequestException:
-        return None
+        raise _Retryable()
 
-    if response.status_code != 200:
+    if response.status_code == 404:
         return None
+    if response.status_code != 200:
+        raise _Retryable()
 
     try:
         payload = response.json()
     except ValueError:
-        return None
+        raise _Retryable()
 
     topics = payload.get("topics") or []
     if not topics:
@@ -79,27 +100,52 @@ def _fetch_top_topic(session, issn, mailto):
     return domain, field, subfield
 
 
+class _Retryable(Exception):
+    """A transient failure (rate limit, 5xx, network error, bad JSON) --
+    distinct from a confirmed 404 "no such source", which is a real
+    negative, not a failure."""
+
+
+def _fetch_with_retries(session, issn, mailto):
+    delay = RETRY_BACKOFF_SECONDS
+    for attempt in range(MAX_RETRIES):
+        try:
+            return _fetch_top_topic(session, issn, mailto)
+        except _Retryable:
+            if attempt == MAX_RETRIES - 1:
+                return "RETRY_EXHAUSTED"  # distinct from a real None/404 miss
+            time.sleep(delay)
+            delay *= 2
+
+
 def _fetch_one(session, journal_id, issn_print, issn_online, mailto):
     """Runs in a worker thread -- fetches (print ISSN, then online ISSN
-    as fallback) and returns (journal_id, (domain, field, subfield)_or_None)
-    for the main thread to write."""
+    as fallback) and returns (journal_id, result) for the main thread
+    to write, where result is (domain, field, subfield) on a match,
+    None on a confirmed no-source-found, or "RETRY_EXHAUSTED" if every
+    attempt hit a transient failure (caller must NOT treat this as a
+    confirmed miss -- see _fetch_with_retries())."""
     result = None
     for raw_issn in (issn_print, issn_online):
         issn = normalize_issn(raw_issn)
         if not issn:
             continue
-        result = _fetch_top_topic(session, issn, mailto)
+        result = _fetch_with_retries(session, issn, mailto)
         time.sleep(REQUEST_DELAY_SECONDS)
-        if result:
+        if result and result != "RETRY_EXHAUSTED":
             break
     return journal_id, result
 
 
 def run(mailto=None, workers=DEFAULT_WORKERS, limit=None):
     conn = get_connection()
+    # openalex_field IS NULL = never attempted (retry these);
+    # openalex_field = '' = attempted and confirmed no OpenAlex source
+    # (a real negative -- see the confirmed_miss branch below, don't
+    # keep re-querying these every run); a real value = already matched.
     query = (
         "SELECT id, issn_print, issn_online FROM journals "
-        "WHERE (openalex_field IS NULL OR openalex_field = '') "
+        "WHERE openalex_field IS NULL "
         "AND (subjects IS NULL OR subjects = '') "
         "AND (issn_print IS NOT NULL OR issn_online IS NOT NULL)"
     )
@@ -113,6 +159,8 @@ def run(mailto=None, workers=DEFAULT_WORKERS, limit=None):
     session.headers.update({"User-Agent": f"Scilene/{APP_VERSION} ({APP_GITHUB}; taxonomy backfill)"})
 
     matched = 0
+    confirmed_miss = 0
+    unresolved = 0
     completed = 0
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = [
@@ -122,21 +170,37 @@ def run(mailto=None, workers=DEFAULT_WORKERS, limit=None):
         for future in as_completed(futures):
             journal_id, result = future.result()
             completed += 1
-            if result:
+            if result == "RETRY_EXHAUSTED":
+                # Every attempt hit a transient failure -- leave the row
+                # NULL (not a confirmed miss) so a future re-run of this
+                # script picks it up again, rather than recording a
+                # false negative. See _fetch_top_topic()'s docstring for
+                # why this distinction exists.
+                unresolved += 1
+            elif result:
                 domain, field, subfield = result
                 conn.execute(
                     "UPDATE journals SET openalex_domain = ?, openalex_field = ?, openalex_subfield = ? WHERE id = ?",
                     (domain, field, subfield, journal_id),
                 )
                 matched += 1
+            else:
+                # Confirmed 404 on every ISSN this journal has -- mark
+                # with '' (distinct from NULL/"never tried") so future
+                # runs don't keep re-querying a journal OpenAlex
+                # genuinely doesn't have.
+                conn.execute("UPDATE journals SET openalex_field = '' WHERE id = ?", (journal_id,))
+                confirmed_miss += 1
 
             if completed % SAVE_EVERY == 0:
                 conn.commit()
-                print(f"  {completed}/{len(pending)} checked, {matched} matched so far", flush=True)
+                print(f"  {completed}/{len(pending)} checked, {matched} matched, "
+                      f"{confirmed_miss} confirmed no-match, {unresolved} unresolved so far", flush=True)
 
     conn.commit()
     conn.close()
-    print(f"Done: {matched}/{len(pending)} journals matched an OpenAlex topic.")
+    print(f"Done: {matched} matched, {confirmed_miss} confirmed no-match, "
+          f"{unresolved} unresolved (re-run the script to retry these) out of {len(pending)}.")
 
 
 def main():
