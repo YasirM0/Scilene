@@ -7,12 +7,19 @@ research focus) from an abstract -- see docs/RESEARCH_INTERPRETER.md.
 "Field of Study" is real as of #53: services/field_detection.py
 matches the abstract against the database's own subject vocabulary
 (journals.subjects), deterministic and not a fake AI call. "Key
-Research Focus" is still UI/interaction scaffolding only -- a fixed
-placeholder pool, since extracting a genuine "key focus" concept
-(narrower than a field, not literally present in any existing
-vocabulary) needs real analysis this project doesn't have yet. Nothing
-that calls suggest_concepts()/next_suggestion() needs to know which
-category is real and which isn't.
+Research Focus" is real as of #113's follow-up: services/focus_detection.py
+does the same thing against journals.keywords (a narrower, per-journal
+vocabulary, matching this slot's own narrower intent) -- replacing a
+fixed 5-item placeholder pool that suggested things like "Robotics" for
+an abstract about internet access and social stratification. Nothing
+that calls suggest_concepts()/next_suggestion() needs to know either
+category is deterministic keyword-vocabulary matching, not an LLM.
+
+Both fallback pools below only ever show when their respective
+detector finds nothing in the abstract at all (no database term of
+that kind appears in it) -- keeping the suggestion slot non-empty
+rather than showing nothing, not a claim that the fallback is itself
+detected from the text.
 
 Never imported by services/recommender.py. A suggestion only ever
 reaches the recommendation engine after a human confirms it (see
@@ -23,11 +30,8 @@ to influence scoring.
 """
 
 from services.field_detection import detect_fields
+from services.focus_detection import detect_focus_terms
 
-# Shown for "Field of Study" only when detect_fields() finds nothing
-# in the abstract (no database subject term appears in it) -- keeps
-# the suggestion slot non-empty rather than showing nothing. Clearly a
-# fallback, not a detection: reusing the pool from before #53.
 FIELD_OF_STUDY_FALLBACK_POOL = [
     "Computer Science",
     "Public Health",
@@ -36,7 +40,7 @@ FIELD_OF_STUDY_FALLBACK_POOL = [
     "Psychology",
 ]
 
-KEY_FOCUS_POOL = [
+KEY_FOCUS_FALLBACK_POOL = [
     "Robotics",
     "Climate Adaptation",
     "Behavioral Economics",
@@ -44,9 +48,8 @@ KEY_FOCUS_POOL = [
     "Urban Policy",
 ]
 
-# category -> (label, tag color). No pool baked in here anymore --
-# "field_of_study"'s pool depends on the abstract (see _field_pool()),
-# "key_focus"'s is still the fixed placeholder above.
+# category -> (label, tag color). No pool baked in here anymore -- both
+# pools depend on the abstract, see _field_pool().
 CATEGORIES = {
     "field_of_study": ("Field of Study", "blue"),
     "key_focus": ("Key Research Focus", "gold"),
@@ -57,15 +60,17 @@ def _field_pool(category, abstract):
     if category == "field_of_study":
         detected = detect_fields(abstract)
         return detected if detected else FIELD_OF_STUDY_FALLBACK_POOL
-    return KEY_FOCUS_POOL
+    detected = detect_focus_terms(abstract)
+    return detected if detected else KEY_FOCUS_FALLBACK_POOL
 
 
 def suggest_concepts(abstract):
     """
-    Returns the initial suggestion for each category -- "field_of_study"
-    is the top real match from detect_fields(abstract) (or the fallback
-    pool's first entry if nothing matched); "key_focus" is still the
-    placeholder pool's first entry. See next_suggestion() for cycling.
+    Returns the initial suggestion for each category -- the top real
+    match from that category's own detector (detect_fields() /
+    detect_focus_terms()) against the abstract, or that category's
+    fallback pool's first entry if nothing matched. See
+    next_suggestion() for cycling.
     """
     return [
         {
