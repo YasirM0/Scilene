@@ -2,7 +2,7 @@
 
 ## Overview
 
-Journal Intelligence follows a modular architecture designed around one principle:
+Scilene follows a modular architecture designed around one principle:
 
 > **Each module should have a single, well-defined responsibility.**
 

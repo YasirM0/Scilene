@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document describes the standard structure used for documentation in the Journal Intelligence project.
+This document describes the standard structure used for documentation in the Scilene project.
 
 Not every document requires every section below. Authors should include only the sections that improve clarity and accurately describe the subject.
 

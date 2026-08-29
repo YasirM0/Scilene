@@ -1,8 +1,8 @@
-# Journal Intelligence — Vision
+# Scilene — Vision
 
 ## Mission
 
-Journal Intelligence is an open-source platform that helps researchers identify suitable academic journals using transparent semantic search and practical publishing information.
+Scilene is an open-source platform that helps researchers identify suitable academic journals using transparent semantic search and practical publishing information.
 
 The project is designed to support researchers in making informed submission decisions without relying on opaque recommendation systems or paid AI services.
 
@@ -64,7 +64,7 @@ Deferred to future versions:
 
 ## Long-Term Vision
 
-Journal Intelligence aims to become a trusted open-source reference tool for journal selection by prioritizing transparency, reproducibility, and practical usefulness over complexity.
+Scilene aims to become a trusted open-source reference tool for journal selection by prioritizing transparency, reproducibility, and practical usefulness over complexity.
 
 ---
 

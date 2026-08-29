@@ -11,7 +11,7 @@ issues below).
 
 ## The core distinction
 
-Journal Intelligence already has one pipeline: `importers/` builds
+Scilene already has one pipeline: `importers/` builds
 `journals` + `journal_sources` (see `docs/DATABASE.md`), and every row
 there can affect **search, filtering, or ranking** — a Scopus
 quartile changes a score, a SINTA accreditation is filterable.

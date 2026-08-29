@@ -1,7 +1,7 @@
 # Architecture Decisions
 
 This document records major architectural decisions made during the development
-of Journal Intelligence and the reasoning behind them.
+of Scilene and the reasoning behind them.
 
 ---
 

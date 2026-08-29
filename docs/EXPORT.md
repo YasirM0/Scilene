@@ -28,7 +28,7 @@ work as-is on Streamlit Community Cloud with no system packages installed.
 Every format shows the same small header, e.g.:
 
 ```
-Journal Intelligence v0.1.9
+Scilene v0.4.5
 Generated: 2026-07-25 11:45 UTC
 
 Search Strategy: Balanced

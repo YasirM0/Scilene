@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document describes the public sources used to build and maintain the Journal Intelligence database.
+This document describes the public sources used to build and maintain the Scilene database.
 
 The project prioritizes reliable, publicly available, and verifiable information.
 

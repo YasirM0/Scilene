@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document records significant architectural and product decisions made during the development of Journal Intelligence.
+This document records significant architectural and product decisions made during the development of Scilene.
 
 Its purpose is to preserve the reasoning behind important decisions so that contributors understand not only *what* was decided, but also *why* those decisions were made.
 

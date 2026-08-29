@@ -14,7 +14,7 @@ The project's main introduction.
 
 Read this first to understand:
 
-- What Journal Intelligence is
+- What Scilene is
 - Why it exists
 - Current project status
 - Planned features
