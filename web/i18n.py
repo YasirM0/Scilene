@@ -752,6 +752,11 @@ _STRINGS = {
         "ar": "لم تتطابق أي مجلات مع المرشحات الحالية. جرّب بحثاً أوسع، ميزانية/لغة مختلفة، أو عدد أقل من مرشحات الفهرسة/الربعية.",
         "id": "Tidak ada jurnal yang cocok dengan filter Anda saat ini. Coba pencarian yang lebih luas, anggaran/bahasa berbeda, atau lebih sedikit filter pengindeksan/kuartil.",
     },
+    "warning.sls_too_large": {
+        "en": "This session file is too large to import (max 2 MB) — a real Scilene session export is only a few KB.",
+        "ar": "ملف الجلسة هذا كبير جداً للاستيراد (الحد الأقصى 2 ميغابايت) — تصدير جلسة Scilene الحقيقي لا يتجاوز بضعة كيلوبايتات.",
+        "id": "File sesi ini terlalu besar untuk diimpor (maksimum 2 MB) — ekspor sesi Scilene yang sebenarnya hanya beberapa KB.",
+    },
     "warning.sls_load_error": {
         "en": "Couldn't load this session file: {error}",
         "ar": "تعذّر تحميل ملف الجلسة هذا: {error}",

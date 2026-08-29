@@ -681,6 +681,33 @@ def export_results(fmt: str, session=Depends(get_session_state)):
     return attach_session_cookie(response, session)
 
 
+# A real .sls export (search params + tags, no results snapshot) is a
+# few KB at most -- generous headroom over that, nowhere near enough
+# to strain memory even from many concurrent uploads.
+MAX_SLS_IMPORT_BYTES = 2 * 1024 * 1024
+
+
+def _read_capped(upload_file, max_bytes):
+    """
+    Reads at most max_bytes+1 bytes from an UploadFile, in chunks, so
+    an oversized upload is rejected without ever buffering the whole
+    thing into memory first (unlike a plain file.file.read(), which
+    reads everything before any size check could run). Returns None if
+    the file exceeds max_bytes.
+    """
+    chunks = []
+    total = 0
+    while True:
+        chunk = upload_file.file.read(65536)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            return None
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
 @router.post("/import-sls")
 def import_sls(request: Request, file: UploadFile = File(...), session=Depends(get_session_state)):
     """
@@ -693,8 +720,19 @@ def import_sls(request: Request, file: UploadFile = File(...), session=Depends(g
     rather than replaying the file's results_snapshot -- a session
     opened days later or on another device should reflect the current
     database, not a stale copy of it.
+
+    #147 -- capped at MAX_SLS_IMPORT_BYTES before parsing, so an
+    oversized or malicious upload never gets read into memory or
+    handed to json.loads() at all.
     """
-    raw = file.file.read()
+    raw = _read_capped(file, MAX_SLS_IMPORT_BYTES)
+    if raw is None:
+        context = {
+            **_filter_context(request.state.locale),
+            **_results_context(session),
+            "warning": t("warning.sls_too_large", request.state.locale),
+        }
+        return _render(request, "partials/search_results.html", context, session)
 
     try:
         search = parse_sls_import(raw, MIN_FALLBACK_TAGS)
