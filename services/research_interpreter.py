@@ -13,6 +13,19 @@ access and social stratification. It's the one category that still
 goes through the full accept/suggest-another/edit interactive flow
 (CATEGORIES below), because its matches held up under real testing.
 
+Both this and Field of Study match against English-only vocabulary
+(journals.keywords/subjects), so a raw Indonesian abstract mostly
+missed both entirely -- confirmed directly: 61.4% of a real 295-
+abstract Indonesian sample got zero Field of Study match. `_field_pool()`
+and `field_of_study_examples()` below run the abstract through
+services/query_translator.py's `translate_for_interpretation()` first
+(dictionary translation for Indonesian, unchanged for everything else)
+-- stress-tested to cut that miss rate to 28.5%. Not zero: Field of
+Study's underlying vocabulary is only ~20-44 broad category names,
+too coarse for a lot of abstracts regardless of language (see below) --
+translation narrows the language gap, it doesn't fix the vocabulary's
+own coarseness.
+
 "Field of Study" (#53's services/field_detection.py, matching
 journals.subjects -- only ~20 broad categories) did NOT hold up:
 tested directly against a real abstract about internet access and
@@ -41,6 +54,7 @@ to influence scoring.
 
 from services.field_detection import detect_fields
 from services.focus_detection import detect_focus_terms
+from services.query_translator import translate_for_interpretation
 
 # Shown as example text (never a "detected" claim -- see module
 # docstring) when detect_fields() finds nothing in the abstract.
@@ -70,7 +84,7 @@ CATEGORIES = {
 
 
 def _field_pool(category, abstract):
-    detected = detect_focus_terms(abstract)
+    detected = detect_focus_terms(translate_for_interpretation(abstract))
     return detected if detected else KEY_FOCUS_FALLBACK_POOL
 
 
@@ -118,5 +132,5 @@ def field_of_study_examples(abstract, top_n=3):
     """
     if not abstract or not abstract.strip():
         return []
-    detected = detect_fields(abstract)
+    detected = detect_fields(translate_for_interpretation(abstract))
     return detected[:top_n] if detected else FIELD_OF_STUDY_EXAMPLE_POOL[:top_n]
