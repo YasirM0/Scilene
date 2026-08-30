@@ -59,23 +59,24 @@
         moment someone glanced at the row rather than read the small
         print. Per-source counts (DOAJ, Scopus, WoS-via-Scopus, SINTA,
         plus the enrichment-only providers) now live in exactly ONE
-        place -- the "Supported Indexes & Coverage" section right
-        below -- instead of being repeated here AND there with no
-        stated relationship between the two.
+        place -- the "Supported Indexes & Coverage" block right below
+        -- instead of being repeated here AND there with no stated
+        relationship between the two.
+
+        Sharing this section (rather than its own py-10 + border-t)
+        with "Supported Indexes & Coverage" below is deliberate: the
+        headline count and its per-source breakdown are one story
+        ("here's the total, here's what it's made of"), so they read
+        as one compact block instead of two full-height sections
+        separated by a divider that implied they were unrelated.
     #}
     <p class="text-center text-5xl sm:text-6xl font-bold text-navy-600 dark:text-navy-300 tracking-tight">
         {{ "{:,}".format(stats.total_journals) }}
     </p>
-    <p class="text-center text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mt-2">
+    <p class="text-center text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mt-2 mb-6">
         {{ t('home.section_journal_database', locale) }}
     </p>
-    {% else %}
-    <p class="text-center text-sm text-gray-500 dark:text-gray-400">{{ t('home.no_database', locale) }}</p>
-    {% endif %}
-</section>
 
-{% if stats %}
-<section class="py-10 border-t border-gray-200 dark:border-gray-700">
     <h2 class="text-center text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
         {{ t('home.section_coverage', locale) }}
     </h2>
@@ -91,7 +92,7 @@
         first four are indexing sources in the stricter sense.
 
         This is now the ONLY place any of these per-source counts
-        appear -- see the comment on the section above for why that
+        appear -- see this section's own comment above for why that
         matters (previously duplicated between here and the "Journal
         Database" stat-card row, with no explanation of how the two
         related).
@@ -118,8 +119,10 @@
             {% endfor %}
         </div>
     </div>
+    {% else %}
+    <p class="text-center text-sm text-gray-500 dark:text-gray-400">{{ t('home.no_database', locale) }}</p>
+    {% endif %}
 </section>
-{% endif %}
 
 <section class="py-10 border-t border-gray-200 dark:border-gray-700">
     <h2 class="text-center text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-6">
