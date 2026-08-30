@@ -214,25 +214,50 @@ def _join_terms(terms):
     return ", ".join(terms[:-1]) + f", and {terms[-1]}"
 
 
-def _explanation_for(query_text, subjects):
+def _explanation_for(query_text, subjects, title="", keywords=""):
     """
     #81 ("Recommendation Explanations from Scope & Focus") landed on
     this as its redefinition: journals.index_terms only ever exists as
     an embedding, never as retrievable text (see this module's own
     SECURITY note), so an explanation can't quote the terms that
-    actually drove the ranking. This surfaces overlap with a journal's
-    PUBLIC subjects field instead -- purely additive to _EXPLANATION,
-    never a substitute for it. The ranking itself came from embedding
+    actually drove the ranking -- an embedding model has no generative
+    capability at all, it only ever outputs a similarity number, so
+    there is no path to a genuine per-journal "why" sentence the way
+    services/explain.py's deterministic engine produces one (that
+    would need a real LLM, out of scope -- see docs/AI_ARCHITECTURE.md).
+    This surfaces overlap with a journal's PUBLIC subjects/title/
+    keywords fields instead -- purely additive to _EXPLANATION, never a
+    substitute for it. The ranking itself came from embedding
     similarity, not these specific word hits, so this never claims
     otherwise; it's supplementary context on data already shown
     elsewhere on the card, not a description of how the AI ranked it.
+
+    Checks subjects, then title, then keywords -- same field priority
+    as services/explain.py's build_explanation(), so both search
+    engines surface the strongest available signal first. Only the
+    first field with a hit is shown, matching build_explanation()'s
+    one-reason-at-a-time shape rather than stacking every overlap.
     """
-    if not subjects:
-        return _EXPLANATION
-    terms = [t for t in _query_terms(query_text) if t in subjects.lower()][:5]
+    terms = _query_terms(query_text)
     if not terms:
         return _EXPLANATION
-    return f"{_EXPLANATION}. It also lists {_join_terms(terms)} among its subjects."
+
+    if subjects:
+        hits = [t for t in terms if t in subjects.lower()][:5]
+        if hits:
+            return f"{_EXPLANATION}. It also lists {_join_terms(hits)} among its subjects."
+
+    if title:
+        hits = [t for t in terms if t in title.lower()][:5]
+        if hits:
+            return f"{_EXPLANATION}. Its title also mentions {_join_terms(hits)}."
+
+    if keywords:
+        hits = [t for t in terms if t in keywords.lower()][:5]
+        if hits:
+            return f"{_EXPLANATION}. It's also tagged with {_join_terms(hits)}."
+
+    return _EXPLANATION
 
 
 def corpus_coverage():
@@ -275,10 +300,13 @@ def search(query_text: str, top_n: int = 40, languages=None, free_only=False, mi
     .recommend() produces (so web/templates/components/journal_card.html
     and everything downstream of it -- pagination, export, comparison --
     works completely unchanged for either search path). The "explanation"
-    field here is a fixed, honest sentence about semantic matching, not
-    a keyword-hit list -- there ARE no keyword hits in this path, and
-    fabricating field-specific ones would misrepresent how this result
-    was actually found.
+    field here always leads with a fixed, honest sentence about
+    semantic matching -- the ranking itself came from embedding
+    similarity, not a keyword hit, and fabricating a claim otherwise
+    would misrepresent how this result was actually found. See
+    _explanation_for()'s own docstring for the real, additive overlap
+    check appended to it (subjects/title/keywords), which is honest
+    supplementary context, not a description of how the AI ranked it.
 
     Callers are expected to have already handled non-English input --
     see services/query_translator.py -- this function assumes
@@ -356,7 +384,7 @@ def search(query_text: str, top_n: int = 40, languages=None, free_only=False, mi
             "publication_type_badge": format_publication_type_badge(journal),
             "score": score,
             "normalized_score": (score + 1) / 2,  # cosine similarity [-1,1] -> [0,1], for display parity only
-            "explanation": _explanation_for(query_text, journal.subjects),
+            "explanation": _explanation_for(query_text, journal.subjects, journal.title, journal.keywords),
         })
 
     _assign_confidence(results)
