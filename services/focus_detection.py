@@ -28,7 +28,7 @@ import re
 from collections import Counter
 
 from services.repository import get_connection
-from services.stopwords import filter_stopwords
+from services.stopwords import filter_stopwords, FOCUS_SUGGESTION_STOPWORDS
 
 TOP_N = 5
 
@@ -63,12 +63,15 @@ def _vocabulary():
             display_forms.setdefault(key, term)
 
     # Drop single-word terms generic enough to be in the shared
-    # academic-filler stopword list (e.g. "research", "study") -- real
-    # vocabulary entries, just too vague to be a useful focus
-    # suggestion on their own. Multi-word terms are never this
-    # generic, so only single words are checked.
+    # academic-filler stopword list (e.g. "research", "study") OR
+    # FOCUS_SUGGESTION_STOPWORDS (e.g. "literature", "indonesia" --
+    # real vocabulary entries, just proven by direct stress-testing to
+    # be useless-to-misleading as a single-word focus suggestion; see
+    # that constant's own docstring for why it's kept separate from the
+    # shared list rather than added to it). Multi-word terms are never
+    # this generic, so only single words are checked.
     for key in list(counts):
-        if " " not in key and not filter_stopwords([key]):
+        if " " not in key and (key in FOCUS_SUGGESTION_STOPWORDS or not filter_stopwords([key])):
             del counts[key]
 
     _vocabulary_cache = (counts, display_forms)

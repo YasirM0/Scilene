@@ -19,6 +19,27 @@ codebase, on purpose:
    block legitimate topics for some field; measuring actual corpus
    frequency is more honest and adapts automatically as the database
    grows.
+
+STOPWORDS itself is shared by every caller of filter_stopwords(),
+including recommender.py's real keyword/title/abstract matching --
+where a word being dropped means it can never contribute to which
+journals get recommended at all, not just downweighted. That's why
+category 2 stays out of STOPWORDS even though some of those words
+(e.g. "literature", "education", "data") turn out to be near-useless
+as a single-word Key Research Focus suggestion (services/
+focus_detection.py) -- confirmed directly by stress-testing
+detect_focus_terms() against ~550 real OpenAlex abstracts (English and
+Indonesian): words like "literature" and "indonesia" won the #1 slot
+for totally unrelated topics purely because they're common,
+substring-matchable journal keywords, not because they meant anything
+about the abstract. Blocklisting them in the SHARED list would also
+silently drop them from recommender.py's real matching -- e.g. a user
+who deliberately types "literature" as a manual search tag for a
+literary-studies search would have it vanish before scoring ever ran.
+FOCUS_SUGGESTION_STOPWORDS below is the narrower, lower-stakes fix:
+only used to keep single-word noise out of the Key Research Focus
+suggestion vocabulary, never touching real keyword/title/abstract
+matching.
 """
 
 STOPWORDS = {
@@ -41,6 +62,32 @@ STOPWORDS = {
     "towards", "journal", "international", "general", "paper", "article",
     "case", "cases", "role", "impact", "effect", "effects", "perspective",
     "perspectives", "framework", "understanding", "assessment", "new",
+}
+
+# Narrower than STOPWORDS on purpose -- see the module docstring's
+# "STOPWORDS itself is shared" note. Only ever consulted by
+# services/focus_detection.py's Key Research Focus vocabulary build,
+# never by real keyword/title/abstract matching. Every entry here was
+# caught winning the #1 Key Research Focus slot for genuinely unrelated
+# abstracts in a real stress test (~550 OpenAlex abstracts, English and
+# Indonesian) -- not guessed, measured:
+# - "literature": abstract said "...digital divide LITERATURE has been
+#   refuting..." (ordinary academic prose, not a topic) and still won.
+# - "education", "development", "data", "media", "management": each won
+#   #1 across abstracts on completely unrelated subjects (thermoelectric
+#   power generation, diabetic nephropathy, software bug detection, ion
+#   implantation, post-disaster housing, food microbiology, K-means
+#   clustering, Sasak language classification...), purely because
+#   they're common substring-matchable journal keywords, not because
+#   they described any of those abstracts.
+# - "indonesia": wins for nearly any Indonesian-language abstract simply
+#   because the country is mentioned somewhere in it (dataset
+#   provenance, institution location) -- a geographic mention, not a
+#   research focus, and this app's own SINTA/Indonesian-journal corpus
+#   makes that mention close to universal rather than a rare fluke.
+FOCUS_SUGGESTION_STOPWORDS = {
+    "literature", "education", "development", "data", "media", "management",
+    "indonesia",
 }
 
 
