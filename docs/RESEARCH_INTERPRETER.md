@@ -19,6 +19,16 @@ never presented as a detected/confident claim the way Key Research
 Focus is. This document describes the architecture the interpreter
 plugs into either way.
 
+**Update:** both categories match against English-only vocabulary, so
+a raw Indonesian abstract mostly missed both -- 61.4% of a real 295-
+abstract Indonesian sample got zero Field of Study match. Both
+`_field_pool()` and `field_of_study_examples()` now translate the
+abstract first via `services/query_translator.py`'s
+`translate_for_interpretation()` (dictionary translation for
+Indonesian, everything else passed through unchanged) -- confirmed to
+cut that miss rate to 28.4% on a fresh sample. Still not zero: that's
+the vocabulary-coarseness limit above, language-independent.
+
 ---
 
 ## What "Research Interpreter" means here
