@@ -17,7 +17,7 @@ jobs:
       - name: ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.12.0
         with:
-          target: "https://scilene-25055279a542.herokuapp.com/"
+          target: "https://scilene.yasirmo.me/"
           # Rules config: fail the job only on HIGH findings; MEDIUM and
           # LOW are flagged in the report but don't block the run.
           rules_file_name: ".zap/rules.tsv"

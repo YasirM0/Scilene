@@ -197,9 +197,9 @@ _STRINGS = {
         "id": "Sudah menemukan jurnalmu? Gunakan Loupe untuk memastikan kutipanmu benar-benar mendukung klaimmu sebelum mengirim.",
     },
     "home.loupe.cta": {
-        "en": "View on GitHub →",
-        "ar": "عرض على GitHub ←",
-        "id": "Lihat di GitHub →",
+        "en": "Try Loupe →",
+        "ar": "جرّب Loupe ←",
+        "id": "Coba Loupe →",
     },
 
     "validation.abstract_too_short": {
@@ -351,9 +351,9 @@ _STRINGS = {
         "id": "Loupe adalah alat verifikasi kutipan gratis dan sumber terbuka oleh pengembang yang sama — alat ini memeriksa apakah klaim dalam sebuah makalah benar-benar didukung oleh sumber yang dikutip, menandai klaim yang tidak memiliki kutipan, dan mencari kontradiksi antara makalah dan referensinya. Jika Scilene membantu Anda menemukan tempat untuk menerbitkan karya, Loupe membantu Anda memastikan kutipan Anda akurat sebelum itu.",
     },
     "about.section.related_projects.link": {
-        "en": "View Loupe on GitHub",
-        "ar": "عرض Loupe على GitHub",
-        "id": "Lihat Loupe di GitHub",
+        "en": "Open Loupe",
+        "ar": "افتح Loupe",
+        "id": "Buka Loupe",
     },
 
     # -- Journal card (#129) -------------------------------------------

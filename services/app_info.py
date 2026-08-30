@@ -27,7 +27,7 @@ APP_LICENSE = "MIT"
 # "Related Projects" section) -- a citation/reference verifier, not
 # part of Scilene itself. Kept here rather than hardcoded in
 # footer.html/about.html so both templates reference one source.
-APP_LOUPE = "https://github.com/YasirM0/loupe"
+APP_LOUPE = "https://loupe.yasirmo.me"
 
 # Sources actually imported by scripts/build_database.py's core
 # indexing pipeline (not the enrichment providers in
