@@ -1,4 +1,4 @@
-# Research Interpreter (UI scaffolding)
+# Research Interpreter
 
 **Status:** "Key Research Focus" is real and interactive (accept/
 suggest-another/edit) as of #113's follow-up (`services/focus_detection.py`
@@ -86,7 +86,7 @@ User Action (HTMX request)
 web/routers/interpreter.py  (reads/writes session state)
         │
         ▼
-services/research_interpreter.py  (placeholder suggestion logic)
+services/research_interpreter.py  (real focus-detection + example-text logic)
         │
         ▼
 partials/interpreter_panel.html  (re-rendered, swapped back in)
@@ -124,8 +124,6 @@ Added to `web/session_store.py`'s per-session defaults:
 
 ## Not implemented
 
-- Any real analysis of the abstract — `suggest_concepts()` always
-  returns the same two placeholder values on first call.
 - Persisting interpreter state into search history (`rerun_history`
   restores past results/filters but not past suggestion state).
 - A bulk paste-many-at-once entry for the no-abstract path — #143

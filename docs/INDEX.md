@@ -40,6 +40,16 @@ Whenever a new feature is proposed, contributors should verify that it aligns wi
 
 ---
 
+## DECISIONS.md / ARCHITECTURE_DECISIONS.md
+
+Records significant product and architectural decisions and the
+reasoning behind them, so contributors understand not just *what* was
+decided but *why*. ARCHITECTURE_DECISIONS.md is the running log by
+date; DECISIONS.md covers a handful of the larger, named decisions in
+more narrative depth.
+
+---
+
 # System Design
 
 ## ARCHITECTURE.md
@@ -57,6 +67,26 @@ Defines the journal data model and explains what information the system stores.
 ## RANKING.md
 
 Explains how journal recommendations are calculated and how ranking remains transparent.
+
+---
+
+## RECOMMENDATIONS.md
+
+Documents what `services/recommender.py` actually does today — scoring,
+strategies, prestige, confidence tiers — code-level detail one layer
+below RANKING.md's conceptual explanation. Code is the source of truth;
+if this drifts from `recommend()`, trust the code.
+
+---
+
+## EXPORT.md
+
+Documents the recommendation export feature (#57) — the five supported
+formats (PDF, DOCX, XLSX, Markdown, CSV), what every export includes,
+and the modules involved (`services/reports.py`,
+`services/report_context.py`). Written during the Streamlit era; a
+status note at the top points to where export lives now
+(`web/routers/search.py`).
 
 ---
 
@@ -107,6 +137,23 @@ Explains the CI pipeline and how to deploy the app (Docker or Heroku).
 
 ---
 
+## BENCHMARK.md
+
+Defines how Scilene evaluates changes to its recommendation engine and
+AI components — Recall@K/MRR against real published papers, so
+improvements are backed by evidence rather than intuition.
+
+---
+
+## WEB_MIGRATION.md
+
+History of the v0.2.0 migration from Streamlit to FastAPI + Jinja2 +
+HTMX + Tailwind. The Streamlit app (`app/`) described throughout as
+"kept running" has since been deleted outright — see the doc's own
+later update note.
+
+---
+
 ## AI_ARCHITECTURE.md
 
 Design for Scilene's optional AI layer (#106) — philosophy, candidate
@@ -117,10 +164,12 @@ model is wired in yet.
 
 ## RESEARCH_INTERPRETER.md
 
-Architecture for the "Suggested by Scilene" tag-suggestion UI — a
-placeholder today, but documents the real contract a future
-embedding-based interpreter will plug into, and why it's built as
-server-rendered HTMX state rather than client-side JavaScript.
+Architecture for the "Suggested by Scilene" tag-suggestion UI. Key
+Research Focus is real, deterministic keyword-vocabulary matching
+today (not a placeholder); Field of Study stays non-interactive
+example text because its underlying vocabulary proved too coarse. Also
+documents why this is built as server-rendered HTMX state rather than
+client-side JavaScript.
 
 ---
 
@@ -136,6 +185,15 @@ ranking.
 
 ---
 
+## DOCUMENTATION_TEMPLATE.md
+
+Meta-documentation: the standard structure new documentation files in
+this project should follow. Not every document needs every section —
+authors should include only what improves clarity for that specific
+subject.
+
+---
+
 # Documentation Status
 
 | Document | Status |
@@ -145,7 +203,11 @@ ranking.
 | PROJECT_PRINCIPLES | ✅ Approved |
 | ARCHITECTURE | ✅ Approved |
 | DATABASE | ✅ Approved |
+| DECISIONS | ✅ Approved |
+| ARCHITECTURE_DECISIONS | ✅ Approved |
 | RANKING | ✅ Approved |
+| RECOMMENDATIONS | ✅ Approved |
+| EXPORT | ✅ Approved (Streamlit-era doc, still accurate — see its own status note) |
 | UI | ✅ Approved |
 | DESIGN_SYSTEM | ✅ Approved |
 | DATA_SOURCES | ✅ Approved |
@@ -153,9 +215,12 @@ ranking.
 | ROADMAP | ✅ Approved |
 | CONTRIBUTING | ✅ Approved |
 | DEPLOYMENT | ✅ Approved |
-| RESEARCH_INTERPRETER | 🟡 Scaffolding only |
+| BENCHMARK | ✅ Approved |
+| WEB_MIGRATION | ✅ Approved (historical record) |
+| RESEARCH_INTERPRETER | 🟡 Partial — Key Research Focus real, Field of Study non-interactive |
 | AI_ARCHITECTURE | 🟡 Design only |
 | QUERY_PIPELINE | 🟡 Design only |
+| DOCUMENTATION_TEMPLATE | ✅ Approved (meta) |
 
 ---
 

@@ -26,6 +26,18 @@ detecting research disciplines, expanding keywords, improving search
 queries, or rewriting an explanation in more natural language. The
 final journal ranking always comes from Scilene's own algorithm.
 
+("Rewriting an explanation in more natural language" specifically
+needs a real generative/LLM-style model like this document plans for
+-- the embedding model AI Semantic Search actually shipped with
+[sentence-transformers/all-MiniLM-L12-v2] has no generative capability
+at all, it only ever outputs a similarity number, so it cannot write
+that sentence itself. What it CAN do, and does
+(`services/semantic_search.py::_explanation_for()`), is deterministic
+overlap-highlighting -- checking the query's own words against a
+journal's public subjects/title/keywords text -- appended to a fixed,
+honest sentence about matching by embedding similarity. That's a real
+but categorically smaller thing than this section describes.)
+
 ```
 Recommendation Engine (deterministic)
         │
@@ -301,4 +313,9 @@ here.
 
 **Last Updated:** August 2026
 
-**Status:** Approved (design) — implementation not started
+**Status:** Approved (design) for the local/on-device model this
+document is actually about — none selected, downloaded, or called
+anywhere. The surrounding scaffolding this future model would plug
+into is already real, though: `AIProvider` interface, `CloudAIProvider`,
+deterministic discipline detection, and the Research Idea Assistant
+flow — see "Current implementation state" above.

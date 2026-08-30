@@ -5,15 +5,20 @@ frontend — homepage, Submission Search (full feature parity: form,
 filters, pagination, cards, history, all 5 export formats), and
 Publication Academy are all real here, not placeholders. Documentation
 remains a deliberate placeholder (Streamlit never had a documentation
-page to migrate content from). The Streamlit app (`app/`) is kept
-running as a regression reference and has not been deleted, but nothing
-in it is exclusive anymore — every user-facing feature it has also
-exists in `web/`.
+page to migrate content from). The Streamlit app (`app/`) was kept
+running as a regression reference at the time, not yet deleted, since
+nothing in it was exclusive anymore — every user-facing feature it had
+also existed in `web/`.
 
 **Update, v0.2.5:** Publication Academy has since been removed
 entirely — it belonged to the Streamlit-era prototype and no longer
 fit the product's direction. The paragraph above is left as a
 historical record of what Phase 4 actually shipped, not current state.
+
+**Update (later):** the Streamlit app (`app/`) has since been deleted
+outright (commit `5f9b179`, "retire Streamlit frontend and finalize
+FastAPI migration") — `web/` is the only frontend now, not a
+regression reference kept alongside one.
 
 ## Why
 

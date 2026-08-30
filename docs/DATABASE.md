@@ -36,8 +36,15 @@ Indexes exist on `issn_print`, `issn_online`, `title`, `country`
 
 Each `data/processed/*_complete.csv` file already contains full
 journal metadata plus appended `scope`/`index_terms` enrichment
-columns (not yet imported into the database — no importer reads them
-yet). None of the 3 are committed to this repo — large, license-bound source
+columns. These ARE imported into the database now: `index_terms` is a
+real column (`data/schema.sql`), populated via
+`scripts/backfill_index_terms.py` and `services/repository.py`'s
+`update_index_terms()`, and consumed by `services/semantic_search.py`
+for AI Semantic Search (only ever stored as an embedding, never
+retrievable as text — see that module's own security note). OpenAlex's
+domain/field/subfield taxonomy is imported the same way, via
+`scripts/backfill_openalex_taxonomy.py` (`services/subject_taxonomy.py`).
+None of the 3 source CSVs are committed to this repo — large, license-bound source
 data, kept out of git and out of the deployed app entirely (only the
 already-built `data/journal_intelligence.db` ships; the live app never
 reads these CSVs). Restore them with `python -m scripts.fetch_source_csvs`
@@ -179,14 +186,20 @@ rows), `wos.csv` (17,815 WoS rows — a subset of the Scopus file), and
   an official SINTA download. Worth keeping in mind if this project (or
   its database) is ever shared outside your own use.
 
-The Streamlit search page shows a data-source credit line at the bottom
-of every results view.
+The Streamlit search page (now deleted, see `docs/WEB_MIGRATION.md`)
+used to show a data-source credit line at the bottom of every results
+view; the FastAPI web app's own per-card source badges
+(`web/templates/components/journal_card.html`'s ✓ DOAJ/Scopus/SINTA/
+Web of Science chips) and the homepage's "Supported Indexes &
+Coverage" section serve the same attribution purpose today, not a
+single credit line.
 
 ## Architecture note
 
-`services/recommender.py` and `services/repository.py` do not import
-Streamlit and can be used from a script or another frontend.
-`services/search_service.py` is the intended entry point for any UI —
-Streamlit pages should call it instead of touching the recommender or
-repository directly. This is a first pass at that separation, scoped to
-what the search page needed; other pages haven't been touched yet.
+`services/recommender.py` and `services/repository.py` don't import
+anything web-framework-specific and can be used from a script or
+another frontend. `services/search_service.py` is the intended entry
+point for any UI — a frontend should call it instead of touching the
+recommender or repository directly. This is a first pass at that
+separation, scoped to what the search page needed; other pages haven't
+been touched yet.

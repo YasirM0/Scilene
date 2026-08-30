@@ -85,11 +85,13 @@ Every recommendation should be reproducible and explainable.
 
 Responsible for applying user-selected constraints such as:
 
-- Scopus
-- SINTA
+- DOAJ / Scopus / Web of Science / SINTA (preferred indexing)
 - Quartile
+- SINTA Level
 - APC
 - Language
+- Subject/Category (`services/subject_taxonomy.py`, DOAJ LCC categories
+  and OpenAlex fields unioned)
 
 Filters reduce the candidate list before the final ranking.
 

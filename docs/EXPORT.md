@@ -1,5 +1,18 @@
 # Recommendation Export (#57)
 
+**Status update (post-migration):** this document describes export as
+it was built during #57, on the Streamlit frontend — that frontend has
+since been deleted entirely (`docs/WEB_MIGRATION.md`). The five
+formats, `services/report_context.py`, and `services/reports.py`
+described below are all still real and unchanged; only the caller is
+different now — `web/routers/search.py`'s export route calls into them
+instead of `app/pages/1_Submission_Search.py` (deleted). Every mention
+of Streamlit, `st.cache_data`, or Streamlit Community Cloud below is a
+historical record of the environment this was originally built for,
+not the current deployment (`docs/DEPLOYMENT.md`: Docker/Heroku) — left
+as-is rather than rewritten, since it's accurate history, not a live
+claim.
+
 ## Supported formats
 
 | Format | Library | Notes |

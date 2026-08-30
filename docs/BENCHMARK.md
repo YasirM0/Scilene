@@ -150,9 +150,11 @@ recommender at Recall@5/10/20 = 0.000 and MRR = 0.000, against the
 TF-IDF baseline's 0.030 / 0.042 / 0.054 and 0.021. This reflects a
 real, explainable property of the current recommender when called
 with an abstract but no confirmed tags (the only fair way to benchmark
-"just an abstract" today, since Research Interpreter suggestions are
-still a hardcoded placeholder pool, not real analysis — see
-`docs/RESEARCH_INTERPRETER.md`): its title/abstract keyword-fallback
+"just an abstract" today: Research Interpreter suggestions need a
+human to accept/edit them before they become confirmed tags — see
+`docs/RESEARCH_INTERPRETER.md` — and this benchmark has no such human
+in the loop to simulate that step, regardless of how accurate the
+underlying suggestion logic is): its title/abstract keyword-fallback
 path (`services/recommender.py`) requires at least 3 distinct keyword
 hits against a journal's (often short) subjects/keywords fields, and
 generic fallback words extracted from a real abstract rarely clear

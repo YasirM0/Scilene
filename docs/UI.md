@@ -165,13 +165,8 @@ Future versions may provide a more detailed explanation of how individual rankin
 
 Users should be able to export recommendation results.
 
-Supported formats for Version 0.1:
-
-- CSV
-- JSON
-- Markdown
-
-Future versions may support additional formats.
+Supported formats: PDF, DOCX, XLSX, Markdown, and CSV — see
+docs/EXPORT.md and "Version 0.1 Scope" below. There is no JSON export.
 
 ---
 
