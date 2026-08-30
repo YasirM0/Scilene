@@ -99,6 +99,15 @@ document.addEventListener("keydown", function (event) {
         closeAllMultiselects();
         return;
     }
+    // The search box (see filterMultiselectOptions() below) sits inside
+    // the same <form> as the search page's own submit button -- Enter
+    // in a text input submits the nearest form by default, which would
+    // fire a real search mid-typing instead of just narrowing the
+    // dropdown's own option list.
+    if (event.key === "Enter" && event.target.classList.contains("ms-search")) {
+        event.preventDefault();
+        return;
+    }
     // <div class="ms-control" tabindex="0"> has no native Enter/Space
     // activation the way a real <button> would.
     if ((event.key === "Enter" || event.key === " ") && event.target.classList.contains("ms-control")) {
@@ -111,6 +120,32 @@ document.addEventListener("keydown", function (event) {
         }
     }
 });
+
+// Live-filters a searchable dropdown's own option rows by substring
+// (case-insensitive) as the user types -- the categories list (44
+// subject names) is the one long enough that scanning it manually was
+// the actual complaint; short lists don't render a .ms-search box at
+// all (see multi_select_filter.html's `searchable` param) so this
+// never runs for them.
+document.addEventListener("input", function (event) {
+    var search = event.target.closest(".ms-search");
+    if (!search) return;
+    var wrapper = search.closest("[data-multiselect]");
+    if (!wrapper) return;
+    filterMultiselectOptions(wrapper, search.value);
+});
+
+function filterMultiselectOptions(wrapper, query) {
+    var q = query.trim().toLowerCase();
+    var anyVisible = false;
+    wrapper.querySelectorAll(".ms-dropdown label").forEach(function (label) {
+        var matches = !q || label.textContent.trim().toLowerCase().indexOf(q) !== -1;
+        label.hidden = !matches;
+        anyVisible = anyVisible || matches;
+    });
+    var noMatches = wrapper.querySelector(".ms-no-matches");
+    if (noMatches) noMatches.hidden = anyVisible;
+}
 
 // Keeps each option's pre-rendered chip in sync with its checkbox --
 // covers both directions: checking a box in the dropdown reveals its
@@ -192,6 +227,16 @@ function openMultiselect(wrapper) {
     var dropdown = wrapper.querySelector(".ms-dropdown");
     if (control) control.setAttribute("aria-expanded", "true");
     if (dropdown) dropdown.hidden = false;
+
+    // Always reopen with a blank search and every option visible --
+    // a stale filter from the last time this dropdown was open would
+    // otherwise silently hide options the user never meant to exclude.
+    var search = wrapper.querySelector(".ms-search");
+    if (search) {
+        search.value = "";
+        filterMultiselectOptions(wrapper, "");
+        search.focus();
+    }
 }
 
 function closeMultiselect(wrapper) {

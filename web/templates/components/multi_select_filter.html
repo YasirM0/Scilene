@@ -1,4 +1,4 @@
-{% macro multi_select_filter(name, label, options, selected=[]) %}
+{% macro multi_select_filter(name, label, options, selected=[], searchable=False) %}
 {% set locale = request.state.locale %}
 {#
     #142 -- a real compact multi-select (Streamlit st.multiselect
@@ -15,6 +15,14 @@
     selected options -- multiselect.js only ever toggles a chip's
     `hidden` attribute to track its checkbox, it never generates chip
     markup, so a translated label/aria-label is never duplicated in JS.
+
+    `searchable` opts a long option list (currently just "categories" --
+    44 subject names, the only list long enough that scanning it
+    manually is real friction) into a text box at the top of the
+    dropdown that live-filters the options below by substring
+    (multiselect.js's filterMultiselectOptions()); left off for the
+    short lists (indexing, quartiles, SINTA levels) where a search box
+    would be pure clutter, not a real aid.
 #}
 <div data-multiselect class="relative">
     <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ label }}</p>
@@ -32,7 +40,14 @@
         <span class="ms-chevron ml-auto text-gray-400 dark:text-gray-500 text-xs shrink-0" aria-hidden="true">▾</span>
     </div>
 
-    <div class="ms-dropdown absolute left-0 z-20 mt-1 w-full max-h-40 overflow-y-auto py-1 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-lg" hidden>
+    <div class="ms-dropdown absolute left-0 z-20 mt-1 w-full max-h-64 overflow-y-auto py-1 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-lg" hidden>
+        {% if searchable %}
+        <div class="sticky top-0 px-2 py-1.5 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+            <input type="text" class="ms-search w-full px-2 py-1 text-sm rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500"
+                placeholder="{{ t('multi_select.search_placeholder', locale) }}" autocomplete="off">
+        </div>
+        <p class="ms-no-matches px-3 py-1.5 text-sm text-gray-400 dark:text-gray-500" hidden>{{ t('multi_select.no_matches', locale) }}</p>
+        {% endif %}
         {% for option in options %}
         <label class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
             <input type="checkbox" id="{{ name }}-{{ loop.index }}" name="{{ name }}" value="{{ option }}" {% if option in selected %}checked{% endif %}

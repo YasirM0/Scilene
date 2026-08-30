@@ -570,6 +570,8 @@ _STRINGS = {
 
     "multi_select.placeholder": {"en": "Select...", "ar": "اختر...", "id": "Pilih..."},
     "multi_select.remove_aria": {"en": "Remove {value}", "ar": "إزالة {value}", "id": "Hapus {value}"},
+    "multi_select.search_placeholder": {"en": "Search...", "ar": "بحث...", "id": "Cari..."},
+    "multi_select.no_matches": {"en": "No matches", "ar": "لا توجد نتائج", "id": "Tidak ada yang cocok"},
 
     "language_filter.label": {"en": "Journal Languages", "ar": "لغات المجلة", "id": "Bahasa Jurnal"},
     "language_filter.detected_hint": {
