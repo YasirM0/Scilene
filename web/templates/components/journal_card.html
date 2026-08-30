@@ -116,9 +116,15 @@
         <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 space-y-2 text-sm">
             <p><span class="font-medium text-gray-700 dark:text-gray-300">{{ t("journal_card.publisher", locale) }}</span> {{ journal.publisher or t("journal_card.not_listed", locale) }}</p>
 
-            {% set subject_tags = format_subjects(journal.subjects) %}
-            {% if subject_tags %}
-            <p><span class="font-medium text-gray-700 dark:text-gray-300">{{ t("journal_card.subjects", locale) }}</span> {{ subject_tags }}</p>
+            {% set subject_entries = extract_subject_entries(journal.subjects) %}
+            {% if subject_entries %}
+            <p>
+                <span class="font-medium text-gray-700 dark:text-gray-300">{{ t("journal_card.subjects", locale) }}</span>
+                {% for tag in subject_entries.tags %}<button type="button"
+                    class="subject-tag-chip text-navy-700 dark:text-navy-300 underline decoration-dotted decoration-navy-400 hover:text-horizon-600 dark:hover:text-horizon-500 hover:decoration-solid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 rounded"
+                    data-subject-category="{{ tag.category }}"
+                    title="{{ t('journal_card.filter_by_subject', locale, category=tag.category) }}">{{ tag.label }}</button>{% if not loop.last %} • {% endif %}{% endfor %}{% if subject_entries.extra %} • +{{ subject_entries.extra }} more{% endif %}
+            </p>
             {% endif %}
 
             {% if journal.review_weeks is not none %}

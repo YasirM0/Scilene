@@ -15,7 +15,7 @@ from services.app_info import APP
 from web.search_presentation import CONFIDENCE_COLORS, CONFIDENCE_STARS, CONFIDENCE_STAR_COLORS
 from web.static_versioning import static_version
 from utils.indexing import format_source_chip, format_index_summary, format_enrichment_badges
-from utils.subjects import format_subjects
+from utils.subjects import format_subjects, extract_subject_entries
 from utils.aliases import format_alias_line
 from utils.publication_types import format_publication_type_badge
 from web.i18n import t, SUPPORTED_LOCALES
@@ -37,6 +37,7 @@ templates.env.globals["format_source_chip"] = format_source_chip
 templates.env.globals["format_index_summary"] = format_index_summary
 templates.env.globals["format_enrichment_badges"] = format_enrichment_badges
 templates.env.globals["format_subjects"] = format_subjects
+templates.env.globals["extract_subject_entries"] = extract_subject_entries
 templates.env.globals["format_alias_line"] = format_alias_line
 templates.env.globals["format_publication_type_badge"] = format_publication_type_badge
 templates.env.globals["t"] = t

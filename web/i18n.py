@@ -370,6 +370,7 @@ _STRINGS = {
     "journal_card.publisher": {"en": "Publisher:", "ar": "الناشر:", "id": "Penerbit:"},
     "journal_card.not_listed": {"en": "Not listed", "ar": "غير مُدرج", "id": "Tidak tercantum"},
     "journal_card.subjects": {"en": "Subjects:", "ar": "المواضيع:", "id": "Subjek:"},
+    "journal_card.filter_by_subject": {"en": "Filter search by \"{category}\"", "ar": "تصفية البحث حسب \"{category}\"", "id": "Filter pencarian berdasarkan \"{category}\""},
     "journal_card.review_time": {"en": "Typical review time:", "ar": "مدة المراجعة المعتادة:", "id": "Waktu tinjauan biasa:"},
     "journal_card.weeks": {"en": "weeks", "ar": "أسابيع", "id": "minggu"},
     "journal_card.issn": {"en": "ISSN: {print} (print) / {online} (online)", "ar": "الترقيم الدولي: {print} (مطبوع) / {online} (إلكتروني)", "id": "ISSN: {print} (cetak) / {online} (daring)"},

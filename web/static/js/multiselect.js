@@ -37,6 +37,24 @@
 // header comment for why a hidden control must also be cleared, not
 // just hidden).
 
+// Journal-card subject tags (components/journal_card.html) -- clicking
+// one checks the matching Subject Category checkbox instead of making
+// the user open the filter panel and find it themselves. Reuses the
+// exact same checked+dispatch("change") mechanism as ms-chip-remove
+// below so it drives the real live-filter/HTMX flow, not a parallel
+// one -- the resulting search request and chip/dropdown state stay
+// identical to checking that box by hand.
+document.addEventListener("click", function (event) {
+    var tag = event.target.closest(".subject-tag-chip");
+    if (!tag) return;
+    var category = tag.dataset.subjectCategory;
+    if (!category) return;
+    var checkbox = document.querySelector('input.live-filter[name="categories"][value="' + CSS.escape(category) + '"]');
+    if (!checkbox || checkbox.checked) return;
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+});
+
 document.addEventListener("click", function (event) {
     var chipRemove = event.target.closest(".ms-chip-remove");
     if (chipRemove) {
