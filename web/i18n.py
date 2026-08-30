@@ -606,14 +606,14 @@ _STRINGS = {
     },
     "add_tag.placeholder": {"en": "Add a tag...", "ar": "أضف وسماً...", "id": "Tambahkan tag..."},
     "search_concepts_section.tag_sources_helper": {
-        "en": "Press Enter to add a tag — try your own keywords or the Key Research Focus above.",
-        "ar": "اضغط Enter لإضافة وسم — جرّب كلماتك المفتاحية أو التركيز البحثي الرئيسي أعلاه.",
-        "id": "Tekan Enter untuk menambahkan tag — coba kata kunci Anda sendiri atau Fokus Riset Utama di atas.",
+        "en": "Press Enter to add your own tag, or click ✓ next to the Key Research Focus suggestion above to add that instead.",
+        "ar": "اضغط Enter لإضافة وسمك الخاص، أو انقر على ✓ بجانب اقتراح التركيز البحثي الرئيسي أعلاه لإضافته بدلاً من ذلك.",
+        "id": "Tekan Enter untuk menambahkan tag Anda sendiri, atau klik ✓ di sebelah saran Fokus Riset Utama di atas untuk menambahkannya.",
     },
     "search_concepts_section.tag_sources_helper_with_examples": {
-        "en": "Press Enter to add a tag — try your own keywords, the Key Research Focus above, or e.g. {examples}.",
-        "ar": "اضغط Enter لإضافة وسم — جرّب كلماتك المفتاحية، أو التركيز البحثي الرئيسي أعلاه، أو مثلاً: {examples}.",
-        "id": "Tekan Enter untuk menambahkan tag — coba kata kunci Anda sendiri, Fokus Riset Utama di atas, atau misalnya: {examples}.",
+        "en": "Press Enter to add your own tag, click ✓ next to the Key Research Focus suggestion above to add that instead, or use these as inspiration: {examples}.",
+        "ar": "اضغط Enter لإضافة وسمك الخاص، أو انقر على ✓ بجانب اقتراح التركيز البحثي الرئيسي أعلاه لإضافته، أو استلهم من هذه الأمثلة: {examples}.",
+        "id": "Tekan Enter untuk menambahkan tag Anda sendiri, klik ✓ di sebelah saran Fokus Riset Utama di atas untuk menambahkannya, atau gunakan contoh berikut sebagai inspirasi: {examples}.",
     },
 
     # -- Export panel (#129) -------------------------------------------------
