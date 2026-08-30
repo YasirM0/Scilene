@@ -8,6 +8,8 @@ The name combines *Sci* (science) with *Selene*, the Greek personification of th
 
 Unlike many journal finders that provide only a ranked list, Scilene explains **why** each journal matches your manuscript.
 
+Scilene is also, as far as we've been able to find, the only journal recommendation tool that indexes **SINTA** (Indonesia's national journal accreditation system) alongside DOAJ, Scopus, and Web of Science — not a niche add-on, but a first-class, filterable index source with its own accreditation tiers (SINTA 1–6), covering thousands of Indonesian journals that international-only tools never surface.
+
 **Live demo:** [scilene.yasirmo.me](https://scilene.yasirmo.me/)
 
 ---

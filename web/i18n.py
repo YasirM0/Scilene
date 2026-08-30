@@ -151,9 +151,9 @@ _STRINGS = {
         "id": "Cakupan Multi-Indeks",
     },
     "home.feature.multiindex.body": {
-        "en": "DOAJ, Scopus, Web of Science, and SINTA in one search, deduplicated into a single database.",
-        "ar": "DOAJ وScopus وWeb of Science وSINTA في بحث واحد، مدمجة دون تكرار في قاعدة بيانات واحدة.",
-        "id": "DOAJ, Scopus, Web of Science, dan SINTA dalam satu pencarian, digabung tanpa duplikasi ke dalam satu basis data.",
+        "en": "DOAJ, Scopus, Web of Science, and SINTA in one search, deduplicated into a single database — including full SINTA 1–6 accreditation filtering, something we haven't found in any other journal finder.",
+        "ar": "DOAJ وScopus وWeb of Science وSINTA في بحث واحد، مدمجة دون تكرار في قاعدة بيانات واحدة — بما في ذلك تصفية كاملة حسب اعتماد SINTA من 1 إلى 6، وهي ميزة لم نجدها في أي أداة أخرى للبحث عن المجلات.",
+        "id": "DOAJ, Scopus, Web of Science, dan SINTA dalam satu pencarian, digabung tanpa duplikasi ke dalam satu basis data — termasuk filter akreditasi SINTA 1–6 secara lengkap, sesuatu yang belum kami temukan di alat pencari jurnal lain.",
     },
     "home.feature.export.title": {
         "en": "Flexible Export",
@@ -241,9 +241,9 @@ _STRINGS = {
         "id": "Mengapa Scilene dibuat?",
     },
     "about.section.why_created.body": {
-        "en": "Many existing journal finders return a ranked list without explaining their reasoning — relying on paid services or prestige-based scoring instead. Scilene was created as a transparent alternative: recommendations grounded in verifiable, publicly available scholarly metadata, with every match paired with a plain-language explanation of why it's there.",
-        "ar": "تعيد العديد من أدوات البحث عن المجلات الحالية قائمة مرتبة دون شرح منطقها — معتمدة بدلاً من ذلك على خدمات مدفوعة أو تقييم قائم على المكانة العلمية. أُنشئ Scilene كبديل شفاف: توصيات مبنية على بيانات علمية يمكن التحقق منها ومتاحة للعموم، مع شرح واضح لكل تطابق يبيّن سبب ظهوره.",
-        "id": "Banyak alat pencari jurnal yang ada mengembalikan daftar peringkat tanpa menjelaskan alasannya — mengandalkan layanan berbayar atau penilaian berbasis prestise. Scilene dibuat sebagai alternatif yang transparan: rekomendasi didasarkan pada metadata ilmiah yang dapat diverifikasi dan tersedia untuk umum, dengan setiap kecocokan disertai penjelasan sederhana mengapa jurnal itu muncul.",
+        "en": "Many existing journal finders return a ranked list without explaining their reasoning — relying on paid services or prestige-based scoring instead. Scilene was created as a transparent alternative: recommendations grounded in verifiable, publicly available scholarly metadata, with every match paired with a plain-language explanation of why it's there. Most of those tools also stop at Scopus and Web of Science — as far as we've been able to find, Scilene is the only one that also indexes SINTA, Indonesia's national journal accreditation system, as a first-class, filterable source (SINTA 1–6) rather than leaving Indonesian researchers to search it separately.",
+        "ar": "تعيد العديد من أدوات البحث عن المجلات الحالية قائمة مرتبة دون شرح منطقها — معتمدة بدلاً من ذلك على خدمات مدفوعة أو تقييم قائم على المكانة العلمية. أُنشئ Scilene كبديل شفاف: توصيات مبنية على بيانات علمية يمكن التحقق منها ومتاحة للعموم، مع شرح واضح لكل تطابق يبيّن سبب ظهوره. كما أن معظم هذه الأدوات تتوقف عند Scopus وWeb of Science — وعلى حد علمنا، فإن Scilene هو الوحيد الذي يفهرس أيضاً SINTA، نظام اعتماد المجلات الوطني في إندونيسيا، كمصدر أساسي وقابل للتصفية (من SINTA 1 إلى 6) بدلاً من ترك الباحثين الإندونيسيين يبحثون فيه بشكل منفصل.",
+        "id": "Banyak alat pencari jurnal yang ada mengembalikan daftar peringkat tanpa menjelaskan alasannya — mengandalkan layanan berbayar atau penilaian berbasis prestise. Scilene dibuat sebagai alternatif yang transparan: rekomendasi didasarkan pada metadata ilmiah yang dapat diverifikasi dan tersedia untuk umum, dengan setiap kecocokan disertai penjelasan sederhana mengapa jurnal itu muncul. Sebagian besar alat tersebut juga hanya berhenti di Scopus dan Web of Science — sejauh yang kami temukan, Scilene adalah satu-satunya yang juga mengindeks SINTA, sistem akreditasi jurnal nasional Indonesia, sebagai sumber utama yang dapat difilter (SINTA 1–6), alih-alih membiarkan peneliti Indonesia mencarinya secara terpisah.",
     },
     "about.section.name.title": {
         "en": 'Why the name "Scilene"?',

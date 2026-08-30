@@ -18,7 +18,7 @@ older code comments and docstrings (harmless, not user-facing).
 from types import SimpleNamespace
 
 APP_NAME = "Scilene"
-APP_VERSION = "0.4.5"
+APP_VERSION = "0.5.0"
 APP_AUTHOR = "Yasir Mohammed"
 APP_GITHUB = "https://github.com/YasirM0/Scilene"
 APP_LICENSE = "MIT"
