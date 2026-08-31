@@ -22,4 +22,4 @@ def set_locale(request: Request, code: str, session=Depends(get_session_state)):
 
     destination = request.headers.get("referer") or "/"
     response = RedirectResponse(url=destination, status_code=303)
-    return attach_session_cookie(response, session)
+    return attach_session_cookie(response, session, request)

@@ -25,7 +25,7 @@ MAX_COMPARE = 4
 
 def _render(request, name, context, session):
     response = templates.TemplateResponse(request=request, name=name, context=context)
-    return attach_session_cookie(response, session)
+    return attach_session_cookie(response, session, request)
 
 
 def _bar_context(session):
@@ -59,7 +59,7 @@ def clear_compare(request: Request, session=Depends(get_session_state)):
     # leave behind has nothing left to show, so leave the page instead
     # of leaving a stale table under an empty bar.
     response = RedirectResponse(url="/search/compare", status_code=303)
-    return attach_session_cookie(response, session)
+    return attach_session_cookie(response, session, request)
 
 
 @router.get("")

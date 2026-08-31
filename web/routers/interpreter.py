@@ -38,7 +38,7 @@ def _render_panel(request, session, extra_context=None, has_abstract=None):
     response = templates.TemplateResponse(
         request=request, name="partials/interpreter_panel.html", context=context
     )
-    return attach_session_cookie(response, session)
+    return attach_session_cookie(response, session, request)
 
 
 def _find_suggestion(session, category):
@@ -235,7 +235,7 @@ def remove_confirmed_tag(request: Request, index: int, session=Depends(get_sessi
     response = templates.TemplateResponse(
         request=request, name="partials/confirmed_tags_standalone.html", context={"tags": tags}
     )
-    return attach_session_cookie(response, session)
+    return attach_session_cookie(response, session, request)
 
 
 @router.post("/tags/add")
@@ -252,4 +252,4 @@ def add_tag(request: Request, value: str = Form(""), session=Depends(get_session
         name="partials/tag_added.html",
         context={"tags": session["confirmed_tags"]},
     )
-    return attach_session_cookie(response, session)
+    return attach_session_cookie(response, session, request)

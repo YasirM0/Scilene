@@ -93,4 +93,4 @@ def continue_to_search(
     # showing an empty abstract field the user has nothing to paste
     # into.
     response.headers["HX-Redirect"] = "/search?mode=idea"
-    return attach_session_cookie(response, session)
+    return attach_session_cookie(response, session, request)

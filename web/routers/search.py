@@ -81,7 +81,7 @@ def _render(request, name, context, session):
     route's own returned Response are different objects).
     """
     response = templates.TemplateResponse(request=request, name=name, context=context)
-    return attach_session_cookie(response, session)
+    return attach_session_cookie(response, session, request)
 
 
 def _filter_context(locale):
@@ -643,7 +643,7 @@ def clear_search(request: Request, session=Depends(get_session_state)):
 
 
 @router.post("/language-filter/touch")
-def touch_language_filter(session=Depends(get_session_state)):
+def touch_language_filter(request: Request, session=Depends(get_session_state)):
     """
     Fired once (event delegation, see language_filter_card.html's
     wrapping div) whenever any language checkbox changes by hand --
@@ -653,7 +653,7 @@ def touch_language_filter(session=Depends(get_session_state)):
     """
     session["language_touched"] = True
     response = HTMLResponse("")
-    return attach_session_cookie(response, session)
+    return attach_session_cookie(response, session, request)
 
 
 def _build_report_context(search_meta, results):
@@ -695,7 +695,7 @@ def export_results(fmt: str, request: Request, session=Depends(get_session_state
         media_type=media_type,
         headers={"Content-Disposition": f'attachment; filename="{basename}.{fmt}"'},
     )
-    return attach_session_cookie(response, session)
+    return attach_session_cookie(response, session, request)
 
 
 # A real .sls export (search params + tags, no results snapshot) is a
