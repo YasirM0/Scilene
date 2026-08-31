@@ -1,19 +1,34 @@
 {% macro add_tag_input(oob=False) %}
 {#
-    #139 -- "Add a tag..." below AI suggestions. Enter submits via a
-    plain HTMX keyup trigger (declarative, not hand-written JS) to
-    /search/tags/add, which re-renders #confirmed-tags AND this same
-    input as an out-of-band swap with an empty value -- that's how the
-    field clears itself after each tag with zero JavaScript: the
-    server just sends back a fresh, empty copy of the same input
-    rather than a script resetting the old one.
+    #139 -- "Add a tag..." below AI suggestions. hx-trigger="keyup[key
+    =='Enter']" used to submit Enter -- but that bracket filter is
+    htmx compiling and eval'ing a JS expression, which this app's CSP
+    (#146) blocks ('unsafe-eval' not allowed). Wrapping the input in
+    its own <form> would sidestep the eval, but this component always
+    renders inside the page's own outer search <form> -- and a <form>
+    nested inside a <form> is dropped entirely by the HTML parser
+    (verified directly: the wrapping <form> tag vanished from the
+    rendered DOM, leaving a bare, trigger-less <input> behind), so
+    that's not available here either.
+
+    Fix: a custom, filter-free trigger name ("add-tag", no brackets --
+    no eval) fired by a tiny inline onkeydown, which the CSP already
+    allows the same way it already allows base.html's dark-mode-init
+    and nav.html's theme-toggle inline scripts (script-src carries
+    'unsafe-inline' for exactly those two, now three, narrow cases --
+    see web/main.py's security_headers() docstring and
+    docs/DESIGN_SYSTEM.md's "JavaScript exceptions" note). This is
+    still htmx doing the actual request/swap -- the inline handler
+    only relays "which key" into a named event, it doesn't touch
+    fetch/XHR or the DOM itself.
 #}
 <input type="text" id="add-tag-input" name="value" placeholder="{{ t('add_tag.placeholder', request.state.locale) }}"
     {% if oob %}hx-swap-oob="true"{% endif %}
     hx-post="/search/tags/add"
-    hx-trigger="keyup[key=='Enter']"
+    hx-trigger="add-tag"
     hx-target="#confirmed-tags"
     hx-swap="outerHTML"
     hx-include="this"
+    onkeydown="if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); htmx.trigger(this, 'add-tag'); }"
     class="w-full sm:w-56 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-horizon-500 focus:border-horizon-500">
 {% endmacro %}
