@@ -669,11 +669,12 @@ def count_by_sinta_accreditation():
 
 
 def count_by_publication_type():
-    """{publication_type: count} from Elsevier's Source Type column
-    (#128) -- NULL (Elsevier hasn't matched this journal) is excluded
-    here, not resolved to a display default; the dashboard shows it as
-    its own honest "Unmatched / unknown" slice rather than inflating
-    "Journal" with a guess -- see utils/publication_types.py for where
+    """{publication_type: count} (#128) -- populated from Elsevier's
+    Source Type column, topped up by
+    scripts/backfill_openalex_publication_type.py for journals Elsevier
+    never matched at all. NULL (neither source has a value, or the
+    backfill hasn't been (re-)run yet) is excluded here, not resolved
+    to a display default -- see utils/publication_types.py for where
     that display-time default IS applied (journal cards, not stats)."""
     conn = get_connection()
     rows = conn.execute(

@@ -472,9 +472,15 @@ _STRINGS = {
     "statistics.chart.sinta_accreditation": {"en": "SINTA Accreditation", "ar": "اعتماد SINTA", "id": "Akreditasi SINTA"},
     "statistics.chart.open_access_cost": {"en": "Open Access Cost", "ar": "تكلفة الوصول المفتوح", "id": "Biaya Akses Terbuka"},
     "statistics.footnote": {
-        "en": "\"Top\" lists are capped at the 10 largest categories. Publication Type only reflects journals matched to the Elsevier Source List (#128) — unmatched journals aren't counted here as a guess either way.",
-        "ar": 'قوائم "الأبرز" مقتصرة على أكبر 10 فئات. يعكس "نوع النشر" فقط المجلات المطابقة لقائمة مصادر Elsevier (#128) — لا تُحتسب المجلات غير المطابقة هنا كتخمين في أي اتجاه.',
-        "id": 'Daftar "teratas" dibatasi pada 10 kategori terbesar. Jenis Publikasi hanya mencerminkan jurnal yang cocok dengan Elsevier Source List (#128) — jurnal yang tidak cocok tidak dihitung di sini sebagai tebakan ke arah mana pun.',
+        # Publication Type used to come ONLY from the Elsevier Source
+        # List; scripts/backfill_openalex_publication_type.py now also
+        # fills it in from OpenAlex for journals Elsevier never
+        # classified, so "matched to the Elsevier Source List" stopped
+        # being accurate -- caught directly by looking at this exact
+        # chart after that backfill ran.
+        "en": "\"Top\" lists are capped at the 10 largest categories. Publication Type reflects journals matched to the Elsevier Source List (#128) or classified by OpenAlex (scripts/backfill_openalex_publication_type.py) — unmatched journals aren't counted here as a guess either way.",
+        "ar": 'قوائم "الأبرز" مقتصرة على أكبر 10 فئات. يعكس "نوع النشر" المجلات المطابقة لقائمة مصادر Elsevier (#128) أو المصنّفة بواسطة OpenAlex — لا تُحتسب المجلات غير المطابقة هنا كتخمين في أي اتجاه.',
+        "id": 'Daftar "teratas" dibatasi pada 10 kategori terbesar. Jenis Publikasi mencerminkan jurnal yang cocok dengan Elsevier Source List (#128) atau diklasifikasikan oleh OpenAlex — jurnal yang tidak cocok tidak dihitung di sini sebagai tebakan ke arah mana pun.',
     },
     "bar_list.no_data": {"en": "No data available.", "ar": "لا توجد بيانات متاحة.", "id": "Tidak ada data yang tersedia."},
 
