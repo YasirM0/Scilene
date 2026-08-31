@@ -643,15 +643,25 @@ _STRINGS = {
         "id": "Menampilkan {visible} dari {total} jurnal yang direkomendasikan.",
     },
     "search_results.hidden_matches": {
-        "en": "{count} weaker matches hidden — tick the box below to see them.",
-        "ar": "تم إخفاء {count} تطابقات أضعف — فعّل المربع أدناه لعرضها.",
-        "id": "{count} kecocokan yang lebih lemah disembunyikan — centang kotak di bawah untuk melihatnya.",
+        # Covers three reasons a result doesn't show by default (weak/
+        # poor confidence, an inactive Scopus listing, a conference
+        # proceedings/book chapter result -- see
+        # web/search_presentation.py's filter_visible_results) -- calling
+        # all of them "weaker matches" would be inaccurate for the third
+        # one specifically (a Conference Proceedings result can score
+        # "Excellent" and still be hidden; it's not a weak match, it's
+        # not a normal journal result at all), so this stays a plain
+        # "results hidden" instead of claiming every one of them scored
+        # low.
+        "en": "{count} results hidden — tick the box below to see them.",
+        "ar": "تم إخفاء {count} نتيجة — فعّل المربع أدناه لعرضها.",
+        "id": "{count} hasil disembunyikan — centang kotak di bawah untuk melihatnya.",
     },
     "search_results.clear_button": {"en": "Clear Search", "ar": "مسح البحث", "id": "Hapus Pencarian"},
     "search_results.show_weaker": {
-        "en": "Show weaker matches too (Moderate / Weak / Poor)",
-        "ar": "إظهار التطابقات الأضعف أيضاً (متوسط / منخفض / ضعيف)",
-        "id": "Tampilkan juga kecocokan yang lebih lemah (Sedang / Lemah / Kurang)",
+        "en": "Show weaker matches and non-journal results too (Moderate / Weak / Poor, Conference Proceedings)",
+        "ar": "إظهار التطابقات الأضعف والنتائج غير الدورية أيضاً (متوسط / منخفض / ضعيف، وقائع المؤتمرات)",
+        "id": "Tampilkan juga kecocokan yang lebih lemah dan hasil non-jurnal (Sedang / Lemah / Kurang, Prosiding Konferensi)",
     },
     "search_results.detected_areas_label": {"en": "Detected Research Areas", "ar": "المجالات البحثية المكتشفة", "id": "Bidang Riset Terdeteksi"},
     "search_results.extra_discipline_placeholder": {

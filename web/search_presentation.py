@@ -14,6 +14,7 @@ import math
 
 from services.app_info import export_prefix
 from services.recommender import STRATEGIES
+from utils.publication_types import HIDDEN_BY_DEFAULT_TYPES
 
 PAGE_SIZE = 10
 
@@ -132,16 +133,31 @@ def is_inactive_scopus(result):
     return False
 
 
+def is_hidden_by_default_type(result):
+    """
+    True for a Conference Proceedings/Book Chapter result (see
+    utils/publication_types.HIDDEN_BY_DEFAULT_TYPES for why) -- Scilene
+    recommends journals; a result you can't actually submit a
+    standalone manuscript to isn't a normal, actionable match.
+    """
+    badge = result.get("publication_type_badge")
+    return bool(badge) and badge["label"] in HIDDEN_BY_DEFAULT_TYPES
+
+
 def filter_visible_results(all_results, show_weaker):
     """
     "Show weaker recommendations" reused, per #98, as the one toggle
-    that also reveals inactive-Scopus journals -- no separate filter.
+    that also reveals inactive-Scopus journals -- and, per the
+    Conference Proceedings/Book Chapter hiding above, those too --
+    no separate filter/toggle for each thing that's hidden by default.
     """
     if show_weaker:
         return all_results
     return [
         r for r in all_results
-        if r["confidence"] in STRONG_TIERS and not is_inactive_scopus(r)
+        if r["confidence"] in STRONG_TIERS
+        and not is_inactive_scopus(r)
+        and not is_hidden_by_default_type(r)
     ]
 
 

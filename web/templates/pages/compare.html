@@ -32,7 +32,9 @@
       <th class="text-left align-bottom p-3 min-w-[220px]">
         <div class="font-semibold text-gray-900 dark:text-gray-50">{{ row.journal.title }}</div>
         {% set pub_type = format_publication_type_badge(row.journal) %}
+        {% if pub_type %}
         <span class="{{ pub_type.classes }} inline-block mt-1">{{ pub_type.icon }} {{ pub_type.label }}</span>
+        {% endif %}
       </th>
       {% endfor %}
     </tr>
