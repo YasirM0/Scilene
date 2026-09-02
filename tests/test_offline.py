@@ -36,7 +36,7 @@ from fastapi.testclient import TestClient
 from web.main import app
 from web.dependencies import SESSION_COOKIE_NAME
 from web.session_store import get_session
-from services import online_enrichment
+from services import dataset_updater, online_enrichment
 from services.ai_provider import CloudAIProvider
 from services.query_translator import (
     translate_query,
@@ -296,3 +296,178 @@ def test_translate_query_arabic_web_blocked(monkeypatch):
     monkeypatch.setenv("SCILENE_RUNTIME", "web")
     with pytest.raises(ArabicNotSupportedOnline):
         translate_query("الصحة العامة")
+
+
+# ---------------------------------------------------------------------
+# Dataset versioning and background updates (#153)
+#
+# Every test below runs against tmp_path-redirected paths, NEVER the
+# real data/journal_intelligence.db or data/.db_version -- accidentally
+# pointing apply_update() at the real files would os.replace() over
+# the actual committed 55MB database. isolated_paths patches
+# dataset_updater's module-level path constants directly (the same
+# pattern services/repository.py's own DATA_DIR/DB_PATH already use),
+# not the real ones.
+# ---------------------------------------------------------------------
+
+import hashlib
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+
+@pytest.fixture
+def isolated_paths(tmp_path, monkeypatch):
+    monkeypatch.setattr(dataset_updater, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(dataset_updater, "DB_PATH", tmp_path / "journal_intelligence.db")
+    monkeypatch.setattr(dataset_updater, "DB_NEW_PATH", tmp_path / "journal_intelligence.db.new")
+    monkeypatch.setattr(dataset_updater, "VERSION_FILE_PATH", tmp_path / ".db_version")
+    monkeypatch.setattr(dataset_updater, "_PENDING_VERSION_PATH", tmp_path / ".db_version.pending")
+    return tmp_path
+
+
+class _BytesHandler(BaseHTTPRequestHandler):
+    """Serves fixed bytes set as a class attribute -- swapped per test
+    via _serve(). Matches tests/test_ai_provider.py's own local-stub-
+    server pattern rather than mocking requests directly, so this is a
+    real HTTP round trip, not a mocked one."""
+    payload = b""
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-Length", str(len(self.payload)))
+        self.end_headers()
+        self.wfile.write(self.payload)
+
+    def log_message(self, format, *args):
+        pass  # keep test output quiet
+
+
+def _serve(payload: bytes):
+    _BytesHandler.payload = payload
+    server = HTTPServer(("127.0.0.1", 0), _BytesHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    port = server.server_address[1]
+    return server, f"http://127.0.0.1:{port}/journal_intelligence.db"
+
+
+@pytest.mark.parametrize("local_version,remote_version,expected", [
+    ("2026.01.01", "2026.09.02", True),   # remote newer
+    ("2026.09.02", "2026.09.02", False),  # same version
+    ("2026.09.02", "2026.01.01", False),  # remote older (shouldn't happen server-side, but must not "downgrade")
+    ("0000.00.00", "2026.01.01", True),   # no local version on disk yet -- always outdated
+    ("2025.12.31", "2026.01.01", True),   # crosses a year boundary -- string comparison alone would still get
+                                           # this right by luck (zero-padded), the real reason _parse_version
+                                           # compares tuples of ints instead
+])
+def test_version_comparison(isolated_paths, monkeypatch, local_version, remote_version, expected):
+    if local_version != "0000.00.00":
+        dataset_updater.VERSION_FILE_PATH.write_text(local_version, encoding="utf-8")
+    # isolated_paths' tmp_path has no .db_version file when local_version
+    # is the "0000.00.00" sentinel -- get_local_version()'s own
+    # documented fallback for that case, not something this test fakes.
+
+    monkeypatch.setattr(
+        dataset_updater, "check_remote_version", lambda: {"version": remote_version}
+    )
+
+    assert dataset_updater.is_update_available() is expected
+
+
+def test_update_check_network_failure(isolated_paths, monkeypatch, network_blocked):
+    monkeypatch.setenv(dataset_updater.VERSION_JSON_URL_ENV_VAR, "https://example.invalid/version.json")
+    result = dataset_updater.check_remote_version()
+    assert result is None
+
+
+def test_update_check_no_url_configured(isolated_paths, monkeypatch):
+    """No SCILENE_DATASET_VERSION_URL at all (the default state, e.g.
+    a plain web deploy) must also return None -- and, unlike the
+    network_blocked case above, without attempting any request."""
+    monkeypatch.delenv(dataset_updater.VERSION_JSON_URL_ENV_VAR, raising=False)
+    assert dataset_updater.check_remote_version() is None
+
+
+def test_sha256_verification(isolated_paths):
+    payload = b"not a real sqlite database, just test bytes"
+    server, url = _serve(payload)
+    try:
+        wrong_sha256 = "0" * 64
+        result = dataset_updater.download_update(url, wrong_sha256, size_bytes=len(payload))
+        assert result is False
+        assert not dataset_updater.DB_NEW_PATH.exists(), "a checksum-mismatched download must not be left on disk"
+    finally:
+        server.shutdown()
+
+
+def test_download_update_succeeds_with_correct_sha256(isolated_paths):
+    payload = b"not a real sqlite database, just test bytes"
+    correct_sha256 = hashlib.sha256(payload).hexdigest()
+    server, url = _serve(payload)
+    try:
+        result = dataset_updater.download_update(url, correct_sha256, size_bytes=len(payload))
+        assert result is True
+        assert dataset_updater.DB_NEW_PATH.read_bytes() == payload
+    finally:
+        server.shutdown()
+
+
+def test_apply_update_swaps_file_and_records_version(isolated_paths):
+    dataset_updater.DB_PATH.write_bytes(b"old database contents")
+    dataset_updater.DB_NEW_PATH.write_bytes(b"new database contents")
+    dataset_updater.stage_pending_version("2026.09.02")
+
+    assert dataset_updater.apply_update() is True
+    assert dataset_updater.DB_PATH.read_bytes() == b"new database contents"
+    assert not dataset_updater.DB_NEW_PATH.exists()
+    assert dataset_updater.get_local_version() == "2026.09.02"
+
+
+def test_apply_update_deferred_while_search_lock_held(isolated_paths):
+    """
+    The actual mechanism web/routers/search.py's
+    _execute_unified_search() relies on: apply_update() must never
+    swap the live DB out from under a real search. Acquiring
+    dataset_updater.SEARCH_LOCK directly here (the same lock object
+    the search path uses) simulates "a search is in progress" without
+    needing to orchestrate a real concurrent HTTP request.
+    """
+    dataset_updater.DB_PATH.write_bytes(b"old database contents")
+    dataset_updater.DB_NEW_PATH.write_bytes(b"new database contents")
+    dataset_updater.stage_pending_version("2026.09.02")
+
+    dataset_updater.SEARCH_LOCK.acquire()
+    try:
+        assert dataset_updater.apply_update() is False
+        assert dataset_updater.DB_PATH.read_bytes() == b"old database contents", "must not swap while locked"
+        assert dataset_updater.DB_NEW_PATH.exists(), "the verified download must survive a deferred apply"
+    finally:
+        dataset_updater.SEARCH_LOCK.release()
+
+    # Lock free again now -- the retry this simulates would succeed.
+    assert dataset_updater.apply_update() is True
+    assert dataset_updater.DB_PATH.read_bytes() == b"new database contents"
+
+
+def test_apply_update_with_retry_gives_up_after_max_attempts(isolated_paths):
+    """
+    apply_update_with_retry()'s actual retry loop (#153: "retry after
+    30 seconds"), with sleep_fn stubbed out so this doesn't really
+    wait -- proves the retry/give-up logic itself, not real timing.
+    """
+    dataset_updater.DB_PATH.write_bytes(b"old database contents")
+    dataset_updater.DB_NEW_PATH.write_bytes(b"new database contents")
+    dataset_updater.stage_pending_version("2026.09.02")
+
+    sleep_calls = []
+    dataset_updater.SEARCH_LOCK.acquire()
+    try:
+        result = dataset_updater.apply_update_with_retry(
+            max_attempts=3, retry_seconds=30, sleep_fn=sleep_calls.append,
+        )
+    finally:
+        dataset_updater.SEARCH_LOCK.release()
+
+    assert result is False
+    assert sleep_calls == [30, 30]  # slept between attempts 1->2 and 2->3, not after the last one
+    assert dataset_updater.DB_PATH.read_bytes() == b"old database contents", "must still not have swapped"

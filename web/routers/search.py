@@ -29,6 +29,7 @@ from fastapi.responses import StreamingResponse, HTMLResponse
 
 from services import search_service, semantic_search
 from services.app_info import APP_VERSION
+from services.dataset_updater import SEARCH_LOCK
 from services.discipline_detection import detect_disciplines
 from services.query_translator import translate_query, ArabicNotSupportedOnline
 from services.sls_format import serialize_sls, parse_sls_import, InvalidSlsFile
@@ -340,6 +341,27 @@ def _execute_semantic_search(session, query_text, display_label, languages=None,
 def _execute_unified_search(session, locale, abstract, concepts, strategy_label, resolved_languages,
                              free_only, min_budget, max_budget, indexing, quartiles,
                              sinta_levels, max_review_weeks, resolved_strategy, categories=None):
+    """
+    Thin wrapper around _execute_unified_search_locked() that holds
+    services.dataset_updater.SEARCH_LOCK for the duration of the real
+    search below (#153) -- the actual coordination point a background
+    dataset update's apply_update() checks via a non-blocking acquire
+    before it's willing to swap the live DB file. A `with` block here
+    (rather than acquiring/releasing by hand around the wrapped
+    function's several early returns) guarantees the lock releases
+    even if something inside raises.
+    """
+    with SEARCH_LOCK:
+        return _execute_unified_search_locked(
+            session, locale, abstract, concepts, strategy_label, resolved_languages,
+            free_only, min_budget, max_budget, indexing, quartiles,
+            sinta_levels, max_review_weeks, resolved_strategy, categories=categories,
+        )
+
+
+def _execute_unified_search_locked(session, locale, abstract, concepts, strategy_label, resolved_languages,
+                                    free_only, min_budget, max_budget, indexing, quartiles,
+                                    sinta_levels, max_review_weeks, resolved_strategy, categories=None):
     """
     The one search action both run_search() and refine_with_disciplines()
     (#102) call -- tries AI Semantic Search first; automatically falls

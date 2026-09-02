@@ -13,7 +13,11 @@ file at all.
 """
 
 import argparse
+import logging
+import os
 import sys
+import threading
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 # Make the project root importable (services/, models/, etc.) regardless
@@ -40,12 +44,83 @@ from web.routers import (
 )
 from web.session_store import get_session
 
+logger = logging.getLogger(__name__)
+
 settings = get_settings()
+
+
+def _run_dataset_update_check():
+    """
+    Runs in a daemon thread started by lifespan() below, never on the
+    request-handling path -- #153. Two separate check_remote_version()
+    calls (one inside is_update_available(), one direct) rather than
+    one: is_update_available() only returns a bool per its own spec,
+    and this needs the actual db_url/sha256/size_bytes to download,
+    so there's no way to get both without either two GETs or changing
+    that function's return type. version.json is tiny (a few hundred
+    bytes) against a 3s timeout each, so the redundant fetch costs
+    little.
+    """
+    from services import dataset_updater
+
+    logger.info("Checking for dataset updates...")
+
+    if not dataset_updater.is_update_available():
+        logger.info("Dataset is up to date (local version %s)", dataset_updater.get_local_version())
+        return
+
+    remote = dataset_updater.check_remote_version()
+    if not remote:
+        # Reachable during is_update_available()'s own check a moment
+        # ago, unreachable now (network dropped, host started
+        # rejecting) -- same "give up for this launch" response as
+        # never having been reachable in the first place.
+        logger.info("Dataset update was available a moment ago but version.json is unreachable now")
+        return
+
+    logger.info(
+        "Dataset update available: local=%s remote=%s",
+        dataset_updater.get_local_version(), remote["version"],
+    )
+
+    downloaded = dataset_updater.download_update(
+        remote["db_url"], remote["sha256"], remote.get("size_bytes")
+    )
+    if not downloaded:
+        logger.warning("Dataset download failed or failed checksum verification; keeping current version")
+        return
+
+    dataset_updater.stage_pending_version(remote["version"])
+
+    if dataset_updater.apply_update_with_retry():
+        logger.info("Dataset updated to version %s", remote["version"])
+    else:
+        logger.warning(
+            "Dataset update for version %s downloaded but could not be applied this launch "
+            "(a search kept SEARCH_LOCK held through every retry) -- will try again next launch",
+            remote["version"],
+        )
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Desktop only (#153) -- on Heroku/web, the DB is refreshed by
+    # scripts/publish_dataset_update.py + a manual redeploy, exactly
+    # like today; SCILENE_RUNTIME unset (the safe default -- see
+    # services/query_translator.py's identical reasoning for Arabic)
+    # means "assume web" here too.
+    if os.environ.get("SCILENE_RUNTIME") == "desktop":
+        threading.Thread(
+            target=_run_dataset_update_check, daemon=True, name="dataset-update-check",
+        ).start()
+    yield
+
 
 app = FastAPI(
     title=APP_NAME,
     version=APP_VERSION,
     debug=settings.debug,
+    lifespan=lifespan,
 )
 
 app.state.limiter = limiter
