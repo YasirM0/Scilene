@@ -27,6 +27,7 @@ something to hide -- still a large improvement over the alternative
 """
 
 import json
+import os
 import re
 from pathlib import Path
 
@@ -138,9 +139,19 @@ def translate_query(text: str) -> tuple[str, str]:
         return _dict_translate_id(text), "id"
 
     if lang == "ar":
-        translated = _argos_translate_ar_en(text)
-        if translated is not None:
-            return translated, "ar"
+        # SCILENE_RUNTIME is a hint, not the primary signal -- self-
+        # detection above (whether Argos is actually importable and
+        # its ar->en package installed) stays authoritative whenever
+        # the hint is absent or unrecognized, exactly the old
+        # behavior. "web" is the one value that overrides self-
+        # detection: it forces the block even if Argos happens to be
+        # present in the process (e.g. a misconfigured deploy image),
+        # since Heroku's RAM budget is the actual reason Arabic is
+        # blocked there, not merely package absence.
+        if os.environ.get("SCILENE_RUNTIME") != "web":
+            translated = _argos_translate_ar_en(text)
+            if translated is not None:
+                return translated, "ar"
         raise ArabicNotSupportedOnline(ARABIC_DESKTOP_MESSAGE)
 
     # English or anything else: pass through

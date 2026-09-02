@@ -2,13 +2,17 @@
   "name": "journal-intelligence-web",
   "private": true,
   "version": "0.2.0",
-  "description": "Frontend build tooling (Tailwind CSS) for the Journal Intelligence FastAPI web app. Not a Node.js runtime dependency of the app itself -- only used to build web/static/css/output.css and to vendor htmx into web/static/js/.",
+  "description": "Frontend build tooling (Tailwind CSS) for the Journal Intelligence FastAPI web app, plus the Tauri CLI for the desktop shell (#152). Not a Node.js runtime dependency of the app itself -- only used to build web/static/css/output.css, vendor htmx into web/static/js/, and drive `tauri dev`/`tauri build` against src-tauri/.",
   "scripts": {
     "build:css": "tailwindcss -i ./web/static/src/input.css -o ./web/static/css/output.css --minify",
-    "watch:css": "tailwindcss -i ./web/static/src/input.css -o ./web/static/css/output.css --watch"
+    "watch:css": "tailwindcss -i ./web/static/src/input.css -o ./web/static/css/output.css --watch",
+    "tauri": "tauri",
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build"
   },
   "devDependencies": {
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "@tauri-apps/cli": "^2"
   },
   "dependencies": {
     "htmx.org": "^2.0.4"

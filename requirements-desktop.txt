@@ -1,0 +1,12 @@
+# Desktop-only dependencies -- not used in the web/Heroku build.
+# argostranslate adds 94MB (the ar->en Argos package, bundled in the
+# installer) for real Arabic translation (#150, #152) -- see
+# services/query_translator.py. ctranslate2's RAM cost (Argos's
+# inference backend) is acceptable on desktop; it's exactly what stays
+# blocked on the 512MB-constrained Heroku web dyno, per requirements.txt.
+-r requirements.txt
+
+argostranslate>=1.9.0
+ctranslate2>=4.0.0
+sentencepiece>=0.2.0
+stanza>=1.9.0

@@ -12,6 +12,7 @@ future public API could import that same core without touching this
 file at all.
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -49,6 +50,17 @@ app = FastAPI(
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.get("/health")
+async def health():
+    """
+    Liveness probe for the Tauri shell (#152): the sidecar spawns
+    uvicorn on a random port and polls this before showing the
+    webview, since the process existing doesn't mean it's accepting
+    requests yet.
+    """
+    return {"status": "ok", "version": APP_VERSION}
 
 
 @app.middleware("http")
@@ -129,11 +141,20 @@ async def cache_versioned_static(request: Request, call_next):
     return response
 
 
-app.mount(
-    "/static",
-    StaticFiles(directory=Path(__file__).resolve().parent / "static"),
-    name="static",
-)
+if getattr(sys, "frozen", False):
+    # PyInstaller's onefile bootloader places the __main__ entry script
+    # (this file) at the bundle root rather than preserving its
+    # original web/ path, unlike normally-imported modules (e.g.
+    # web/templating.py's identical Path(__file__)... pattern), which
+    # DO keep their real path under sys._MEIPASS -- so only this one
+    # __file__-relative lookup needs a frozen-mode branch. Verified by
+    # running the frozen binary: "Directory '/tmp/_MEIxxxx/static' does
+    # not exist" (looked one level too shallow) before this existed.
+    STATIC_DIR = Path(sys._MEIPASS) / "web" / "static"
+else:
+    STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 app.include_router(home.router)
 app.include_router(pages.router)
@@ -143,3 +164,25 @@ app.include_router(enrichment.router)
 app.include_router(research_idea.router)
 app.include_router(compare.router)
 app.include_router(locale_router.router)
+
+
+if __name__ == "__main__":
+    # Only reached when the Tauri sidecar (#152) launches the frozen
+    # binary directly (`scilene-server --port N`) -- the web/Heroku
+    # deploy always runs `uvicorn web.main:app` instead (see Procfile),
+    # never this file as a script. --port is required so the sidecar
+    # can bind whatever free port it picked before spawning.
+    import uvicorn
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--host", type=str, default="127.0.0.1")
+    args = parser.parse_args()
+    # `app` directly, NOT the "web.main:app" string -- the string form
+    # makes uvicorn re-import "web.main" by dotted path, which only
+    # exists as __main__ inside the frozen PyInstaller bundle (nothing
+    # else imports web.main as a submodule, unlike web.config/web.routers/
+    # etc), so it fails with "Could not import module 'web.main'" the
+    # instant the sidecar actually starts. The string form only matters
+    # for uvicorn's reload=True/multi-worker modes, neither used here.
+    uvicorn.run(app, host=args.host, port=args.port, reload=False)
