@@ -154,6 +154,40 @@ async def health():
     return {"status": "ok", "version": APP_VERSION}
 
 
+# #151 -- native OS chrome (window title, menu labels) has no
+# per-request locale of its own the way a page render does
+# (request.state.locale, set below): there's exactly one native window
+# for the whole desktop process, so this reflects the PERSISTED
+# language pref (services.prefs, desktop-only), not any particular
+# browser session's cookie. Distinct from the window-title strings a
+# page itself might show -- this is purely for src-tauri/src/lib.rs to
+# call once after the webview is ready.
+WINDOW_TITLES = {
+    "en": "Scilene — Journal Intelligence",
+    "ar": "سيلين — ذكاء المجلات",
+    "id": "Scilene — Kecerdasan Jurnal",
+}
+RTL_LANGUAGES = {"ar"}
+
+
+@app.get("/api/window-title")
+async def window_title():
+    language = "en"
+    if os.environ.get("SCILENE_RUNTIME") == "desktop":
+        from services.prefs import get_pref
+
+        language = get_pref("language", "en")
+
+    if language not in WINDOW_TITLES:
+        language = "en"
+
+    return {
+        "title": WINDOW_TITLES[language],
+        "rtl": language in RTL_LANGUAGES,
+        "language": language,
+    }
+
+
 @app.middleware("http")
 async def resolve_locale(request: Request, call_next):
     """

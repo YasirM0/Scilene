@@ -567,3 +567,31 @@ def test_language_setting_ar_blocked_on_web(client, isolated_prefs, monkeypatch)
     assert response.status_code in (400, 303, 307)
 
     assert prefs.get_pref("language") == "en", "must not have saved 'ar' while blocked"
+
+
+def test_window_title_endpoint(client, isolated_prefs, monkeypatch):
+    """
+    #151 -- what src-tauri/src/lib.rs fetches once after the webview
+    is ready to set the native window title. Uses the real
+    prefs.set_pref()/get_pref() roundtrip (isolated_prefs redirects
+    storage to tmp_path) rather than monkeypatching get_pref directly
+    -- exercises the same code path GET /api/window-title actually
+    runs, not a stand-in for it.
+    """
+    monkeypatch.setenv("SCILENE_RUNTIME", "desktop")
+
+    response = client.get("/api/window-title")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["title"] == "Scilene — Journal Intelligence"
+    assert body["rtl"] is False
+
+    prefs.set_pref("language", "ar")
+    body = client.get("/api/window-title").json()
+    assert body["rtl"] is True
+    assert "سيلين" in body["title"]
+
+    prefs.set_pref("language", "id")
+    body = client.get("/api/window-title").json()
+    assert "Kecerdasan" in body["title"]
+    assert body["rtl"] is False
