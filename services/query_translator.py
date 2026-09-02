@@ -31,6 +31,25 @@ import os
 import re
 from pathlib import Path
 
+# Must run before argostranslate (or anything that imports it) is ever
+# imported anywhere in this process -- argostranslate.settings reads
+# ARGOS_CHUNK_TYPE once, at import time, to decide which sentence-
+# boundary-detection engine to use before translating. Left at its
+# default, argostranslate picks StanzaSentencizer for the ar->en pair,
+# and stanza.Pipeline() unconditionally checks
+# raw.githubusercontent.com for a fresher resources manifest on EVERY
+# call, even though the actual model files are already downloaded and
+# cached locally (#154 -- found by tests/test_offline.py's hard
+# network-block fixture: a real, genuinely-offline machine got
+# ArabicNotSupportedOnline raised here too, the exact web-only
+# limitation this desktop path exists to not have, because that
+# manifest check raised instead of the translation actually running).
+# MINISBD forces argostranslate's own self-contained ONNX sentence
+# splitter instead, with no such check -- see
+# docs/DESKTOP_BUILD.md's Arabic packaging note for the one-time local
+# model file this also requires bundling.
+os.environ.setdefault("ARGOS_CHUNK_TYPE", "MINISBD")
+
 from langdetect import detect, DetectorFactory, LangDetectException
 
 DetectorFactory.seed = 0  # langdetect is non-deterministic by default without this

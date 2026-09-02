@@ -46,6 +46,32 @@ merely-large one — CPU-only `torch` is still ~770MB on disk (it's the
 single biggest thing in the frozen binary by far; ONNX retrieval model
 + SQLite DB together are under 150MB).
 
+**Cache the MiniSBD "ar" sentence-boundary model too, not just the
+Argos ar→en language package.** `services/query_translator.py` sets
+`ARGOS_CHUNK_TYPE=MINISBD` before argostranslate is ever imported (#154)
+— left at its default, argostranslate's sentence-splitting step for
+Arabic uses `stanza.Pipeline()`, which unconditionally checks
+`raw.githubusercontent.com` for a resources manifest on every call,
+even when the translation model itself is already fully cached. A
+genuinely offline machine hit exactly that: Arabic silently fell back
+to the same `ArabicNotSupportedOnline` message that's supposed to be a
+web-only limitation, found by `tests/test_offline.py`'s hard
+network-block fixture. MiniSBD is argostranslate's own self-contained
+ONNX sentence splitter and has no such check — but it downloads its
+model file on first use exactly like the Argos package did, so that
+also needs a one-time, online, pre-build step:
+
+```bash
+source .desktop-build-venv/bin/activate
+ARGOS_CHUNK_TYPE=MINISBD python3 -c "import argostranslate.sbd as sbd; sbd.minisbd_models.get_model_file('ar')"
+```
+
+This downloads to `argostranslate.settings.data_dir / "minisbd" / "ar.onnx"`
+(inside whatever `XDG_DATA_HOME`/platform data dir Argos resolves to in
+the build environment) — bundle that file the same way the Argos
+`ar_en` package itself gets bundled, or the frozen binary will hit the
+same silent fallback on a genuinely offline install.
+
 ---
 
 ## Step by step
