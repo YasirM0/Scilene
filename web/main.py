@@ -40,13 +40,23 @@ from web.dependencies import SESSION_COOKIE_NAME
 from web.i18n import DEFAULT_LOCALE
 from web.routers import (
     home, pages, search, interpreter, enrichment,
-    research_idea, compare, locale as locale_router,
+    research_idea, compare, locale as locale_router, settings as settings_router,
 )
 from web.session_store import get_session
 
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
+
+# #155 -- what resolve_locale() below falls back to for a brand-new
+# session (no cookie yet). A plain module-level variable, not the
+# DEFAULT_LOCALE import above directly: `from web.i18n import
+# DEFAULT_LOCALE` binds this module's own name to whatever
+# DEFAULT_LOCALE's value was AT IMPORT TIME -- later reassigning
+# web.i18n.DEFAULT_LOCALE itself wouldn't change what this file's own
+# `DEFAULT_LOCALE` name refers to. lifespan() reassigns THIS variable
+# instead, once, at desktop startup, from the language pref.
+_startup_default_locale = DEFAULT_LOCALE
 
 
 def _run_dataset_update_check():
@@ -92,24 +102,30 @@ def _run_dataset_update_check():
 
     dataset_updater.stage_pending_version(remote["version"])
 
-    if dataset_updater.apply_update_with_retry():
+    # #155 -- whether this actually applies now or just gets flagged
+    # UPDATE_PENDING for the user to confirm via /settings depends on
+    # the dataset_auto_update pref; maybe_apply_update() owns that
+    # decision (and the logging for each branch) so it isn't
+    # duplicated between here and POST /settings/apply-update's manual
+    # trigger path.
+    if dataset_updater.maybe_apply_update(remote["version"]):
         logger.info("Dataset updated to version %s", remote["version"])
-    else:
-        logger.warning(
-            "Dataset update for version %s downloaded but could not be applied this launch "
-            "(a search kept SEARCH_LOCK held through every retry) -- will try again next launch",
-            remote["version"],
-        )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Desktop only (#153) -- on Heroku/web, the DB is refreshed by
+    # Desktop only (#153/#155) -- on Heroku/web, the DB is refreshed by
     # scripts/publish_dataset_update.py + a manual redeploy, exactly
-    # like today; SCILENE_RUNTIME unset (the safe default -- see
+    # like today, and there's no persistent per-install language pref
+    # to read at all; SCILENE_RUNTIME unset (the safe default -- see
     # services/query_translator.py's identical reasoning for Arabic)
     # means "assume web" here too.
     if os.environ.get("SCILENE_RUNTIME") == "desktop":
+        global _startup_default_locale
+        from services.prefs import get_pref
+
+        _startup_default_locale = get_pref("language", DEFAULT_LOCALE)
+
         threading.Thread(
             target=_run_dataset_update_check, daemon=True, name="dataset-update-check",
         ).start()
@@ -150,7 +166,30 @@ async def resolve_locale(request: Request, call_next):
     (that would give every anonymous pageview a side effect).
     """
     session_id = request.cookies.get(SESSION_COOKIE_NAME)
-    request.state.locale = get_session(session_id).get("locale", DEFAULT_LOCALE) if session_id else DEFAULT_LOCALE
+    request.state.locale = (
+        get_session(session_id).get("locale", _startup_default_locale) if session_id else _startup_default_locale
+    )
+    return await call_next(request)
+
+
+@app.middleware("http")
+async def resolve_theme(request: Request, call_next):
+    """
+    Makes request.state.theme available to base.html (#155) -- None on
+    web (services.prefs needs platformdirs, not installed there; the
+    existing localStorage + inline-script mechanism in base.html/
+    nav.html is untouched and keeps working exactly as before). Read
+    fresh per-request, not cached at startup like _startup_default_locale
+    above: unlike the language default (only relevant once, for a
+    brand-new session), theme can change mid-run via POST
+    /settings/theme and every subsequent page load must reflect that
+    immediately, prefs.json read cost is negligible either way.
+    """
+    request.state.theme = None
+    if os.environ.get("SCILENE_RUNTIME") == "desktop":
+        from services.prefs import get_pref
+
+        request.state.theme = get_pref("theme", "light")
     return await call_next(request)
 
 
@@ -239,6 +278,7 @@ app.include_router(enrichment.router)
 app.include_router(research_idea.router)
 app.include_router(compare.router)
 app.include_router(locale_router.router)
+app.include_router(settings_router.router)
 
 
 if __name__ == "__main__":

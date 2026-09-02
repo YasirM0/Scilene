@@ -7,6 +7,7 @@ its own Jinja2Templates(...) — that would mean re-registering globals
 instance, one source of truth, imported everywhere.
 """
 
+import os
 from pathlib import Path
 
 from fastapi.templating import Jinja2Templates
@@ -46,6 +47,16 @@ templates.env.globals["supported_locales"] = SUPPORTED_LOCALES
 templates.env.globals["confidence_colors"] = CONFIDENCE_COLORS
 templates.env.globals["confidence_stars"] = CONFIDENCE_STARS
 templates.env.globals["confidence_star_colors"] = CONFIDENCE_STAR_COLORS
+
+# #155 -- safe as a plain global (unlike theme, read fresh per-request
+# via request.state.theme in web/main.py's resolve_theme middleware):
+# SCILENE_RUNTIME is an environment variable fixed for this process's
+# entire lifetime, never changed by anything after startup, so
+# reading it once here can never go stale the way a cached prefs.json
+# value could. Gates the settings gear icon (nav.html) and the
+# Arabic radio's disabled state (settings.html) -- both genuinely
+# don't apply on a stateless web deployment.
+templates.env.globals["is_desktop"] = os.environ.get("SCILENE_RUNTIME") == "desktop"
 
 # Defined once, here, so every page's nav bar (via partials/nav.html)
 # stays in sync automatically — a new page just needs an entry added

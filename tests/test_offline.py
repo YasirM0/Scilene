@@ -37,7 +37,7 @@ from fastapi.testclient import TestClient
 from web.main import app
 from web.dependencies import SESSION_COOKIE_NAME
 from web.session_store import get_session
-from services import dataset_updater, online_enrichment
+from services import dataset_updater, online_enrichment, prefs
 from services.ai_provider import CloudAIProvider
 from services.query_translator import (
     translate_query,
@@ -497,3 +497,73 @@ def test_apply_update_with_retry_gives_up_after_max_attempts(isolated_paths):
     assert result is False
     assert sleep_calls == [30, 30]  # slept between attempts 1->2 and 2->3, not after the last one
     assert dataset_updater.DB_PATH.read_bytes() == b"old database contents", "must still not have swapped"
+
+
+# ---------------------------------------------------------------------
+# Settings panel (#155) -- prefs.json storage and the /settings routes.
+#
+# isolated_prefs redirects platformdirs.user_config_dir() to tmp_path
+# for the duration of each test -- services/prefs.py imports
+# platformdirs lazily (inside _prefs_path(), not at module level, so
+# that importing services.prefs/web.routers.settings stays safe on a
+# machine without requirements-desktop.txt installed), and every call
+# below re-resolves the path through that same patched function, so
+# nothing here ever touches the real ~/.config/scilene/prefs.json.
+# ---------------------------------------------------------------------
+
+import platformdirs
+
+
+@pytest.fixture
+def isolated_prefs(tmp_path, monkeypatch):
+    monkeypatch.setattr(platformdirs, "user_config_dir", lambda *a, **kw: str(tmp_path))
+    return tmp_path
+
+
+def test_prefs_defaults(isolated_prefs):
+    assert prefs.load_prefs() == {
+        "language": "en",
+        "dataset_auto_update": True,
+        "theme": "light",
+    }
+
+
+def test_prefs_roundtrip(isolated_prefs):
+    prefs.set_pref("theme", "dark")
+    assert prefs.get_pref("theme") == "dark"
+
+    # The file was actually written, not just cached in memory -- a
+    # completely fresh load_prefs() call (no shared state with
+    # set_pref() above beyond the file on disk) still sees it.
+    reloaded = prefs.load_prefs()
+    assert reloaded["theme"] == "dark"
+    assert reloaded["language"] == "en"  # untouched defaults survive alongside the one changed key
+
+
+def test_prefs_corrupt_file(isolated_prefs):
+    prefs_path = isolated_prefs / "prefs.json"
+    prefs_path.parent.mkdir(parents=True, exist_ok=True)
+    prefs_path.write_text("{not valid json", encoding="utf-8")
+
+    assert prefs.load_prefs() == {
+        "language": "en",
+        "dataset_auto_update": True,
+        "theme": "light",
+    }
+
+
+def test_settings_endpoint(client, isolated_prefs):
+    response = client.get("/settings")
+    assert response.status_code == 200
+    assert "Language" in response.text
+    assert "Appearance" in response.text
+
+
+def test_language_setting_ar_blocked_on_web(client, isolated_prefs, monkeypatch):
+    monkeypatch.setenv("SCILENE_RUNTIME", "web")
+    prefs.set_pref("language", "en")
+
+    response = client.post("/settings/language", data={"language": "ar"})
+    assert response.status_code in (400, 303, 307)
+
+    assert prefs.get_pref("language") == "en", "must not have saved 'ar' while blocked"

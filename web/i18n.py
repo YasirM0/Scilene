@@ -855,6 +855,29 @@ _STRINGS = {
         "ar": "التبديل بين المظهر الداكن والفاتح",
         "id": "Beralih antara tampilan gelap dan terang",
     },
+    "nav.settings": {"en": "Settings", "ar": "الإعدادات", "id": "Pengaturan"},
+
+    # -- Settings panel (#155) ------------------------------------------------
+    "settings.language.title": {"en": "Language", "ar": "اللغة", "id": "Bahasa"},
+    "settings.language.arabic_desktop_note": {
+        "en": "Arabic search is available in the Scilene desktop app",
+        "ar": "البحث باللغة العربية متاح في تطبيق Scilene لسطح المكتب",
+        "id": "Pencarian berbahasa Arab tersedia di aplikasi desktop Scilene",
+    },
+    "settings.appearance.title": {"en": "Appearance", "ar": "المظهر", "id": "Tampilan"},
+    "settings.appearance.light": {"en": "Light", "ar": "فاتح", "id": "Terang"},
+    "settings.appearance.dark": {"en": "Dark", "ar": "داكن", "id": "Gelap"},
+    "settings.dataset.title": {"en": "Dataset", "ar": "قاعدة البيانات", "id": "Kumpulan Data"},
+    "settings.dataset.version_label": {
+        "en": "Dataset: {version}", "ar": "قاعدة البيانات: {version}", "id": "Kumpulan Data: {version}",
+    },
+    "settings.dataset.auto_update": {"en": "Auto-update", "ar": "تحديث تلقائي", "id": "Perbarui otomatis"},
+    "settings.dataset.ask_first": {"en": "Ask me first", "ar": "اسألني أولاً", "id": "Tanya saya dulu"},
+    "settings.dataset.update_available": {
+        "en": "Update available: {version}", "ar": "يتوفر تحديث: {version}", "id": "Pembaruan tersedia: {version}",
+    },
+    "settings.dataset.apply_update": {"en": "Apply update", "ar": "تطبيق التحديث", "id": "Terapkan pembaruan"},
+    "settings.save": {"en": "Save", "ar": "حفظ", "id": "Simpan"},
     "home.title": {
         "en": "{app_name} — Find the right journal for your research",
         "ar": "{app_name} — اعثر على المجلة المناسبة لبحثك",

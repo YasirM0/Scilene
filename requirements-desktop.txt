@@ -10,3 +10,8 @@ argostranslate>=1.9.0
 ctranslate2>=4.0.0
 sentencepiece>=0.2.0
 stanza>=1.9.0
+
+# Settings panel (#155) -- resolves the OS-correct prefs.json location
+# (~/.config/scilene on Linux/Mac, %APPDATA%/scilene on Windows). Not
+# needed on web: nothing persists locally on a stateless Heroku dyno.
+platformdirs>=4.0.0

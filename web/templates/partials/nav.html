@@ -101,6 +101,22 @@
                 <span class="hidden dark:inline" aria-hidden="true">☀️</span>
             </button>
 
+            {#
+                #155 -- desktop only (is_desktop, a fixed process-
+                lifetime global, not a per-request one -- see
+                web/templating.py): language/theme/dataset-update
+                prefs the settings page controls only exist there,
+                nothing on web reads or writes prefs.json at all.
+            #}
+            {% if is_desktop %}
+            <a
+                href="/settings"
+                aria-label="{{ t('nav.settings', request.state.locale) }}"
+                class="px-2 py-1.5 rounded-md text-sm text-horizon-50 hover:text-white hover:bg-navy-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition shrink-0
+                    {% if request.url.path == '/settings' %}text-white bg-navy-700{% endif %}"
+            >⚙️</a>
+            {% endif %}
+
         </div>
     </div>
 </nav>

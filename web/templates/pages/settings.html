@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t("nav.settings", request.state.locale) }} — {{ app.name }}{% endblock %}
+
+{% block content %}
+
+{% set locale = request.state.locale %}
+
+<h1 class="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-6">{{ t("nav.settings", locale) }}</h1>
+
+<div class="space-y-4 max-w-xl">
+
+    {#
+        LANGUAGE card -- a real <input type="radio"> group (not
+        per-option self-submitting buttons like nav.html's language
+        dropdown) since there's one persisted choice to pick among 3
+        and one explicit Save, matching #155's own "Radio group ...
+        Form POSTs to /settings/language" wording. Reflects
+        prefs.language (the persisted pref this page manages), not
+        request.state.locale (this session's current display language,
+        which the nav bar dropdown can change independently without
+        touching this preference at all).
+    #}
+    <section class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+        <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-3">{{ t("settings.language.title", locale) }}</h2>
+        <form method="post" action="/settings/language" class="space-y-2">
+            {% for code, meta in supported_locales.items() %}
+            <label class="flex items-center gap-2 text-sm {% if code == 'ar' and not is_desktop %}text-gray-400 dark:text-gray-500{% else %}text-gray-700 dark:text-gray-300{% endif %}">
+                <input
+                    type="radio"
+                    name="language"
+                    value="{{ code }}"
+                    {% if prefs.language == code %}checked{% endif %}
+                    {% if code == 'ar' and not is_desktop %}disabled{% endif %}
+                    class="text-navy-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500"
+                >
+                {{ meta.label }}
+            </label>
+            {% if code == 'ar' and not is_desktop %}
+            <p class="text-xs text-gray-400 dark:text-gray-500 ml-6">{{ t("settings.language.arabic_desktop_note", locale) }}</p>
+            {% endif %}
+            {% endfor %}
+            <button
+                type="submit"
+                class="mt-2 px-3 py-1.5 rounded-md text-sm font-medium bg-navy-600 text-white hover:bg-navy-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500"
+            >{{ t("settings.save", locale) }}</button>
+        </form>
+    </section>
+
+    {#
+        APPEARANCE card -- two self-submitting buttons (#155's own
+        "Two-button toggle"), each its own <form>, matching the
+        one-click-equals-one-action feel of the nav bar's existing
+        theme-toggle button rather than adding a separate Save step.
+    #}
+    <section class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+        <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-3">{{ t("settings.appearance.title", locale) }}</h2>
+        <div class="flex gap-2">
+            <form method="post" action="/settings/theme">
+                <input type="hidden" name="theme" value="light">
+                <button
+                    type="submit"
+                    class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500
+                        {% if prefs.theme == 'light' %}bg-navy-600 text-white{% else %}bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600{% endif %}"
+                >{{ t("settings.appearance.light", locale) }}</button>
+            </form>
+            <form method="post" action="/settings/theme">
+                <input type="hidden" name="theme" value="dark">
+                <button
+                    type="submit"
+                    class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500
+                        {% if prefs.theme == 'dark' %}bg-navy-600 text-white{% else %}bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600{% endif %}"
+                >{{ t("settings.appearance.dark", locale) }}</button>
+            </form>
+        </div>
+    </section>
+
+    {#
+        DATASET card -- same self-submitting two-button pattern for
+        the auto-update/ask-first toggle; the [Apply update] button
+        only appears when update_pending (dataset_updater.UPDATE_PENDING,
+        read fresh by GET /settings) is true.
+    #}
+    <section class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+        <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-3">{{ t("settings.dataset.title", locale) }}</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            {{ t("settings.dataset.version_label", locale, version=current_version) }}
+        </p>
+
+        <div class="flex gap-2 mb-3">
+            <form method="post" action="/settings/auto-update">
+                <input type="hidden" name="enabled" value="true">
+                <button
+                    type="submit"
+                    class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500
+                        {% if prefs.dataset_auto_update %}bg-navy-600 text-white{% else %}bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600{% endif %}"
+                >{{ t("settings.dataset.auto_update", locale) }}</button>
+            </form>
+            <form method="post" action="/settings/auto-update">
+                <input type="hidden" name="enabled" value="false">
+                <button
+                    type="submit"
+                    class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500
+                        {% if not prefs.dataset_auto_update %}bg-navy-600 text-white{% else %}bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600{% endif %}"
+                >{{ t("settings.dataset.ask_first", locale) }}</button>
+            </form>
+        </div>
+
+        {% if update_pending %}
+        <div class="flex items-center justify-between gap-3 rounded-md bg-horizon-50 dark:bg-navy-900 border border-horizon-200 dark:border-navy-700 px-3 py-2">
+            <p class="text-sm text-navy-700 dark:text-horizon-50">
+                {{ t("settings.dataset.update_available", locale, version=pending_version) }}
+            </p>
+            {#
+                htmx, not a plain form: POST /settings/apply-update
+                returns a JSON body (#155's own spec) plus an
+                HX-Redirect header back to /settings -- a plain form
+                here would navigate the browser to that raw JSON
+                instead. hx-swap="none" is defense in depth (htmx
+                already redirects on HX-Redirect without attempting a
+                swap), not load-bearing on its own.
+            #}
+            <form hx-post="/settings/apply-update" hx-swap="none">
+                <button
+                    type="submit"
+                    class="px-3 py-1.5 rounded-md text-sm font-medium bg-navy-600 text-white hover:bg-navy-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-horizon-500 whitespace-nowrap"
+                >{{ t("settings.dataset.apply_update", locale) }}</button>
+            </form>
+        </div>
+        {% endif %}
+    </section>
+
+</div>
+
+{% endblock %}

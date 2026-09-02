@@ -1,5 +1,18 @@
 <!DOCTYPE html>
-<html lang="{{ request.state.locale }}" dir="{{ supported_locales[request.state.locale].dir }}" class="h-full">
+{#
+    #155 -- request.state.theme (web/main.py's resolve_theme
+    middleware) is only ever set on desktop (services.prefs needs
+    platformdirs, not installed on web); None there leaves this exactly
+    as it was before #155, deferring entirely to the inline script
+    below + localStorage. The dark CLASS, not a data-theme attribute:
+    every existing dark: utility across this whole app (starting with
+    <body> a few lines down) is a Tailwind class-variant selector, not
+    a CSS custom-property one -- a data-theme attribute here would be
+    inert, controlling nothing any page actually reads.
+#}
+<html lang="{{ request.state.locale }}" dir="{{ supported_locales[request.state.locale].dir }}"
+      class="h-full{{ ' dark' if request.state.theme == 'dark' else '' }}"
+      {% if request.state.theme %}data-theme-source="server"{% endif %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,7 +41,17 @@
         // an inline script is the only way to do that (a deferred one,
         // or one in extra_scripts at the end of <body>, would paint
         // light first and flip afterward).
-        if (localStorage.getItem("theme") !== "light") {
+        //
+        // #155 -- skipped entirely when data-theme-source="server" is
+        // present (desktop only): the <html> tag above already carries
+        // the correct class, rendered server-side from prefs.json
+        // before this script even runs, so there's no flash to prevent
+        // and nothing here to do. Running it anyway would let a stale
+        // localStorage value (e.g. from before Settings existed, or
+        // from clicking the nav bar's own theme toggle -- #155 doesn't
+        // wire that button into prefs.json) override a deliberate
+        // Settings choice.
+        if (!document.documentElement.hasAttribute("data-theme-source") && localStorage.getItem("theme") !== "light") {
             document.documentElement.classList.add("dark");
         }
     </script>

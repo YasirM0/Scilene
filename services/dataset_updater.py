@@ -74,6 +74,17 @@ APPLY_MAX_ATTEMPTS = 10  # ~5 minutes of retrying before giving up for this laun
 # never blocks a search waiting for it.
 SEARCH_LOCK = threading.Lock()
 
+# Set by maybe_apply_update() below when a verified download is ready
+# but the user's dataset_auto_update pref is off -- read by
+# web/routers/settings.py's GET /settings and /settings/update-status
+# to show "Update available" + an [Apply update] button, and cleared
+# once that button's POST /settings/apply-update actually applies it.
+# Module-level rather than persisted anywhere: there's nothing to
+# recover across a restart -- a fresh launch just re-checks and
+# re-downloads if still needed.
+UPDATE_PENDING = False
+PENDING_VERSION = None
+
 
 def get_local_version() -> str:
     """
@@ -257,3 +268,45 @@ def apply_update_with_retry(
 
     logger.warning("Dataset update still pending after %d attempts -- giving up for this launch", max_attempts)
     return False
+
+
+def maybe_apply_update(version: str) -> bool:
+    """
+    The one place that actually decides whether a verified download
+    (download_update() + stage_pending_version() already done by the
+    caller) gets applied automatically or left for the user to confirm
+    -- #155's dataset_auto_update pref. Desktop-only in practice
+    (services.prefs needs platformdirs), imported lazily here for the
+    same reason web/routers/settings.py does: importing
+    services.dataset_updater itself must stay safe on a machine that
+    never installed requirements-desktop.txt.
+
+    Returns whether the update was actually applied just now (matches
+    apply_update()/apply_update_with_retry()'s own return convention)
+    -- False when it was left pending for manual confirmation, not an
+    error.
+    """
+    global UPDATE_PENDING, PENDING_VERSION
+
+    from services.prefs import get_pref
+
+    auto_update = get_pref("dataset_auto_update", True)
+
+    if not auto_update:
+        logger.info("Update ready — awaiting user confirmation")
+        UPDATE_PENDING = True
+        PENDING_VERSION = version
+        return False
+
+    applied = apply_update_with_retry()
+    if applied:
+        UPDATE_PENDING = False
+        PENDING_VERSION = None
+    else:
+        # Auto-update is on, but every retry found SEARCH_LOCK held --
+        # same "still pending" state as the manual-confirmation branch
+        # above, just arrived at for a different reason (apply_update_with_retry()
+        # already logged the give-up warning).
+        UPDATE_PENDING = True
+        PENDING_VERSION = version
+    return applied
