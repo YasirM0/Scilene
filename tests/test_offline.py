@@ -31,6 +31,7 @@ session.
 import socket
 
 import pytest
+import requests
 from fastapi.testclient import TestClient
 
 from web.main import app
@@ -374,18 +375,43 @@ def test_version_comparison(isolated_paths, monkeypatch, local_version, remote_v
     assert dataset_updater.is_update_available() is expected
 
 
-def test_update_check_network_failure(isolated_paths, monkeypatch, network_blocked):
-    monkeypatch.setenv(dataset_updater.VERSION_JSON_URL_ENV_VAR, "https://example.invalid/version.json")
+def test_update_check_network_failure(isolated_paths, network_blocked):
+    """
+    VERSION_URL is a real, always-set constant now (GitHub Releases,
+    not the old Cloudcube env-var-that-might-be-unset design) -- no
+    monkeypatching needed to make check_remote_version() actually
+    attempt a connection here; it always does. Also asserts no AWS/
+    boto3-shaped error surfaces anywhere in the stack -- there's
+    nothing left in this module that could raise one, since it never
+    imports boto3 at all (#153 follow-up: Cloudcube removed from this
+    path entirely).
+    """
     result = dataset_updater.check_remote_version()
     assert result is None
 
 
-def test_update_check_no_url_configured(isolated_paths, monkeypatch):
-    """No SCILENE_DATASET_VERSION_URL at all (the default state, e.g.
-    a plain web deploy) must also return None -- and, unlike the
-    network_blocked case above, without attempting any request."""
-    monkeypatch.delenv(dataset_updater.VERSION_JSON_URL_ENV_VAR, raising=False)
-    assert dataset_updater.check_remote_version() is None
+def test_version_url_real_get_no_credentials_needed():
+    """
+    The one genuinely "real" check Step 4 asks for: an actual GET
+    against raw.githubusercontent.com, no network_blocked fixture, no
+    mocking, no AWS/GitHub credential of any kind (a public repo's raw
+    file needs none). 200 (data/version.json exists on `main`) or 404
+    (this exact commit hasn't reached GitHub yet) are both acceptable
+    -- what must NOT happen is an exception, a hang, or any sign this
+    ever needed a credential.
+    """
+    response = requests.get(dataset_updater.VERSION_URL, timeout=10)
+    assert response.status_code in (200, 404), (
+        f"expected 200 or 404 from a public raw.githubusercontent.com URL, got {response.status_code}"
+    )
+
+    # check_remote_version() itself must handle whichever of the two
+    # this actually was without raising, consistent with that status.
+    result = dataset_updater.check_remote_version()
+    if response.status_code == 200:
+        assert isinstance(result, dict) and result.get("version")
+    else:
+        assert result is None
 
 
 def test_sha256_verification(isolated_paths):

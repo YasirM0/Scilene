@@ -10,14 +10,20 @@ The web deployment's database gets refreshed by
 scripts/publish_dataset_update.py + a manual redeploy instead, exactly
 like today.
 
+Delivery mechanism: GitHub Releases, not Cloudcube -- Cloudcube stays
+in this codebase (scripts/fetch_source_csvs.py) only for its original
+role, rebuilding the DB from source CSVs, a maintainer-only step this
+module has nothing to do with. Both requests below are plain,
+unauthenticated HTTPS GETs against public GitHub URLs -- this module
+never imports boto3 or holds any credential of any kind, at any point.
+
 Client/server contract (scripts/publish_dataset_update.py writes the
-server side of this):
-    GET {SCILENE_DATASET_VERSION_URL}
-    -> {"version": "YYYY.MM.DD", "db_url": "https://...",
+server side of this, as data/version.json committed to the repo):
+    GET {VERSION_URL}  (raw.githubusercontent.com)
+    -> {"version": "YYYY.MM.DD", "db_url": "https://github.com/.../releases/download/...",
         "sha256": "...", "size_bytes": 12345}
-Both requests are plain, unauthenticated HTTPS GETs -- the desktop app
-never holds any Cloudcube/AWS credential, only the maintainer-run
-publish script does.
+db_url points at a GitHub Release asset -- also a plain public GET,
+same as VERSION_URL itself.
 
 Thread safety: SEARCH_LOCK is the actual lock a real search acquires
 for its duration (see web/routers/search.py's _execute_unified_search)
@@ -27,7 +33,6 @@ retry.
 """
 
 import hashlib
-import json
 import logging
 import os
 import threading
@@ -49,13 +54,13 @@ VERSION_FILE_PATH = DATA_DIR / ".db_version"
 # background thread's local variables between the two calls.
 _PENDING_VERSION_PATH = DATA_DIR / ".db_version.pending"
 
-# A real, hard-coded default would either be some maintainer's actual
-# infrastructure (wrong to bake into source) or a placeholder that
-# silently "works" until someone hits it in production -- unset means
-# every check_remote_version() call below returns None immediately,
-# which is exactly the same safe "no update available" behavior as a
-# real but unreachable URL, just without a wasted network attempt.
-VERSION_JSON_URL_ENV_VAR = "SCILENE_DATASET_VERSION_URL"
+# Public, unauthenticated -- raw.githubusercontent.com serves whatever
+# is currently committed at this path on `main`, no GitHub token or
+# API rate-limit concerns the way api.github.com would have. 404 (repo
+# doesn't have data/version.json yet, or the branch/path is wrong) is
+# handled identically to any other check_remote_version() failure
+# below -- never raises, just means "no update available right now".
+VERSION_URL = "https://raw.githubusercontent.com/YasirM0/Scilene/main/data/version.json"
 
 VERSION_CHECK_TIMEOUT_SECONDS = 3
 DOWNLOAD_TIMEOUT_SECONDS = (5, 300)  # (connect, read) -- a 55MB+ file legitimately takes longer than 3s
@@ -85,24 +90,16 @@ def get_local_version() -> str:
     return "0000.00.00"
 
 
-def _version_json_url():
-    return os.environ.get(VERSION_JSON_URL_ENV_VAR)
-
-
 def check_remote_version() -> dict | None:
     """
     Returns version.json's parsed contents, or None on ANY failure --
-    unset URL, unreachable host, timeout, non-200, malformed JSON.
-    Every one of those means the same thing to a caller: no usable
-    remote version info right now, proceed with the local DB. Never
-    raises.
+    unreachable host, timeout, a 404 (data/version.json not present on
+    `main` yet), malformed JSON. Every one of those means the same
+    thing to a caller: no usable remote version info right now,
+    proceed with the local DB. Never raises.
     """
-    url = _version_json_url()
-    if not url:
-        return None
-
     try:
-        response = requests.get(url, timeout=VERSION_CHECK_TIMEOUT_SECONDS)
+        response = requests.get(VERSION_URL, timeout=VERSION_CHECK_TIMEOUT_SECONDS)
         response.raise_for_status()
         return response.json()
     except Exception:
