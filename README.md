@@ -1,3 +1,5 @@
+![Scilene Graphical Abstract](assets/scilene-graphical-abstract.svg)
+
 # Scilene
 
 > Navigate Scholarly Publishing with Confidence
